@@ -26,6 +26,12 @@ That's it. Your agent now has Kira.
 
 ---
 
+## Demo
+
+![Kira Demo](./demo.gif)
+
+---
+
 ## What happens
 
 **Before Kira:** Agent deploys to Vercel, forgets env vars, app crashes. Retries 3 times. Burns tokens.
