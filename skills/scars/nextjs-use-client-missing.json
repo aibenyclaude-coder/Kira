@@ -1,0 +1,13 @@
+{
+  "id": "scar.nextjs-use-client-missing.v1",
+  "keywords": ["nextjs", "use client", "react hooks", "app router", "client component"],
+  "contexts": ["nextjs", "react"],
+  "title": "Next.js App Router component uses Client Hooks without 'use client' directive",
+  "summary": "Agent writes useState/useEffect/onClick in an App Router component but forgets the 'use client' directive at the top, causing build or hydration errors.",
+  "severity": "critical",
+  "mistake": "Agent creates or edits an App Router component that uses useState, useEffect, onClick, or other client-side hooks and event handlers without adding 'use client' at the very first line of the file. Next.js App Router defaults all components to Server Components, so client APIs are not available. The build fails with 'You're importing a component that needs useState' or the app crashes with a hydration mismatch error at runtime.",
+  "instead": "Before writing any component that uses React client hooks (useState, useEffect, useRef, useCallback, useMemo, useContext) or browser event handlers (onClick, onChange, onSubmit), add 'use client' as the very first line of the file. Keep Server Components and Client Components separated — extract interactive parts into small Client Components and import them into Server Components. This minimizes the client bundle and keeps the benefits of server rendering.",
+  "hit_count": 923,
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}

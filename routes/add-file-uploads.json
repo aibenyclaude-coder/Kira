@@ -1,0 +1,32 @@
+{
+  "id": "route.add-file-uploads.v1",
+  "goals": [
+    "add file uploads",
+    "upload files",
+    "add image upload",
+    "file upload feature",
+    "user uploads"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "File Upload Pipeline",
+  "description": "Add file upload capability: client-side upload UI, server-side handling, and cloud storage.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "uploadthing",
+      "description": "Set up UploadThing for file upload handling"
+    },
+    {
+      "order": 2,
+      "keyword": "zod validation",
+      "description": "Add file validation schemas with Zod"
+    },
+    {
+      "order": 3,
+      "keyword": "s3 upload",
+      "description": "Configure S3/R2 storage if needed beyond UploadThing"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}

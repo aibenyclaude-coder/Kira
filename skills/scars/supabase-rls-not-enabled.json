@@ -1,0 +1,13 @@
+{
+  "id": "scar.supabase-rls-not-enabled.v1",
+  "keywords": ["supabase", "rls", "row level security", "supabase security", "database security"],
+  "contexts": ["nextjs", "supabase"],
+  "title": "Supabase table created without Row Level Security — all data publicly accessible",
+  "summary": "Agent creates a Supabase table without enabling RLS, leaving every row readable and writable by any anonymous user through the public API.",
+  "severity": "critical",
+  "mistake": "Agent runs CREATE TABLE in Supabase without following up with ALTER TABLE ... ENABLE ROW LEVEL SECURITY and adding policies. Supabase exposes tables via the public REST API by default. Without RLS, the anon key can read, insert, update, and delete every row in the table. The agent sees 'table created' and moves on, unaware that the entire dataset is now publicly exposed to anyone with the project URL.",
+  "instead": "Immediately after every CREATE TABLE statement, run ALTER TABLE <table_name> ENABLE ROW LEVEL SECURITY. Then add at least one RLS policy that restricts access based on auth.uid() or auth.role(). For example: CREATE POLICY \"Users can read own data\" ON <table_name> FOR SELECT USING (auth.uid() = user_id). Verify RLS is active by checking the Supabase dashboard or running SELECT relrowsecurity FROM pg_class WHERE relname = '<table_name>'. Never leave a table without RLS in any Supabase project.",
+  "hit_count": 456,
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}

@@ -1,0 +1,73 @@
+{
+  "id": "route.build-saas.v1",
+  "goals": [
+    "build a saas",
+    "create a saas app",
+    "build saas application",
+    "saas boilerplate",
+    "saas starter",
+    "build a subscription app"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Full-stack SaaS Application",
+  "description": "Complete route from zero to production SaaS: UI, auth, database, payments, email, analytics, and deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup tailwind",
+      "description": "Set up styling with Tailwind CSS v4"
+    },
+    {
+      "order": 2,
+      "keyword": "shadcn",
+      "description": "Install UI component library"
+    },
+    {
+      "order": 3,
+      "keyword": "prisma",
+      "description": "Set up database with Prisma ORM"
+    },
+    {
+      "order": 4,
+      "keyword": "add auth clerk",
+      "description": "Add user authentication with Clerk"
+    },
+    {
+      "order": 5,
+      "keyword": "stripe",
+      "description": "Add subscription payments with Stripe"
+    },
+    {
+      "order": 6,
+      "keyword": "resend",
+      "description": "Set up transactional email"
+    },
+    {
+      "order": 7,
+      "keyword": "posthog",
+      "description": "Add product analytics"
+    },
+    {
+      "order": 8,
+      "keyword": "sentry",
+      "description": "Add error monitoring"
+    },
+    {
+      "order": 9,
+      "keyword": "setup vitest",
+      "description": "Set up testing"
+    },
+    {
+      "order": 10,
+      "keyword": "github actions",
+      "description": "Configure CI/CD"
+    },
+    {
+      "order": 11,
+      "keyword": "deploy vercel",
+      "description": "Deploy to production"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}

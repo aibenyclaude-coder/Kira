@@ -1,0 +1,13 @@
+{
+  "id": "scar.docker-no-multistage-build.v1",
+  "keywords": ["docker", "docker image", "dockerfile", "docker build", "container"],
+  "contexts": ["nodejs", "docker", "typescript"],
+  "title": "Single-stage Dockerfile produces bloated image with devDependencies",
+  "summary": "Agent writes a single-stage Dockerfile that includes node_modules, devDependencies, and source files, resulting in an image over 1GB.",
+  "severity": "warning",
+  "mistake": "Agent writes a Dockerfile with a single FROM stage that runs npm install (without --omit=dev), copies the entire project including source, tests, and devDependencies into the final image. The resulting image is 1GB+ instead of ~150MB. Deploy times balloon, CI caches miss constantly, and container startup is slower. The agent reports 'Docker image built successfully' without checking the image size.",
+  "instead": "Use a multi-stage Dockerfile. Stage 1 (builder): install all dependencies and build the project. Stage 2 (production): use a slim base image (e.g., node:20-alpine), copy only the dist/ or build output and production dependencies from the builder stage. Always add a .dockerignore to exclude node_modules, .git, tests, and docs. After building, run 'docker images' to verify the final image size is under 300MB for a typical Node.js app.",
+  "hit_count": 389,
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}
