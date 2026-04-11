@@ -1,0 +1,28 @@
+- main [ref=e5]:
+  - generic [ref=e6]:
+    - link "Npm" [ref=e7] [cursor=pointer]:
+      - /url: /
+      - img [ref=e8]
+    - button "Light mode — click for dark" [ref=e11] [cursor=pointer]:
+      - img [ref=e12]
+  - generic [ref=e16]:
+    - generic [ref=e17]:
+      - button "Toggle between showing and hiding a shade over a wombat's head" [ref=e19] [cursor=pointer]
+      - button "Make the animated wombat visibly giggle" [ref=e24]
+    - generic [ref=e27]:
+      - heading "Sign In" [level=1] [ref=e28]
+      - generic [ref=e29]:
+        - generic [ref=e31]: Username
+        - textbox "Username" [ref=e32]:
+          - /placeholder: ""
+      - link "Forgot password?" [ref=e34] [cursor=pointer]:
+        - /url: /forgot
+      - generic [ref=e35]:
+        - generic [ref=e37]: Password
+        - generic [ref=e38]:
+          - textbox "Password" [ref=e39]:
+            - /placeholder: ""
+          - button "Show password" [ref=e40] [cursor=pointer]: Show
+      - button "Sign In" [disabled] [ref=e42]
+    - link "Create Account" [ref=e43] [cursor=pointer]:
+      - /url: /signup

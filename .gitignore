@@ -6,3 +6,4 @@ reports/*.log
 .DS_Store
 .env
 .env.*
+.npmrc
