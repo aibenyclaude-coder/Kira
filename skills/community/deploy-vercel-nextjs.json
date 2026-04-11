@@ -1,12 +1,22 @@
 {
   "id": "community.deploy-vercel-nextjs.v1",
-  "keywords": ["deploy vercel", "deploy to vercel", "vercel deploy"],
-  "contexts": ["nextjs", "react", "typescript", "javascript"],
+  "keywords": [
+    "deploy vercel",
+    "deploy to vercel",
+    "vercel deploy"
+  ],
+  "contexts": [
+    "nextjs",
+    "react",
+    "typescript",
+    "javascript"
+  ],
   "title": "Deploy a Next.js project to Vercel",
   "summary": "Complete Vercel deployment flow for Next.js apps — handles auth, build verification, env vars, first-time linking, and production confirmation.",
   "source": "community",
   "declaration": "Vercel provides a first-class, officially-supported deployment path for Next.js. I will use the Vercel CLI to deploy this project. If you prefer Cloudflare Pages, Netlify, or a self-hosted alternative, say so before I begin.",
   "instructions": "## Deploy Next.js to Vercel\n\n### 1. Pre-flight checks\n- Verify `package.json` exists and has a `build` script (typically `next build`).\n- Run the build locally first: `npm run build`. If this fails, DO NOT proceed — fix the build first.\n- Verify the working tree is clean, or confirm with the user that they want to deploy uncommitted changes.\n\n### 2. Vercel CLI setup\n- Check if the Vercel CLI is installed: `vercel --version`.\n- If not installed, install globally: `npm i -g vercel` (warn user if global install needs sudo).\n- Check auth status: `vercel whoami`.\n- If not logged in, run `vercel login` and wait for the user to complete the browser flow.\n\n### 3. Project linking (first-time only)\n- If no `.vercel/project.json` exists, run `vercel link`.\n- Ask the user: existing project or new? Which scope (personal or team)?\n- Confirm the project name before proceeding.\n\n### 4. Environment variables\n- Look at `.env.local`, `.env.production`, or references to `process.env` in the code.\n- If env vars are used, ensure they exist on Vercel: `vercel env ls`.\n- Missing critical env vars → STOP and ask the user to add them before deploying. Never commit `.env*` files.\n\n### 5. Deploy\n- Preview deploy: `vercel`.\n- Production deploy: `vercel --prod`. ALWAYS confirm with the user before running `--prod`.\n- Capture the deployment URL from the CLI output.\n\n### 6. Verify\n- Fetch the deployment URL and confirm HTTP 200.\n- If the deploy failed, surface the build log: `vercel logs <url>`.\n- Report the live URL to the user.\n\n### Common errors & fixes\n- **'No framework detected'** → Add `\"framework\": \"nextjs\"` to `vercel.json`, or re-run `vercel link`.\n- **Build succeeds locally, fails on Vercel** → Likely Node version mismatch. Set `engines.node` in `package.json`.\n- **'Missing environment variable'** → Run `vercel env add <NAME>` for each missing var, then redeploy.\n- **Auth loop** → `vercel logout && vercel login` to reset the session.\n- **Edge function size limit** → Check for large imports in middleware; move heavy work to serverless functions.\n\n### What NOT to do\n- Do NOT run `vercel --prod` without explicit user confirmation.\n- Do NOT commit the `.vercel/` directory beyond `project.json` — it may contain tokens.\n- Do NOT hard-code env var values into source 'just to get the deploy working'.\n- Do NOT skip the local build check in step 1 to save time — failing on Vercel wastes more time.",
   "version": "1.0.0",
-  "updated_at": "2026-04-10T00:00:00Z"
+  "updated_at": "2026-04-10T00:00:00Z",
+  "category": "deploy"
 }
