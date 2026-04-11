@@ -1,0 +1,37 @@
+{
+  "id": "route.setup-dev-environment.v1",
+  "goals": [
+    "setup dev environment",
+    "configure development",
+    "setup linting and testing",
+    "setup code quality",
+    "prepare project for development"
+  ],
+  "contexts": ["nextjs", "react", "typescript", "nodejs"],
+  "title": "Set Up Development Environment",
+  "description": "Configure linting, testing, and CI for a clean development workflow.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup eslint",
+      "description": "Configure ESLint for code quality"
+    },
+    {
+      "order": 2,
+      "keyword": "setup vitest",
+      "description": "Set up unit testing"
+    },
+    {
+      "order": 3,
+      "keyword": "docker",
+      "description": "Containerize the application"
+    },
+    {
+      "order": 4,
+      "keyword": "github actions",
+      "description": "Set up CI/CD pipeline"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}

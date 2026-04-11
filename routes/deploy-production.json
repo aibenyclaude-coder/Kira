@@ -1,0 +1,38 @@
+{
+  "id": "route.deploy-production.v1",
+  "goals": [
+    "deploy to production",
+    "go live",
+    "launch my app",
+    "ship it",
+    "put it online",
+    "make it live"
+  ],
+  "contexts": ["nextjs", "react", "typescript", "nodejs"],
+  "title": "Deploy to Production",
+  "description": "Complete production deployment route including CI, monitoring, and deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup vitest",
+      "description": "Ensure tests pass before deploying"
+    },
+    {
+      "order": 2,
+      "keyword": "github actions",
+      "description": "Set up CI to run tests on every push"
+    },
+    {
+      "order": 3,
+      "keyword": "docker",
+      "description": "Containerize if needed (skip for Vercel/Cloudflare)"
+    },
+    {
+      "order": 4,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel (or Cloudflare Pages)"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}

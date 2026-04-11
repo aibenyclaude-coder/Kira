@@ -1,0 +1,34 @@
+{
+  "id": "route.add-auth-nextjs.v1",
+  "goals": [
+    "add authentication",
+    "add login",
+    "add user auth",
+    "setup auth for my app",
+    "add sign in",
+    "add sign up",
+    "protect my routes"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Add Authentication to Next.js App",
+  "description": "Complete route for adding authentication with protected routes and user management.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "add auth",
+      "description": "Set up authentication provider (Clerk or Auth.js)"
+    },
+    {
+      "order": 2,
+      "keyword": "prisma",
+      "description": "Set up database for user data (if using Auth.js with database adapter)"
+    },
+    {
+      "order": 3,
+      "keyword": "deploy vercel",
+      "description": "Deploy to get callback URLs for OAuth providers"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}
