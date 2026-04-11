@@ -58,16 +58,16 @@ function matchByKeywordAndContext<T extends { keywords: string[]; contexts: stri
       continue;
     }
 
-    // Tier 3: Word overlap — at least 1 meaningful word matches.
-    // Skip common filler words to avoid false positives.
-    const FILLER = new Set(["i", "a", "to", "my", "the", "an", "is", "it", "do", "want", "need", "please", "can", "how", "add", "setup", "set", "up", "create", "install", "get", "make", "use", "with", "for", "in", "on", "of", "app", "project"]);
+    // Tier 3: Word overlap — at least 2 meaningful words must match.
+    // Only common filler words are excluded; technical verbs (add, setup, etc.) are kept.
+    const FILLER = new Set(["i", "a", "to", "my", "the", "an", "is", "it", "do", "want", "need", "please", "can", "how", "with", "for", "in", "on", "of"]);
     if (
       itemKeywords.some((k) => {
         const kWords = k.split(/\s+/);
         const meaningfulMatches = queryWords.filter(
           (qw) => !FILLER.has(qw) && kWords.includes(qw)
         );
-        return meaningfulMatches.length >= 1;
+        return meaningfulMatches.length >= 2;
       })
     ) {
       if (!seen.has(i)) {

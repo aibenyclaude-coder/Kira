@@ -10,7 +10,7 @@ const SEP = "─".repeat(64);
 
 async function main(): Promise<void> {
   console.log("\n╔══════════════════════════════════════════════════════════════╗");
-  console.log("║  Kira v0.2 — demo                                          ║");
+  console.log("║  Kira v0.3 — demo                                          ║");
   console.log("║  Where agents shine.                                       ║");
   console.log("╚══════════════════════════════════════════════════════════════╝\n");
 
@@ -68,7 +68,7 @@ async function main(): Promise<void> {
   console.log(SEP);
   console.log(`[lookup] ${JSON.stringify(q4)}`);
   const r4 = lookup(skills, scars, q4);
-  console.log(`  → ${r4.skill_count} skill(s), ${r4.scar_count} scar(s) (expected 0)\n`);
+  console.log(`  → ${r4.skill_count} skill(s), ${r4.scar_count} scar(s) (expected 0)`);
 
   // ── Test 5: all keywords ─────────────────────────────────────────────
   console.log(SEP);

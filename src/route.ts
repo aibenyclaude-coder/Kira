@@ -111,10 +111,21 @@ export function resolveRoute(
       context: contexts,
     });
 
+    // When multiple skills match, prefer the one whose keywords
+    // most closely match the step keyword (longer overlap = better fit).
+    let selectedSkill = result.skills[0] ?? null;
+    if (result.skills.length > 1) {
+      const stepKw = stepDef.keyword.toLowerCase();
+      const exact = result.skills.find((s) =>
+        s.keywords.some((k) => k.toLowerCase() === stepKw)
+      );
+      if (exact) selectedSkill = exact;
+    }
+
     return {
       order: stepDef.order,
       keyword: stepDef.keyword,
-      skill: result.skills[0] ?? null,
+      skill: selectedSkill,
       scars: result.scars,
       description: stepDef.description,
     };

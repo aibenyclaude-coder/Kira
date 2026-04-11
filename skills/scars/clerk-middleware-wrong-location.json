@@ -7,7 +7,7 @@
   "severity": "critical",
   "mistake": "The agent creates `app/middleware.ts` instead of `middleware.ts` (project root) or `src/middleware.ts`. Next.js only reads middleware from the root or src/ — placing it inside `app/` means it's never executed. The app loads without errors, login pages appear to work, but protected routes are not actually protected. The agent doesn't notice because there's no error message — the middleware simply never fires.",
   "instead": "ALWAYS place middleware.ts at the project root (`./middleware.ts`) or inside `src/` if using the src directory pattern (`./src/middleware.ts`). NEVER place it inside `app/`. After creating the file, verify it's active by checking that accessing a protected route without auth redirects to the sign-in page. The middleware matcher in the config must also cover the routes you want to protect.",
-  "hit_count": 512,
+  "hit_count": 1,
   "version": "1.0.0",
   "updated_at": "2026-04-11T00:00:00Z"
 }
