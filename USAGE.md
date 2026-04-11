@@ -1,67 +1,103 @@
 # Using Kira
 
-## Run the demo (no MCP client needed)
+## Quick Start (recommended)
 
-```bash
-cd /Users/beny/Desktop/Kira
-npm install
-npm run demo
-```
+Add to your MCP config and you're done:
 
-The demo runs `lookup` directly, prints the matching Skill, records a
-success report, and exercises two negative cases (wrong keyword, wrong context).
-
-## Wire Kira into Claude Code as an MCP server
-
-Add this entry to your MCP client config. For Claude Code, edit
-`~/.claude/settings.json` (or your project's `.mcp.json`):
-
+**Claude Code** (`~/.claude/settings.json`):
 ```json
 {
   "mcpServers": {
     "kira": {
-      "command": "node",
-      "args": ["/Users/beny/Desktop/Kira/dist/index.js"]
+      "command": "npx",
+      "args": ["kira-mcp"]
     }
   }
 }
 ```
 
-Make sure `dist/` exists first:
-
-```bash
-npm run build
-```
-
-Restart Claude Code. Then in any session:
-
-> Use the kira_lookup tool with keyword "deploy vercel" and context ["nextjs"].
-
-Claude will fetch the Skill from the local index and read it before
-executing. The agent is instructed to declare its choice upfront
-(the `declaration` field) before running the instructions.
-
-## Add a new community Skill
-
-Drop a new file in `skills/community/<slug>.json`. Schema:
-
+**Cursor** (`.cursor/mcp.json`):
 ```json
 {
-  "id": "community.<slug>.v1",
-  "keywords": ["firing keyword", "alias"],
-  "contexts": ["nextjs", "python", "..."],
-  "title": "Human-readable title",
-  "summary": "One-line summary.",
-  "source": "community",
-  "declaration": "What the agent should announce to the user before executing.",
-  "instructions": "## Step-by-step markdown instructions\n\n...",
-  "version": "1.0.0",
-  "updated_at": "2026-04-10T00:00:00Z"
+  "mcpServers": {
+    "kira": {
+      "command": "npx",
+      "args": ["kira-mcp"]
+    }
+  }
 }
 ```
 
-No rebuild needed — the server re-reads the filesystem on each startup.
-(Live hot-reload is a v0.2 feature.)
+**Cline** (VS Code settings → Cline MCP Servers):
+```json
+{
+  "mcpServers": {
+    "kira": {
+      "command": "npx",
+      "args": ["kira-mcp"]
+    }
+  }
+}
+```
+
+Restart your client. Kira auto-fires — your agent will call `kira_lookup` before every task without you doing anything.
+
+## What your agent gets
+
+### kira_lookup — find the right skill
+
+Your agent calls:
+```
+kira_lookup("deploy vercel", context: ["nextjs"])
+```
+
+Returns:
+- **Skill**: Step-by-step deployment instructions
+- **Scars**: "847 agents forgot env vars — run `vercel env ls` first"
+
+Fuzzy matching works — "deploy", "database", "auth" all resolve correctly.
+
+### kira_route — plan multi-step goals
+
+Your agent calls:
+```
+kira_route("build a web app")
+```
+
+Returns 8 ordered steps, each with its skill and warnings:
+1. Tailwind CSS v4
+2. shadcn/ui
+3. ESLint
+4. Prisma + Scar: "don't forget prisma generate"
+5. Clerk Auth + Scar: "middleware goes in root, not app/"
+6. Vitest
+7. GitHub Actions CI
+8. Vercel Deploy + Scar: "check env vars before --prod"
+
+### kira_report — feed the quality system
+
+After each task, your agent calls:
+```
+kira_report("community.deploy-vercel-nextjs.v1", "success")
+```
+
+Status options: `success`, `retry`, `failure`. This data drives quality scoring and future Scar generation.
+
+## Run the demo (no MCP client needed)
+
+```bash
+npx kira-mcp --demo
+```
+
+Or from source:
+```bash
+git clone https://github.com/aibenyclaude-coder/Kira.git
+cd Kira
+npm install
+npm run demo
+```
+
+The demo exercises `kira_lookup`, `kira_route`, and `kira_report` with sample queries.
 
 ## Test the MCP server manually
 
@@ -71,8 +107,18 @@ No rebuild needed — the server re-reads the filesystem on each startup.
   '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
   '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' \
   '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"kira_lookup","arguments":{"keyword":"deploy vercel","context":["nextjs"]}}}'; \
-  sleep 0.5) | node dist/index.js
+  sleep 0.5) | npx kira-mcp
 ```
 
-You should see three JSON-RPC responses: `initialize`, `tools/list`, and
-the `kira_lookup` result.
+You should see three JSON-RPC responses: `initialize`, `tools/list`, and the `kira_lookup` result.
+
+## Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `KIRA_REMOTE_URL` | (none) | URL for remote skill index auto-updates |
+| `KIRA_PRO_KEY` | (none) | Pro license key (coming soon) |
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to add Skills and Scars.

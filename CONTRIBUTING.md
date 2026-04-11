@@ -1,34 +1,115 @@
 # Contributing to Kira
 
+The first **1,000 contributors** get permanent free access to all Kira features, including future Pro tier. Your contribution is tracked by GitHub username.
+
+## What you can contribute
+
+| Type | File location | Difficulty |
+|---|---|---|
+| **Skill** (how to do something) | `skills/community/<slug>.json` | Easy |
+| **Scar** (what to avoid) | `skills/scars/<slug>.json` | Easy |
+| **Route** (multi-step plan) | `routes/<slug>.json` | Medium |
+| **Server feature** | `src/` | Advanced |
+
 ## Writing a Skill
 
-1. Create a JSON file in `skills/community/<slug>.json`
-2. Follow the schema in CLAUDE.md
-3. Include at least:
-   - 3+ keyword variants
-   - Step-by-step instructions with numbered steps
-   - "Common errors & fixes" section
-   - "What NOT to do" section
-4. Run `npm run demo` to verify it loads
-5. Open a PR
+### 1. Pick a topic
+
+Choose a developer tool or workflow that AI agents commonly use. Check [existing skills](./skills/community/) to avoid duplicates.
+
+Good candidates: any tool where agents frequently retry or make mistakes.
+
+### 2. Create the file
+
+`skills/community/<slug>.json` — use kebab-case for the slug.
+
+```json
+{
+  "id": "community.<slug>.v1",
+  "keywords": ["primary keyword", "alias 1", "alias 2"],
+  "contexts": ["nextjs", "react"],
+  "title": "Human-readable title",
+  "summary": "One sentence describing what this skill covers.",
+  "source": "community",
+  "declaration": "What the agent announces to the user before executing.",
+  "instructions": "## Step-by-step instructions\n\n1. First step\n2. Second step\n...\n\n## Common Errors & Fixes\n\n- Error: ...\n  Fix: ...\n\n## What NOT to Do\n\n- Never ...",
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}
+```
+
+### 3. Quality checklist
+
+- [ ] **3+ keywords** — include common variations ("deploy vercel", "deploy to vercel", "vercel deploy")
+- [ ] **Contexts** — specify when this skill applies (nextjs, python, etc.)
+- [ ] **Numbered steps** — agents follow them in order
+- [ ] **Common Errors & Fixes** — at least 2 known pitfalls
+- [ ] **What NOT to Do** — at least 2 anti-patterns
+- [ ] **Declaration** — what the agent says before starting (transparency)
+- [ ] **No code execution** — instructions are natural language Markdown only
+
+### 4. Validate and submit
+
+```bash
+# Validate JSON
+python3 -c "import json; json.load(open('skills/community/YOUR-FILE.json'))"
+
+# Verify it loads
+npm run demo
+
+# Open a PR
+```
+
+### Example: look at existing skills
+
+The best reference is an existing skill. Start with:
+- [`deploy-vercel-nextjs.json`](./skills/community/deploy-vercel-nextjs.json) — simple, clear structure
+- [`setup-stripe-nextjs.json`](./skills/community/setup-stripe-nextjs.json) — complex multi-step skill
 
 ## Writing a Scar
 
-1. Create a JSON file in `skills/scars/<slug>.json`
-2. Include:
-   - A concrete `mistake` (what went wrong, in detail)
-   - A concrete `instead` (what to do differently)
-   - `severity`: "warning" or "critical"
-   - `hit_count`: estimate how many agents hit this (start at 1)
-3. Run `npm run demo` to verify it loads
-4. Open a PR
+Scars warn agents about mistakes other agents already made.
 
-## Early Contributor Perk
+```json
+{
+  "id": "scar.<slug>.v1",
+  "keywords": ["deploy vercel", "vercel deploy"],
+  "contexts": ["nextjs"],
+  "title": "Short description of what goes wrong",
+  "summary": "One sentence.",
+  "severity": "critical",
+  "mistake": "Concrete description of what the agent did wrong.",
+  "instead": "Concrete description of what to do instead.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}
+```
 
-The first 1000 contributors get **permanent free access** to all Kira features,
-including future Pro tier. Your contribution is tracked by GitHub username.
+**Severity levels:**
+- `critical` — causes deployment failure, data loss, or security issue
+- `warning` — causes retry or suboptimal result
 
-## Quality Bar
+**Quality bar:** A scar must have a **concrete mistake** and a **concrete fix**. Vague warnings ("be careful with X") are not useful.
 
-Skills and Scars are designed for **zero-retry agent execution**.
-If an agent follows your skill and still needs to retry, the skill needs improvement.
+## Writing a Route
+
+Routes are multi-step plans for broad goals. See [`routes/`](./routes/) for examples.
+
+## Code contributions
+
+For server changes (`src/`):
+
+```bash
+npm install
+npm run build    # must pass
+npm run demo     # must complete successfully
+```
+
+Follow the commit convention in [CLAUDE.md](./CLAUDE.md).
+
+## Quality philosophy
+
+Skills and Scars are designed for **zero-retry agent execution**. If an agent follows your skill and still needs to retry, the skill needs improvement.
+
+We measure quality by `success` rate — the percentage of agents that complete on the first try. Skills below 50% success rate get flagged for improvement.
