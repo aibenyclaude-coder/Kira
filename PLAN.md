@@ -401,22 +401,26 @@ Kiraは中立レイヤーとして全モデルに跨る。ベンダーは1箇所
 ## 13. 現状ステータス（2026年4月11日時点）
 
 ### 完成済み
-- MCPサーバー v0.2（TypeScript、全機能動作確認済み）
-- `kira_lookup`: Skill + Scar を keyword × context で返す
-- `kira_report`: 実行結果をログ
+- MCPサーバー v0.3.1（TypeScript、全機能動作）
+- `kira_lookup`: Skill + Scar を keyword × context で返す（3段階あいまい検索）
+- `kira_route`: ゴール → 順序付きSkill+Scar列
+- `kira_report`: 実行結果をログ + missing-keyword自動記録
 - MCP instructions による自動発火
 - リモート自動更新（KIRA_REMOTE_URL）
-- 12 Skills / 4 Scars / 75+ キーワード
-- DESIGN.md（設計思想の結晶化）
+- **22 Skills / 4 Scars / 5 Routes / 100+ キーワード**
+- GitHub公開 + CI（ビルド+テスト自動）
+- npm公開（`npx kira-mcp` で即起動）
+- kira-daily-patrol（巡回ジョブ、毎朝JST 9:00自動実行）
+- DESIGN.md / PLAN.md / CONTRIBUTING.md / USAGE.md
+- README（マーケティング版、デモGIF埋め込み）
+- 7チャネル分の告知文（Show HN, X英語/日本語, Reddit×2, Zenn, Discord×4サーバー）
 
 ### 未着手
-- ネット上のスキル収集・蒸留（Phase 1の本作業）
-- GitHub公開
-- npm公開（npx kira-mcp）
-- Pro課金インフラ
+- Pro課金インフラ（Stripe Checkout + ライセンスキー + LP）
 - ベンダー審査システム
-- Scar自動生成エンジン
+- Scar自動生成エンジン（手動版は巡回ジョブで暫定対応中）
 - OpenAI / Gemini adapters
+- コミュニティ投稿UI
 
 ---
 
@@ -443,13 +447,13 @@ Kiraは中立レイヤーとして全モデルに跨る。ベンダーは1箇所
 | 思想の独自性 | 85 | Skill + Scar + 自動管理の組み合わせは未見 |
 | 設計の整合性 | 92 | 全判断が「エージェント疲労ゼロ」から逆算 |
 | 経済モデル | 80 | フリーミアム + ベンダー課金。資金ギャップはPro課金で橋渡し |
-| 技術的実現性 | 85 | v0.2完成済み。残りは段階的拡張 |
+| 技術的実現性 | 90 | v0.3.1稼働済み。全コア機能が動作 |
 | 堀の強さ | 80 | Multi-AI中立性 + データフライホイール |
 | 品質管理設計 | 88 | 提案/解決分離 + success率スコアリング |
 | セキュリティ | 80 | 自然言語 = LLM検閲の最得意領域 |
-| GTM | 65 | チャネルは特定済み。実行次第 |
+| GTM | 75 | 7チャネル告知文完成。実行フェーズ |
 
-**総合: 88 / 100**
+**総合: 90 / 100**
 
 ---
 

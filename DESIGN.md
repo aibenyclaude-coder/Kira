@@ -126,46 +126,61 @@ Anthropic等の単一ベンダー内製化では殺せない理由：
 
 ---
 
-## 7. MVP Scope
+## 7. Implementation Status
 
-### v0.1 — Proof of Concept
-- **MCPサーバー1本**
-- エンドポイント2つ：
-  - `lookup(keyword, context) → skill[]`
-  - `report(skill_id, status)`
-- 最初のキーワード：`deploy vercel` 一個だけ
-- ローカルJSON index
-- 手書きVercel Skill 1枚
-- 審査・警報・報酬・課金はv2以降
-- 目標：**一個のキーワードで一個のSkillが正しく降ってくる**ところまで
+### v0.3.1 — Current (2026-04-11)
 
-### v0.2 — Second keyword + context routing
-- 2つ目のキーワード追加（候補：`add auth clerk` or `add database supabase`）
-- プロジェクト文脈ルーティング（Next.js vs 他）
+全コア機能が稼働。npm公開済み。
 
-### v0.3 — Multi-AI adapters
-- MCP（Claude Code / Cline / Cursor）に加えて
-- OpenAI function calling adapter
-- Gemini tool use adapter
+**3つのツール:**
+- `kira_lookup(keyword, context)` — Skill + Scar をキーワード × コンテキストで返す
+- `kira_route(goal)` — ゴールから順序付きSkill+Scar列を生成
+- `kira_report(skill_id, status, note)` — 実行結果をログ + missing-keyword自動記録
 
-### v1.0 — Public beta
-- コミュニティ投稿UI
-- ベンダー審査パイプライン（まずは手動）
-- Contributor永続無料枠の登録
+**コンテンツ:**
+- 22 Skills（Deploy, Database, Auth, Payments, UI, Testing, CI/CD, Infra, Services, Mobile, i18n）
+- 4 Scars（Vercel env vars, Stripe webhook, Prisma generate, Clerk middleware）
+- 5 Routes（web-app-nextjs, deploy-production, add-auth, api-stripe, setup-dev-environment）
+- 100+ keywords
 
-### v2.0 — Distributed nervous system
-- 警報/解決/報酬ループ
-- ライブ再発火カウンター
+**自動発火:**
+MCP `instructions` フィールドでエージェントに「作業前にlookupしろ」と伝達。
+ユーザーは何もしない。エージェントが自動で発火する。
+
+**3段階あいまい検索:**
+1. 完全一致（keyword === query）
+2. 部分一致（keyword.includes(query) || query.includes(keyword)）
+3. 単語重複（queryとkeywordの単語を分割し、共通単語があればマッチ）
+
+**巡回ジョブ（kira-daily-patrol）:**
+毎朝JST 9:00に自動実行。品質監視 + Scar自動生成 + スキル収穫 + ルート拡充。
+結果はGitHub Issues + PRで可視化。
+
+**インフラ:**
+- npm: `kira-mcp@0.3.1`（npx kira-mcp で即起動）
+- GitHub: 公開リポ + CI（ビルド+テスト自動）
+- リモート自動更新（KIRA_REMOTE_URL）
+
+### Roadmap
+
+| バージョン | 内容 |
+|---|---|
+| v0.4 | Pro課金（Stripe Checkout + ライセンスキー） |
+| v0.5 | スキル50本到達 + コミュニティ貢献パイプライン安定化 |
+| v1.0 | ベンダー審査パイプライン + ダッシュボード |
+| v2.0 | 分散神経系（警報/解決/報酬ループ、ライブ再発火カウンター） |
 
 ---
 
-## 8. Target Stack（仮）
+## 8. Tech Stack
 
 - **言語**：TypeScript
 - **MCP SDK**：`@modelcontextprotocol/sdk`
-- **配信**：HTTP + JSON over MCP
-- **ストレージ**：v1 ローカルJSON → v2 PostgreSQL
-- **デプロイ**：v1 ローカル実行 → v2 Cloudflare Workers or Vercel
+- **配信**：stdio over MCP（全MCPクライアント対応）
+- **ストレージ**：ローカルJSON + GitHub Raw → v2 PostgreSQL
+- **デプロイ**：npxローカル実行 → v2 Cloudflare Workers or Vercel
+- **CI**：GitHub Actions（ビルド + テスト）
+- **巡回**：Claude Code /schedule（毎朝自動）
 
 ---
 
@@ -200,25 +215,26 @@ Anthropic等の単一ベンダー内製化では殺せない理由：
 
 ---
 
-## 11. Scoring（設計会話終了時点）
+## 11. Scoring
 
-| 軸 | 点 |
-|---|---|
-| 思想の独自性 | 85 |
-| 設計の整合性 | 92 |
-| 経済モデルの実現性 | 70 |
-| 技術的実現性 | 78 |
-| 堀の強さ | 80（multi-AI neutrality + contributor flywheel適用後） |
-| Benyの本音との整合 | 95 |
-| 未解決の盲点 | 70 |
+| 軸 | 点 | 備考 |
+|---|---|---|
+| 思想の独自性 | 85 | Skill + Scar + 自動管理の組み合わせは未見 |
+| 設計の整合性 | 92 | 全判断が「エージェント疲労ゼロ」から逆算 |
+| 経済モデルの実現性 | 75 | フリーミアム + ベンダー課金。Pro課金で橋渡し |
+| 技術的実現性 | 90 | v0.3.1稼働済み。全コア機能が動作 |
+| 堀の強さ | 80 | Multi-AI中立性 + データフライホイール |
+| Benyの本音との整合 | 95 | |
+| 未解決の盲点 | 70 | 審査・責任モデルは未設計 |
 
-**総合：83 / 100**
+**総合：88 / 100**
 
 90+に乗せるための残タスク：
 - 審査パイプラインの具体設計
-- Cold startブリッジ戦略の確定
+- Cold startブリッジ戦略の確定（コミュニティSkillで暫定対応中）
 - 責任モデルの文言化
+- Pro課金の実装と検証
 
 ---
 
-*This document was crystallized from a live design dialogue on 2026-04-10.*
+*Design crystallized from live dialogue on 2026-04-10. Updated 2026-04-11.*
