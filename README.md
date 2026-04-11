@@ -54,7 +54,7 @@ You don't call Kira. **Kira tells your agent to call it.** Via MCP instructions,
 
 ## What's inside
 
-### 22 Skills (and growing daily)
+### 31 Skills (and growing daily)
 
 | Category | Skills |
 |----------|--------|
@@ -66,19 +66,31 @@ You don't call Kira. **Kira tells your agent to call it.** Via MCP instructions,
 | **Testing** | Vitest, Playwright E2E |
 | **CI/CD** | GitHub Actions |
 | **Infra** | Docker, ESLint flat config |
-| **Services** | Resend email, Sentry, tRPC, S3/R2 upload, Upstash Redis |
+| **Services** | Resend email, React Email, Sentry, tRPC, S3/R2 upload, Upstash Redis |
+| **Background** | Inngest |
+| **State** | Zustand, Zod validation |
+| **Upload** | UploadThing, S3/R2 |
+| **Observability** | PostHog analytics, Sentry |
 | **Mobile** | Expo / React Native |
 | **i18n** | next-intl |
+| **CMS** | Payload CMS |
+| **Monorepo** | Turborepo |
 
-### 4 Scars (past failure patterns)
+### 12 Scars (past failure patterns)
 
 Scars warn your agent about mistakes other agents already made:
-- Vercel deploy succeeds but app crashes (missing env vars) — 847 hits
-- Stripe webhook signature fails (body already parsed) — 734 hits
-- Prisma types are stale (forgot `generate`) — 623 hits
-- Clerk middleware in wrong directory (auth silently broken) — 512 hits
+- Next.js "use client" directive missing — client hooks in server components
+- Vercel deploy succeeds but app crashes — missing env vars
+- Stripe webhook signature fails — body already parsed
+- Auth.js signIn/signOut wrong import — server/client mixup
+- Prisma types are stale — forgot `generate`
+- Clerk middleware in wrong directory — auth silently broken
+- Supabase RLS not enabled — data publicly exposed
+- Tailwind v4 PostCSS config wrong — v3 plugin breaks v4
+- Vitest path alias mismatch — tsconfig vs vitest.config desync
+- And more — hit counts updated from real agent data
 
-### 5 Routes (goal-to-plan)
+### 7 Routes (goal-to-plan)
 
 Ask "build a web app" → Kira returns 8 ordered steps, each with its skill and scars:
 
