@@ -1,0 +1,26 @@
+{
+  "name": "kira",
+  "version": "0.1.0",
+  "description": "Where agents shine — a runtime skill distribution layer for AI agents.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "kira-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "demo": "tsc && node dist/demo.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

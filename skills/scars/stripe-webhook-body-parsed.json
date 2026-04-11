@@ -1,0 +1,13 @@
+{
+  "id": "scar.stripe-webhook-body-parsed.v1",
+  "keywords": ["stripe", "add stripe", "stripe checkout", "stripe payments", "add payments"],
+  "contexts": ["nextjs", "react", "typescript", "javascript", "nodejs"],
+  "title": "Stripe webhook signature verification fails — body already parsed as JSON",
+  "summary": "Agent reads the webhook body with `request.json()` before verifying the signature, causing `stripe.webhooks.constructEvent` to fail with 'No signatures found matching the expected signature for payload'.",
+  "severity": "critical",
+  "mistake": "In the webhook handler, the agent calls `await request.json()` to read the body, then passes the parsed object to `stripe.webhooks.constructEvent()`. But constructEvent needs the RAW string body, not a parsed JSON object. The signature is computed against the raw bytes — parsing and re-stringifying changes whitespace/ordering, so the signature never matches. The agent retries by changing the webhook secret, regenerating keys, or rewriting the entire handler — none of which fix the actual problem.",
+  "instead": "Use `await request.text()` (NOT `request.json()`) to get the raw body string. Pass that raw string directly to `stripe.webhooks.constructEvent(rawBody, sig, webhookSecret)`. In Next.js App Router, `request.text()` returns the untouched body by default — no configuration needed. ONLY parse the JSON AFTER signature verification succeeds: `const event = JSON.parse(rawBody)` or use the event returned by constructEvent.",
+  "hit_count": 734,
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}

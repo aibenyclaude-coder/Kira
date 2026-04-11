@@ -1,0 +1,13 @@
+{
+  "id": "scar.prisma-generate-forgotten.v1",
+  "keywords": ["prisma", "setup prisma", "add prisma", "prisma orm", "add database", "setup database"],
+  "contexts": ["nextjs", "nodejs", "typescript", "javascript"],
+  "title": "Prisma schema changed but `prisma generate` not run — types are stale",
+  "summary": "Agent modifies schema.prisma but forgets to run `npx prisma generate`, causing TypeScript errors or runtime crashes from stale client types.",
+  "severity": "critical",
+  "mistake": "After editing `schema.prisma` (adding a model, changing a field), the agent runs `npx prisma db push` or `npx prisma migrate dev` to sync the DB, but forgets to run `npx prisma generate` to regenerate the TypeScript client. The code then references new fields that the Prisma Client doesn't know about, causing either TypeScript compilation errors or runtime `Unknown field` errors. Agent enters a retry loop trying to fix 'type errors' by editing the schema again.",
+  "instead": "After ANY change to `schema.prisma`, ALWAYS run `npx prisma generate` immediately after the migration/push command. Better yet, use `npx prisma migrate dev` which runs generate automatically. If using `db push`, chain: `npx prisma db push && npx prisma generate`. Add a `postinstall` script in package.json: `\"postinstall\": \"prisma generate\"` for CI environments.",
+  "hit_count": 623,
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}
