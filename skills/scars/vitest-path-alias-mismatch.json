@@ -1,0 +1,25 @@
+{
+  "id": "scar.vitest-path-alias-mismatch.v1",
+  "keywords": [
+    "vitest",
+    "path alias",
+    "vitest config",
+    "module not found",
+    "cannot find module",
+    "tsconfig paths"
+  ],
+  "contexts": [
+    "nextjs",
+    "react",
+    "typescript",
+    "vite"
+  ],
+  "title": "Vitest cannot resolve @/ imports because path aliases do not match tsconfig.json",
+  "summary": "Tests fail with 'Cannot find module @/...' because vitest.config.ts resolve.alias does not mirror tsconfig.json paths.",
+  "severity": "critical",
+  "mistake": "Setting up Vitest without replicating the project's tsconfig.json `compilerOptions.paths` in `vitest.config.ts` `resolve.alias`. The agent creates vitest.config.ts with no alias, or with a hardcoded `@` -> `./src` alias without checking what tsconfig.json actually says. Tests then fail with `Cannot find module '@/components/...'` or similar. This is the number one cause of Vitest setup failure in Next.js projects.",
+  "instead": "Before writing vitest.config.ts, read tsconfig.json `compilerOptions.paths` and replicate EVERY alias entry in `resolve.alias`. For example, if tsconfig has `\"@/*\": [\"./src/*\"]`, vitest must have `alias: { '@': path.resolve(__dirname, './src') }`. If tsconfig has additional aliases like `\"@db/*\": [\"./src/db/*\"]`, those must also be added. After creating the config, run `npx vitest run` to verify the aliases resolve correctly.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}

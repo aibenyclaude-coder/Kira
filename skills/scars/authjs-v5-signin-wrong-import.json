@@ -1,0 +1,25 @@
+{
+  "id": "scar.authjs-v5-signin-wrong-import.v1",
+  "keywords": [
+    "auth.js",
+    "authjs",
+    "nextauth",
+    "next-auth",
+    "signIn",
+    "signOut",
+    "server component",
+    "client component"
+  ],
+  "contexts": [
+    "nextjs",
+    "typescript"
+  ],
+  "title": "Auth.js v5 signIn/signOut fails because server and client imports are swapped",
+  "summary": "Importing signIn from next-auth/react in a server component (or from @/auth in a client component) causes runtime errors.",
+  "severity": "critical",
+  "mistake": "Importing `signIn` or `signOut` from `next-auth/react` in a Server Component or Server Action. Auth.js v5 has TWO separate signIn/signOut exports: server-side from `@/auth` (the project's auth config file) and client-side from `next-auth/react`. Using the client import on the server throws 'signIn is not a function' or a React hook error. Using the server import on the client throws a module resolution error or attempts to run server-only code in the browser.",
+  "instead": "In Server Components and Server Actions, import from the project's auth config: `import { signIn, signOut } from '@/auth'`. In Client Components (files with 'use client'), import from the React package: `import { signIn, signOut } from 'next-auth/react'`. Never cross these boundaries. Additionally, do not wrap server-side signIn/signOut in try/catch — they intentionally throw a NEXT_REDIRECT which must propagate.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "scar.tailwind-v4-postcss-plugin-wrong.v1",
+  "keywords": [
+    "tailwind",
+    "tailwind css",
+    "postcss",
+    "tailwind v4",
+    "postcss config",
+    "setup tailwind"
+  ],
+  "contexts": [
+    "nextjs",
+    "react",
+    "typescript",
+    "vite"
+  ],
+  "title": "Tailwind v4 broken because PostCSS plugin is set to 'tailwindcss' instead of '@tailwindcss/postcss'",
+  "summary": "Using the v3 PostCSS plugin name in a v4 project causes styles to silently fail or produce build errors.",
+  "severity": "critical",
+  "mistake": "Setting the PostCSS plugin to `tailwindcss` in `postcss.config.mjs` when the project uses Tailwind CSS v4. This is the v3 plugin name. In v4, the PostCSS plugin was renamed to `@tailwindcss/postcss`. The build may not error — it may silently fall back to v3 behavior or produce no utility classes at all. The agent sees no build error and reports success, but the styles are broken.",
+  "instead": "Always check the installed Tailwind version (`node_modules/tailwindcss/package.json`). For v4+, the PostCSS config must use `@tailwindcss/postcss` as the plugin, not `tailwindcss`. Install with `npm install -D @tailwindcss/postcss`. Also replace `@tailwind base; @tailwind components; @tailwind utilities;` with `@import \"tailwindcss\"` in the CSS entry point, and remove `autoprefixer` from PostCSS plugins (v4 includes it).",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}

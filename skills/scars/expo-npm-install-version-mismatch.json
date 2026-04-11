@@ -1,0 +1,25 @@
+{
+  "id": "scar.expo-npm-install-version-mismatch.v1",
+  "keywords": [
+    "expo",
+    "react native",
+    "expo install",
+    "npm install expo",
+    "expo module",
+    "invariant violation"
+  ],
+  "contexts": [
+    "react",
+    "typescript",
+    "mobile",
+    "expo"
+  ],
+  "title": "Expo native module crashes because npm install pulled an SDK-incompatible version",
+  "summary": "Using npm install instead of npx expo install for Expo SDK packages installs incompatible versions that crash at runtime.",
+  "severity": "critical",
+  "mistake": "Running `npm install expo-camera` (or any Expo SDK package) directly instead of `npx expo install expo-camera`. npm pulls the latest published version which may be incompatible with the project's Expo SDK version. The install succeeds, the build may succeed, but the app crashes at runtime with 'Invariant Violation: Native module cannot be null' or similar native bridge errors. The agent sees a clean install and moves on.",
+  "instead": "Always use `npx expo install <package>` for any Expo SDK package (expo-camera, expo-notifications, expo-location, expo-image-picker, etc.). This command reads the project's Expo SDK version from app.json/package.json and pins the compatible version of each package. After adding packages that need config plugins, also run `npx expo prebuild --clean` to regenerate native projects.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}
