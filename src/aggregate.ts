@@ -7,9 +7,10 @@
  * This is the first rotation of the flywheel:
  * use → report → aggregate → scar proposal → better lookup → use
  */
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { Scar } from "./types.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dirname, "..");
@@ -17,6 +18,7 @@ const REPORTS_DIR = join(PROJECT_ROOT, "reports");
 const LOG_FILE = join(REPORTS_DIR, "reports.log");
 const AGGREGATE_FILE = join(REPORTS_DIR, "aggregate.json");
 const SCAR_PROPOSALS_FILE = join(REPORTS_DIR, "scar-proposals.json");
+const SCARS_DIR = join(PROJECT_ROOT, "skills", "scars");
 
 const RETRY_THRESHOLD = 2; // propose scar after 2 retries on same skill
 
@@ -140,7 +142,56 @@ export async function runAggregation(): Promise<{
     "utf-8"
   );
 
+  // Sync hit_counts to scar files from aggregate data (no race condition)
+  await syncScarHitCounts(statsMap);
+
   return { stats, proposals };
+}
+
+/**
+ * Update scar hit_counts from aggregated report data.
+ * Each scar's hit_count = total retry+failure count across skills
+ * whose skill_id matches the scar's keywords.
+ *
+ * This replaces the per-report incrementing that had race conditions.
+ */
+async function syncScarHitCounts(
+  stats: Map<string, SkillStats>
+): Promise<void> {
+  let scarFiles: string[];
+  try {
+    scarFiles = (await readdir(SCARS_DIR)).filter((f) => f.endsWith(".json"));
+  } catch {
+    return;
+  }
+
+  for (const file of scarFiles) {
+    const path = join(SCARS_DIR, file);
+    try {
+      const raw = await readFile(path, "utf-8");
+      const scar = JSON.parse(raw) as Scar;
+
+      // Count retries across all skills that match this scar's keywords
+      let totalHits = 0;
+      for (const [skillId, s] of stats) {
+        const skillSlug = skillId.toLowerCase();
+        const matches = scar.keywords.some((k) => {
+          const kLower = k.toLowerCase();
+          return skillSlug.includes(kLower) || kLower.split(/\s+/).some((w) => skillSlug.includes(w));
+        });
+        if (matches) {
+          totalHits += s.retry + s.failure;
+        }
+      }
+
+      if (totalHits !== scar.hit_count) {
+        scar.hit_count = totalHits;
+        await writeFile(path, JSON.stringify(scar, null, 2) + "\n", "utf-8");
+      }
+    } catch {
+      // Skip malformed files
+    }
+  }
 }
 
 // CLI entrypoint

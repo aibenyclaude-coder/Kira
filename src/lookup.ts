@@ -109,10 +109,30 @@ export function lookup(
     return b.hit_count - a.hit_count;
   });
 
+  // When 0 results, suggest closest available skills by single-word overlap
+  let suggestions: string[] | undefined;
+  if (sortedSkills.length === 0 && sortedScars.length === 0) {
+    const queryWords = keyword.toLowerCase().split(/\s+/);
+    const scored = allSkills.map((s) => {
+      const allKw = s.keywords.flatMap((k) => k.toLowerCase().split(/\s+/));
+      const overlap = queryWords.filter((q) => allKw.includes(q)).length;
+      return { title: s.title, overlap };
+    });
+    suggestions = scored
+      .filter((s) => s.overlap > 0)
+      .sort((a, b) => b.overlap - a.overlap)
+      .slice(0, 3)
+      .map((s) => s.title);
+    if (suggestions.length === 0) {
+      suggestions = ["No matching skills found. Try broader keywords like 'deploy', 'auth', 'database', 'testing'."];
+    }
+  }
+
   return {
     skills: sortedSkills,
     scars: sortedScars,
     skill_count: sortedSkills.length,
     scar_count: sortedScars.length,
+    ...(suggestions ? { suggestions } : {}),
   };
 }

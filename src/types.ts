@@ -93,6 +93,8 @@ export interface LookupResponse {
   scars: Scar[];
   skill_count: number;
   scar_count: number;
+  /** When 0 results, suggests the closest available skills. */
+  suggestions?: string[];
 }
 
 // ── Route types ────────────────────────────────────────────────────────

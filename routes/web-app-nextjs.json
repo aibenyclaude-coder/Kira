@@ -15,41 +15,46 @@
   "steps": [
     {
       "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a new Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
       "keyword": "setup tailwind",
       "description": "Set up styling with Tailwind CSS v4"
     },
     {
-      "order": 2,
+      "order": 3,
       "keyword": "shadcn",
       "description": "Install UI component library"
     },
     {
-      "order": 3,
+      "order": 4,
       "keyword": "setup eslint",
       "description": "Configure linting and code quality"
     },
     {
-      "order": 4,
+      "order": 5,
       "keyword": "prisma",
       "description": "Set up database ORM"
     },
     {
-      "order": 5,
+      "order": 6,
       "keyword": "add auth",
       "description": "Add authentication"
     },
     {
-      "order": 6,
+      "order": 7,
       "keyword": "setup vitest",
       "description": "Set up testing framework"
     },
     {
-      "order": 7,
+      "order": 8,
       "keyword": "github actions",
       "description": "Configure CI/CD pipeline"
     },
     {
-      "order": 8,
+      "order": 9,
       "keyword": "deploy vercel",
       "description": "Deploy to production"
     }
