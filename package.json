@@ -1,17 +1,39 @@
 {
-  "name": "kira",
-  "version": "0.1.0",
-  "description": "Where agents shine — a runtime skill distribution layer for AI agents.",
+  "name": "kira-mcp",
+  "version": "0.3.0",
+  "description": "Where agents shine — auto-manages Skills and Scars for AI agents via MCP.",
   "license": "MIT",
   "type": "module",
   "bin": {
     "kira-mcp": "./dist/index.js"
   },
+  "files": [
+    "dist/",
+    "skills/",
+    "routes/",
+    "README.md",
+    "DESIGN.md"
+  ],
+  "keywords": [
+    "mcp",
+    "ai",
+    "agent",
+    "skills",
+    "claude",
+    "cursor",
+    "cline",
+    "model-context-protocol"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aibenyclaude-coder/Kira"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "demo": "tsc && node dist/demo.js",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0"
