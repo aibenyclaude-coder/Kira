@@ -1,13 +1,24 @@
 {
   "id": "scar.vercel-env-vars-missing.v1",
-  "keywords": ["deploy vercel", "deploy to vercel", "vercel deploy", "vercel", "vercel env"],
-  "contexts": ["nextjs", "react", "typescript", "javascript"],
+  "keywords": [
+    "deploy vercel",
+    "deploy to vercel",
+    "vercel deploy",
+    "vercel",
+    "vercel env"
+  ],
+  "contexts": [
+    "nextjs",
+    "react",
+    "typescript",
+    "javascript"
+  ],
   "title": "Vercel deploy succeeds but app crashes — missing env vars",
   "summary": "Build passes because env vars aren't required at build time, but the app crashes at runtime because they're not set in Vercel's environment settings.",
   "severity": "critical",
   "mistake": "Deploying to Vercel without checking that all `process.env.*` variables used in the app are configured in Vercel's Environment Variables dashboard. The build succeeds because Next.js doesn't fail on missing env vars at build time (they're just `undefined`). The agent sees 'deploy successful' and reports done. The user opens the URL and gets a 500 error.",
   "instead": "Before running `vercel --prod`, run `vercel env ls` and cross-reference with every `process.env.*` in the codebase. For each missing variable, run `vercel env add <NAME>`. Also check `.env.local` and `.env.production` for any vars that exist locally but not on Vercel. Never assume 'build passed = app works'.",
-  "hit_count": 1,
+  "hit_count": 3,
   "version": "1.0.0",
   "updated_at": "2026-04-11T00:00:00Z"
 }

@@ -32,6 +32,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "demo": "tsc && node dist/demo.js",
+    "aggregate": "tsc && node dist/aggregate.js",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run build"
   },
