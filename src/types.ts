@@ -95,6 +95,30 @@ export interface LookupResponse {
   scar_count: number;
 }
 
+// ── Route types ────────────────────────────────────────────────────────
+
+export interface RouteStep {
+  order: number;
+  keyword: string;
+  skill: Skill | null;
+  scars: Scar[];
+  description: string;
+}
+
+export interface RouteRequest {
+  goal: string;
+  context?: string[];
+}
+
+export interface RouteResponse {
+  goal: string;
+  steps: RouteStep[];
+  step_count: number;
+  coverage: string;
+}
+
+// ── Report types ───────────────────────────────────────────────────────
+
 export type ReportStatus = "success" | "retry" | "failure";
 
 export interface ReportRequest {

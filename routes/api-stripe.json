@@ -1,0 +1,28 @@
+{
+  "id": "route.api-stripe.v1",
+  "goals": [
+    "add payments",
+    "monetize my app",
+    "add stripe",
+    "accept payments",
+    "add subscription",
+    "add checkout"
+  ],
+  "contexts": ["nextjs", "react", "typescript", "nodejs"],
+  "title": "Stripe Payment Integration",
+  "description": "Complete route for adding payment functionality to a web application.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "stripe",
+      "description": "Set up Stripe SDK, API routes, and Checkout flow"
+    },
+    {
+      "order": 2,
+      "keyword": "deploy vercel",
+      "description": "Deploy to get a public URL for webhooks"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}

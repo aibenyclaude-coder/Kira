@@ -1,0 +1,59 @@
+{
+  "id": "route.web-app-nextjs.v1",
+  "goals": [
+    "build a web app",
+    "create a web application",
+    "make a website",
+    "build a nextjs app",
+    "create a fullstack app",
+    "build a saas",
+    "new nextjs project"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Full-stack Next.js Web Application",
+  "description": "Complete route from project setup to production deployment for a Next.js web application.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup tailwind",
+      "description": "Set up styling with Tailwind CSS v4"
+    },
+    {
+      "order": 2,
+      "keyword": "shadcn",
+      "description": "Install UI component library"
+    },
+    {
+      "order": 3,
+      "keyword": "setup eslint",
+      "description": "Configure linting and code quality"
+    },
+    {
+      "order": 4,
+      "keyword": "prisma",
+      "description": "Set up database ORM"
+    },
+    {
+      "order": 5,
+      "keyword": "add auth",
+      "description": "Add authentication"
+    },
+    {
+      "order": 6,
+      "keyword": "setup vitest",
+      "description": "Set up testing framework"
+    },
+    {
+      "order": 7,
+      "keyword": "github actions",
+      "description": "Configure CI/CD pipeline"
+    },
+    {
+      "order": 8,
+      "keyword": "deploy vercel",
+      "description": "Deploy to production"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-11T00:00:00Z"
+}
