@@ -8,7 +8,10 @@ import type {
   RouteRequest,
   RouteResponse,
 } from "./types.js";
-import { lookup } from "./lookup.js";
+import { lookup, type indexItems } from "./lookup.js";
+
+// Re-export the Indexed type from lookup for function signatures
+type Indexed = { _keywordsLower: string[]; _contextsLower: string[] };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROUTES_DIR = join(__dirname, "..", "routes");
@@ -89,8 +92,8 @@ function matchRoute(
  */
 export function resolveRoute(
   routes: RouteDefinition[],
-  allSkills: Skill[],
-  allScars: Scar[],
+  allSkills: (Skill & Indexed)[],
+  allScars: (Scar & Indexed)[],
   request: RouteRequest
 ): RouteResponse {
   const contexts = request.context ?? [];

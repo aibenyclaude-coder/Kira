@@ -5,22 +5,49 @@ import type {
   LookupResponse,
 } from "./types.js";
 
+// Module-level constants — allocated once, not per-lookup.
+const FILLER = new Set([
+  "i", "a", "to", "my", "the", "an", "is", "it", "do",
+  "want", "need", "please", "can", "how", "with", "for", "in", "on", "of",
+]);
+const MIN_WORD_OVERLAP = 2;
+
+/** Pre-computed lowercase keywords for a skill/scar item. */
+interface Indexed {
+  _keywordsLower: string[];
+  _contextsLower: string[];
+}
+
+/**
+ * One-time indexing: lowercase keywords and contexts at load time
+ * so we don't repeat it on every lookup call.
+ */
+export function indexItems<T extends { keywords: string[]; contexts: string[] }>(
+  items: T[]
+): (T & Indexed)[] {
+  return items.map((item) => ({
+    ...item,
+    _keywordsLower: item.keywords.map((k) => k.toLowerCase()),
+    _contextsLower: item.contexts.map((c) => c.toLowerCase()),
+  }));
+}
+
 /**
  * Match keyword with three tiers:
  *   1. Exact match: "deploy vercel" === "deploy vercel"
  *   2. Contains match: "deploy vercel" found inside "I want to deploy vercel app"
- *   3. Word overlap: "deploy" matches "deploy vercel" (any word in the keyword appears in a skill keyword)
+ *   3. Word overlap: 2+ meaningful words match (e.g., "add auth" matches "add auth clerk")
  *
  * Returns matches in priority order: exact first, then contains, then word overlap.
  * Deduplicates across tiers.
  */
-function matchByKeywordAndContext<T extends { keywords: string[]; contexts: string[] }>(
+function matchByKeywordAndContext<T extends Indexed>(
   items: T[],
   keyword: string,
   contexts: string[]
 ): T[] {
   const normalizedKeyword = keyword.toLowerCase().trim();
-  const normalizedContexts = contexts.map((c) => c.toLowerCase().trim());
+  const normalizedContexts = new Set(contexts.map((c) => c.toLowerCase().trim()));
   const queryWords = normalizedKeyword.split(/\s+/);
 
   const exact: T[] = [];
@@ -31,14 +58,14 @@ function matchByKeywordAndContext<T extends { keywords: string[]; contexts: stri
   for (let i = 0; i < items.length; i++) {
     const item = items[i]!;
 
-    // Context filter first (cheap).
-    if (normalizedContexts.length > 0 && item.contexts.length > 0) {
-      if (!item.contexts.some((c) => normalizedContexts.includes(c.toLowerCase()))) {
+    // Context filter first (cheap — Set.has is O(1)).
+    if (normalizedContexts.size > 0 && item._contextsLower.length > 0) {
+      if (!item._contextsLower.some((c) => normalizedContexts.has(c))) {
         continue;
       }
     }
 
-    const itemKeywords = item.keywords.map((k) => k.toLowerCase());
+    const itemKeywords = item._keywordsLower;
 
     // Tier 1: Exact match
     if (itemKeywords.some((k) => k === normalizedKeyword)) {
@@ -58,16 +85,14 @@ function matchByKeywordAndContext<T extends { keywords: string[]; contexts: stri
       continue;
     }
 
-    // Tier 3: Word overlap — at least 2 meaningful words must match.
-    // Only common filler words are excluded; technical verbs (add, setup, etc.) are kept.
-    const FILLER = new Set(["i", "a", "to", "my", "the", "an", "is", "it", "do", "want", "need", "please", "can", "how", "with", "for", "in", "on", "of"]);
+    // Tier 3: Word overlap — at least MIN_WORD_OVERLAP meaningful words must match.
     if (
       itemKeywords.some((k) => {
         const kWords = k.split(/\s+/);
         const meaningfulMatches = queryWords.filter(
           (qw) => !FILLER.has(qw) && kWords.includes(qw)
         );
-        return meaningfulMatches.length >= 2;
+        return meaningfulMatches.length >= MIN_WORD_OVERLAP;
       })
     ) {
       if (!seen.has(i)) {
@@ -87,8 +112,8 @@ function matchByKeywordAndContext<T extends { keywords: string[]; contexts: stri
  * Scars: critical first, then warning. Higher hit_count = more agents burned.
  */
 export function lookup(
-  allSkills: Skill[],
-  allScars: Scar[],
+  allSkills: (Skill & Indexed)[],
+  allScars: (Scar & Indexed)[],
   request: LookupRequest
 ): LookupResponse {
   const keyword = request.keyword;
@@ -114,8 +139,9 @@ export function lookup(
   if (sortedSkills.length === 0 && sortedScars.length === 0) {
     const queryWords = keyword.toLowerCase().split(/\s+/);
     const scored = allSkills.map((s) => {
-      const allKw = s.keywords.flatMap((k) => k.toLowerCase().split(/\s+/));
-      const overlap = queryWords.filter((q) => allKw.includes(q)).length;
+      const overlap = queryWords.filter((q) =>
+        s._keywordsLower.some((k) => k.split(/\s+/).includes(q))
+      ).length;
       return { title: s.title, overlap };
     });
     suggestions = scored

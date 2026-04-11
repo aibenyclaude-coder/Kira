@@ -6,7 +6,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { loadAllSkills, loadAllScars } from "./index-loader.js";
 import { loadRoutes, resolveRoute } from "./route.js";
-import { lookup } from "./lookup.js";
+import { lookup, indexItems } from "./lookup.js";
 import { record, logMissingKeyword } from "./report.js";
 import { verifyProKey } from "./license.js";
 import type { Skill, Scar, ReportStatus } from "./types.js";
@@ -107,7 +107,7 @@ export async function startServer(): Promise<void> {
   const server = new Server(
     {
       name: "kira",
-      version: "0.3.1",
+      version: "0.4.0",
     },
     {
       capabilities: {
@@ -128,11 +128,13 @@ export async function startServer(): Promise<void> {
     }
   );
 
-  const [skills, scars, routes] = await Promise.all([
+  const [rawSkills, rawScars, routes] = await Promise.all([
     loadAllSkills(tier),
     loadAllScars(tier),
     loadRoutes(),
   ]);
+  const skills = indexItems(rawSkills);
+  const scars = indexItems(rawScars);
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: TOOLS,
@@ -165,17 +167,26 @@ export async function startServer(): Promise<void> {
     }
 
     if (name === "kira_report") {
-      const skill_id = String(args?.skill_id ?? "");
-      const status = String(args?.status ?? "") as ReportStatus;
-      const note = args?.note ? String(args.note) : undefined;
+      const skill_id = String(args?.skill_id ?? "").slice(0, 200);
+      const status = String(args?.status ?? "");
+      const note = args?.note ? String(args.note).slice(0, 1000) : undefined;
 
+      if (!/^[a-z0-9][a-z0-9._-]*$/.test(skill_id)) {
+        throw new Error(
+          `Invalid skill_id "${skill_id}". Must match /^[a-z0-9][a-z0-9._-]*$/.`
+        );
+      }
       if (!["success", "retry", "failure"].includes(status)) {
         throw new Error(
           `Invalid status "${status}". Must be one of: success, retry, failure.`
         );
       }
 
-      const result = await record({ skill_id, status, note });
+      const result = await record({
+        skill_id,
+        status: status as ReportStatus,
+        note,
+      });
 
       return {
         content: [

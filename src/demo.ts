@@ -3,18 +3,20 @@
  * Shows both Skills (how to do it) and Scars (what to avoid).
  */
 import { loadAllSkills, loadAllScars } from "./index-loader.js";
-import { lookup } from "./lookup.js";
+import { lookup, indexItems } from "./lookup.js";
 import { record } from "./report.js";
 
 const SEP = "─".repeat(64);
 
 async function main(): Promise<void> {
   console.log("\n╔══════════════════════════════════════════════════════════════╗");
-  console.log("║  Kira v0.3 — demo                                          ║");
+  console.log("║  Kira v0.4 — demo                                          ║");
   console.log("║  Where agents shine.                                       ║");
   console.log("╚══════════════════════════════════════════════════════════════╝\n");
 
-  const [skills, scars] = await Promise.all([loadAllSkills(), loadAllScars()]);
+  const [rawSkills, rawScars] = await Promise.all([loadAllSkills(), loadAllScars()]);
+  const skills = indexItems(rawSkills);
+  const scars = indexItems(rawScars);
   console.log(`[index] Loaded ${skills.length} skill(s) + ${scars.length} scar(s)\n`);
 
   // ── Test 1: deploy vercel (has skill + scar) ─────────────────────────

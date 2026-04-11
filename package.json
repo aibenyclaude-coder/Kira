@@ -11,6 +11,7 @@
     "dist/",
     "skills/",
     "routes/",
+    "src/keys/",
     "README.md",
     "DESIGN.md"
   ],
