@@ -83,18 +83,29 @@ export interface Scar {
   updated_at: string;
 }
 
+/** Lightweight skill without instructions — for lookup/route responses. */
+export type SkillSummary = Omit<Skill, "instructions"> & { category?: string };
+
+/** Lightweight scar — full content is always returned (scars are small). */
+export type ScarSummary = Scar;
+
 export interface LookupRequest {
   keyword: string;
   context?: string[];
 }
 
 export interface LookupResponse {
-  skills: Skill[];
-  scars: Scar[];
+  skills: SkillSummary[];
+  scars: ScarSummary[];
   skill_count: number;
   scar_count: number;
   /** When 0 results, suggests the closest available skills. */
   suggestions?: string[];
+}
+
+export interface GetResponse {
+  skill: Skill | null;
+  scar: Scar | null;
 }
 
 // ── Route types ────────────────────────────────────────────────────────
@@ -102,8 +113,8 @@ export interface LookupResponse {
 export interface RouteStep {
   order: number;
   keyword: string;
-  skill: Skill | null;
-  scars: Scar[];
+  skill: SkillSummary | null;
+  scars: ScarSummary[];
   description: string;
 }
 

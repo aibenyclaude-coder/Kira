@@ -95,6 +95,25 @@ const TOOLS = [
       required: ["goal"],
     },
   },
+  {
+    name: "kira_get",
+    description:
+      "Get the full instructions for a specific skill or scar by ID. " +
+      "Call this AFTER kira_lookup to retrieve the step-by-step instructions " +
+      "for the skill you've chosen. lookup returns summaries (no instructions) " +
+      "to save tokens — use this tool to get the full details.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description:
+            "The skill or scar ID (e.g., 'community.setup-stripe-nextjs.v1' or 'scar.vercel-env-vars-missing.v1').",
+        },
+      },
+      required: ["id"],
+    },
+  },
 ];
 
 export async function startServer(): Promise<void> {
@@ -115,15 +134,16 @@ export async function startServer(): Promise<void> {
       },
       instructions:
         "Kira manages your skills (how to do things) and scars (what to avoid). " +
-        "When the user describes a BROAD GOAL (e.g., 'build a web app', 'add payments'), " +
-        "call kira_route first to get an ordered plan with all steps, skills, and scars. " +
-        "When the user asks for a SPECIFIC TASK (e.g., 'deploy to vercel'), " +
-        "call kira_lookup with the relevant keyword. " +
-        "Read scars FIRST to know what NOT to do. Then follow the skill instructions. " +
-        "After completing each task/step, call kira_report with the outcome — " +
-        "especially 'retry' with a note on what went wrong. This feeds the quality system. " +
-        "If lookup returns 0 results, check the 'suggestions' field for alternatives. " +
-        "If still no match, proceed with your own knowledge but still call kira_report. " +
+        "WORKFLOW: " +
+        "1. For BROAD GOALS ('build a web app'): call kira_route → get ordered steps. " +
+        "2. For SPECIFIC TASKS ('deploy to vercel'): call kira_lookup → get matching skills/scars. " +
+        "3. Read scars FIRST to know what NOT to do. " +
+        "4. Choose a skill, then call kira_get(skill_id) to get full instructions. " +
+        "5. Follow the instructions step by step. " +
+        "6. Call kira_report with the outcome (especially 'retry' with a note on what went wrong). " +
+        "IMPORTANT: kira_lookup and kira_route return summaries WITHOUT instructions to save tokens. " +
+        "Always call kira_get to fetch the full instructions before executing. " +
+        "If lookup returns 0 results, check 'suggestions' for alternatives. " +
         "Kira is community-vetted and designed for zero-retry execution.",
     }
   );
@@ -211,6 +231,41 @@ export async function startServer(): Promise<void> {
           {
             type: "text",
             text: JSON.stringify(result, null, 2),
+          },
+        ],
+      };
+    }
+
+    if (name === "kira_get") {
+      const id = String(args?.id ?? "");
+
+      const skill = skills.find((s) => s.id === id) ?? null;
+      const scar = scars.find((s) => s.id === id) ?? null;
+
+      if (!skill && !scar) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ error: `No skill or scar found with id "${id}"` }),
+            },
+          ],
+        };
+      }
+
+      // Return original skill with full instructions (re-read from raw)
+      const fullSkill = skill
+        ? rawSkills.find((s) => s.id === id) ?? null
+        : null;
+      const fullScar = scar
+        ? rawScars.find((s) => s.id === id) ?? null
+        : null;
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({ skill: fullSkill, scar: fullScar }, null, 2),
           },
         ],
       };

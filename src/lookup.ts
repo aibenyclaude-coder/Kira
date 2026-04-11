@@ -1,6 +1,7 @@
 import type {
   Skill,
   Scar,
+  SkillSummary,
   LookupRequest,
   LookupResponse,
 } from "./types.js";
@@ -11,6 +12,12 @@ const FILLER = new Set([
   "want", "need", "please", "can", "how", "with", "for", "in", "on", "of",
 ]);
 const MIN_WORD_OVERLAP = 2;
+
+/** Strip instructions from a skill to produce a lightweight summary. */
+function toSkillSummary(skill: Skill & Indexed): SkillSummary {
+  const { instructions: _, _keywordsLower: _k, _contextsLower: _c, ...summary } = skill;
+  return summary;
+}
 
 /** Pre-computed lowercase keywords for a skill/scar item. */
 interface Indexed {
@@ -119,11 +126,11 @@ export function lookup(
   const keyword = request.keyword;
   const contexts = request.context ?? [];
 
-  // ── Skills ───────────────────────────────────────────────────────────
+  // ── Skills (return summaries without instructions to save tokens) ──
   const matchedSkills = matchByKeywordAndContext(allSkills, keyword, contexts);
   const community = matchedSkills.filter((s) => s.source === "community");
   const vendor = matchedSkills.filter((s) => s.source === "vendor");
-  const sortedSkills = [...community, ...vendor];
+  const sortedSkills = [...community, ...vendor].map(toSkillSummary);
 
   // ── Scars ────────────────────────────────────────────────────────────
   const matchedScars = matchByKeywordAndContext(allScars, keyword, contexts);
