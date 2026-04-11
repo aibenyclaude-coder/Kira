@@ -7,7 +7,7 @@ import {
 import { loadAllSkills, loadAllScars } from "./index-loader.js";
 import { loadRoutes, resolveRoute } from "./route.js";
 import { lookup } from "./lookup.js";
-import { record } from "./report.js";
+import { record, logMissingKeyword } from "./report.js";
 import type { Skill, Scar, ReportStatus } from "./types.js";
 
 const TOOLS = [
@@ -138,6 +138,11 @@ export async function startServer(): Promise<void> {
         : undefined;
 
       const result = lookup(skills, scars, { keyword, context });
+
+      // Log missing keywords for patrol jobs to pick up.
+      if (result.skill_count === 0 && result.scar_count === 0) {
+        logMissingKeyword(keyword, context ?? []).catch(() => {});
+      }
 
       return {
         content: [

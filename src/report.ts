@@ -7,6 +7,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // At runtime this file lives in dist/, so one "..": dist → project root.
 const REPORTS_DIR = join(__dirname, "..", "reports");
 const LOG_FILE = join(REPORTS_DIR, "reports.log");
+const MISSING_LOG = join(REPORTS_DIR, "missing-keywords.log");
 
 /**
  * Record the outcome of applying a Skill.
@@ -24,4 +25,21 @@ export async function record(request: ReportRequest): Promise<ReportResponse> {
   await appendFile(LOG_FILE, JSON.stringify(entry) + "\n", "utf-8");
 
   return { ack: true, recorded_at };
+}
+
+/**
+ * Log a keyword that returned 0 results from lookup.
+ * Patrol jobs read this to discover demand for new skills.
+ */
+export async function logMissingKeyword(
+  keyword: string,
+  context: string[]
+): Promise<void> {
+  await mkdir(REPORTS_DIR, { recursive: true });
+  const entry = {
+    keyword,
+    context,
+    timestamp: new Date().toISOString(),
+  };
+  await appendFile(MISSING_LOG, JSON.stringify(entry) + "\n", "utf-8");
 }
