@@ -86,11 +86,6 @@ Status options: `success`, `retry`, `failure`. This data drives quality scoring 
 ## Run the demo (no MCP client needed)
 
 ```bash
-npx kira-mcp --demo
-```
-
-Or from source:
-```bash
 git clone https://github.com/aibenyclaude-coder/Kira.git
 cd Kira
 npm install
