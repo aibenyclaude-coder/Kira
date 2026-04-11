@@ -1,6 +1,6 @@
 {
   "id": "community.setup-clerk-nextjs.v1",
-  "keywords": ["clerk", "setup clerk", "add clerk", "add auth", "setup auth", "authentication", "clerk nextjs", "clerk auth"],
+  "keywords": ["clerk", "setup clerk", "add clerk", "add auth", "add auth clerk", "setup auth", "authentication", "clerk nextjs", "clerk auth"],
   "contexts": ["nextjs", "react", "typescript", "javascript"],
   "title": "Set up Clerk authentication with Next.js App Router",
   "summary": "Complete Clerk auth integration for Next.js App Router — ClerkProvider, middleware, sign-in/sign-up pages, route protection, and server/client auth hooks.",
