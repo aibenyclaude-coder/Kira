@@ -8,3 +8,4 @@ reports/*.log
 .env.*
 .npmrc
 .playwright-mcp/
+.kira-pro-v1.priv.pem

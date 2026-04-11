@@ -8,7 +8,9 @@ import { loadAllSkills, loadAllScars } from "./index-loader.js";
 import { loadRoutes, resolveRoute } from "./route.js";
 import { lookup } from "./lookup.js";
 import { record, logMissingKeyword } from "./report.js";
+import { verifyProKey } from "./license.js";
 import type { Skill, Scar, ReportStatus } from "./types.js";
+import type { KiraTier } from "./license.js";
 
 const TOOLS = [
   {
@@ -96,10 +98,16 @@ const TOOLS = [
 ];
 
 export async function startServer(): Promise<void> {
+  const tier: KiraTier = verifyProKey(process.env.KIRA_PRO_KEY);
+  if (tier === "pro") {
+    // eslint-disable-next-line no-console
+    console.error("[kira] Pro license verified. Real-time updates enabled.");
+  }
+
   const server = new Server(
     {
       name: "kira",
-      version: "0.2.0",
+      version: "0.3.1",
     },
     {
       capabilities: {
@@ -119,8 +127,8 @@ export async function startServer(): Promise<void> {
   );
 
   const [skills, scars, routes] = await Promise.all([
-    loadAllSkills(),
-    loadAllScars(),
+    loadAllSkills(tier),
+    loadAllScars(tier),
     loadRoutes(),
   ]);
 

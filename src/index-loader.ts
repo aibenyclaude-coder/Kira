@@ -2,6 +2,7 @@ import { readFile, readdir, writeFile, mkdir, stat } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Skill, Scar } from "./types.js";
+import type { KiraTier } from "./license.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dirname, "..");
@@ -11,7 +12,13 @@ const CACHE_SKILLS = join(CACHE_DIR, "remote-skills.json");
 const CACHE_SCARS = join(CACHE_DIR, "remote-scars.json");
 
 const CACHE_TTL_MS = Number(process.env.KIRA_CACHE_TTL_MS) || 3_600_000;
-const REMOTE_URL = process.env.KIRA_REMOTE_URL ?? "";
+const PRO_CDN_URL = "https://cdn.kira.sh/v1";
+
+function getRemoteUrl(tier: KiraTier): string {
+  const explicit = process.env.KIRA_REMOTE_URL;
+  if (explicit) return explicit;
+  return tier === "pro" ? PRO_CDN_URL : "";
+}
 
 // ── Local loader ───────────────────────────────────────────────────────
 
@@ -54,10 +61,10 @@ async function isCacheFresh(path: string): Promise<boolean> {
   }
 }
 
-async function fetchRemote<T>(endpoint: string, cachePath: string): Promise<T[]> {
-  if (!REMOTE_URL) return [];
+async function fetchRemote<T>(endpoint: string, cachePath: string, remoteUrl: string): Promise<T[]> {
+  if (!remoteUrl) return [];
 
-  const url = `${REMOTE_URL.replace(/\/$/, "")}/${endpoint}`;
+  const url = `${remoteUrl.replace(/\/$/, "")}/${endpoint}`;
 
   if (await isCacheFresh(cachePath)) {
     const cached = await readFile(cachePath, "utf-8");
@@ -115,18 +122,20 @@ function merge<T extends { id: string; updated_at: string }>(
 
 // ── Public API ─────────────────────────────────────────────────────────
 
-export async function loadAllSkills(): Promise<Skill[]> {
+export async function loadAllSkills(tier: KiraTier = "free"): Promise<Skill[]> {
+  const remoteUrl = getRemoteUrl(tier);
   const [local, remote] = await Promise.all([
     loadLocalSkills(),
-    fetchRemote<Skill>("skills.json", CACHE_SKILLS),
+    fetchRemote<Skill>("skills.json", CACHE_SKILLS, remoteUrl),
   ]);
   return merge(local, remote);
 }
 
-export async function loadAllScars(): Promise<Scar[]> {
+export async function loadAllScars(tier: KiraTier = "free"): Promise<Scar[]> {
+  const remoteUrl = getRemoteUrl(tier);
   const [local, remote] = await Promise.all([
     loadLocalScars(),
-    fetchRemote<Scar>("scars.json", CACHE_SCARS),
+    fetchRemote<Scar>("scars.json", CACHE_SCARS, remoteUrl),
   ]);
   return merge(local, remote);
 }
