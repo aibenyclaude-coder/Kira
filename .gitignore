@@ -7,3 +7,4 @@ reports/*.log
 .env
 .env.*
 .npmrc
+.playwright-mcp/
