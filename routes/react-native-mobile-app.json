@@ -1,0 +1,49 @@
+{
+  "id": "route.react-native-mobile-app.v1",
+  "goals": [
+    "build a mobile app",
+    "create a react native app",
+    "build an expo app",
+    "create a mobile application",
+    "react native setup",
+    "start a mobile project",
+    "build ios and android app"
+  ],
+  "contexts": ["react-native", "expo", "typescript"],
+  "title": "React Native Mobile App (Expo)",
+  "description": "Complete route from Expo project init to a production-ready React Native app with state management, auth, error monitoring, and analytics.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup expo",
+      "description": "Initialize a new Expo project with TypeScript and file-based routing (Expo Router)"
+    },
+    {
+      "order": 2,
+      "keyword": "setup zustand",
+      "description": "Add lightweight global state management"
+    },
+    {
+      "order": 3,
+      "keyword": "zod validation",
+      "description": "Add schema validation for forms and API responses"
+    },
+    {
+      "order": 4,
+      "keyword": "add auth clerk",
+      "description": "Add user authentication with Clerk (supports Expo natively)"
+    },
+    {
+      "order": 5,
+      "keyword": "setup sentry",
+      "description": "Add crash reporting and error monitoring"
+    },
+    {
+      "order": 6,
+      "keyword": "posthog",
+      "description": "Add product analytics and feature flags"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-12T00:00:00Z"
+}
