@@ -1,0 +1,42 @@
+{
+  "id": "route.add-background-jobs.v1",
+  "goals": [
+    "add background jobs",
+    "add job queue",
+    "add async processing",
+    "add background tasks",
+    "add cron jobs",
+    "add email queue",
+    "add async workflows",
+    "add task queue",
+    "add scheduled jobs",
+    "add durable workflows"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Add Background Jobs & Async Processing",
+  "description": "Complete route for adding durable background job processing to a Next.js app: job runner, rate limiting, email notifications, and error monitoring.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "inngest",
+      "description": "Set up Inngest for durable background jobs, cron tasks, and multi-step workflows"
+    },
+    {
+      "order": 2,
+      "keyword": "setup redis",
+      "description": "Add Upstash Redis for rate limiting job triggers and caching job state"
+    },
+    {
+      "order": 3,
+      "keyword": "resend",
+      "description": "Send transactional emails (confirmations, notifications) triggered by job completion"
+    },
+    {
+      "order": 4,
+      "keyword": "setup sentry",
+      "description": "Monitor job failures and capture errors from background functions"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-13T00:00:00Z"
+}
