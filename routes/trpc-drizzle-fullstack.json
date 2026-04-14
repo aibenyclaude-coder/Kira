@@ -1,0 +1,69 @@
+{
+  "id": "route.trpc-drizzle-fullstack.v1",
+  "goals": [
+    "build a trpc app",
+    "trpc drizzle nextjs",
+    "type-safe api nextjs",
+    "t3 stack",
+    "build with drizzle and trpc",
+    "setup drizzle trpc",
+    "type safe fullstack"
+  ],
+  "contexts": ["nextjs", "typescript"],
+  "title": "Type-safe Full-stack App with tRPC + Drizzle",
+  "description": "Complete route for a type-safe full-stack Next.js app: Drizzle ORM for the database layer, tRPC for end-to-end type-safe APIs, Clerk for auth, shadcn for UI, Zod for validation, and tested CI/CD to Vercel.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Bootstrap the Next.js App Router project with TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Add Tailwind CSS v4 for utility-first styling"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui component library for pre-built UI components"
+    },
+    {
+      "order": 4,
+      "keyword": "setup drizzle",
+      "description": "Set up Drizzle ORM with Postgres — define schema, run migrations"
+    },
+    {
+      "order": 5,
+      "keyword": "setup trpc",
+      "description": "Add tRPC for end-to-end type-safe API procedures (no REST, no codegen)"
+    },
+    {
+      "order": 6,
+      "keyword": "add auth clerk",
+      "description": "Add Clerk for authentication — protect tRPC procedures and pages"
+    },
+    {
+      "order": 7,
+      "keyword": "zod validation",
+      "description": "Add Zod for input validation on tRPC procedures and forms"
+    },
+    {
+      "order": 8,
+      "keyword": "setup vitest",
+      "description": "Set up Vitest for unit-testing tRPC procedures and utility functions"
+    },
+    {
+      "order": 9,
+      "keyword": "github actions",
+      "description": "Configure CI pipeline — type-check, lint, test on every PR"
+    },
+    {
+      "order": 10,
+      "keyword": "deploy vercel",
+      "description": "Deploy to production on Vercel with environment variables"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-14T00:00:00Z"
+}
