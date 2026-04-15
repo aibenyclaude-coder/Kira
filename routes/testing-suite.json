@@ -1,0 +1,40 @@
+{
+  "id": "route.testing-suite.v1",
+  "goals": [
+    "set up testing",
+    "add tests",
+    "complete testing setup",
+    "testing suite",
+    "add test coverage",
+    "unit tests and e2e",
+    "full testing stack",
+    "quality pipeline"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Complete Testing & Quality Pipeline",
+  "description": "Full quality stack: Vitest for unit/integration tests, Playwright for end-to-end browser tests, ESLint for static analysis, and GitHub Actions to run everything automatically on every push.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup vitest",
+      "description": "Set up Vitest for unit and integration tests with jsdom, coverage reports, and path alias support"
+    },
+    {
+      "order": 2,
+      "keyword": "setup playwright",
+      "description": "Add Playwright for end-to-end browser tests across Chromium, Firefox, and WebKit"
+    },
+    {
+      "order": 3,
+      "keyword": "setup eslint",
+      "description": "Configure ESLint flat config for static analysis, catching errors before tests run"
+    },
+    {
+      "order": 4,
+      "keyword": "github actions",
+      "description": "Configure CI to run Vitest, Playwright, and ESLint on every push and pull request"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-15T00:00:00Z"
+}
