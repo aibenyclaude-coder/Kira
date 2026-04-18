@@ -1,0 +1,66 @@
+{
+  "id": "route.monorepo-turborepo.v1",
+  "goals": [
+    "setup monorepo",
+    "create monorepo",
+    "turborepo setup",
+    "setup turborepo",
+    "monorepo nextjs",
+    "multi-package repo",
+    "shared ui package",
+    "pnpm workspaces monorepo",
+    "multiple apps monorepo"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Turborepo Monorepo with Shared Packages",
+  "description": "Complete route from monorepo init to production: Turborepo workspace, shared UI and config packages, database ORM, testing, and CI/CD with remote caching.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "turborepo",
+      "description": "Initialize Turborepo workspace with apps/ and packages/ structure, configure turbo.json pipelines"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Set up shared Tailwind CSS config package consumed by all apps"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Create a shared @repo/ui package with shadcn/ui components"
+    },
+    {
+      "order": 4,
+      "keyword": "setup eslint",
+      "description": "Configure shared ESLint flat config package for consistent linting across all apps"
+    },
+    {
+      "order": 5,
+      "keyword": "prisma",
+      "description": "Set up shared @repo/database package with Prisma ORM"
+    },
+    {
+      "order": 6,
+      "keyword": "add auth",
+      "description": "Add authentication to the web app"
+    },
+    {
+      "order": 7,
+      "keyword": "setup vitest",
+      "description": "Configure shared Vitest workspace setup for unit testing across packages"
+    },
+    {
+      "order": 8,
+      "keyword": "github actions",
+      "description": "Configure GitHub Actions CI with turbo run and Turborepo remote cache"
+    },
+    {
+      "order": 9,
+      "keyword": "deploy vercel",
+      "description": "Deploy apps from the monorepo to Vercel using Vercel's monorepo support"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-18T00:00:00Z"
+}
