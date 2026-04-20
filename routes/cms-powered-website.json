@@ -1,0 +1,67 @@
+{
+  "id": "route.cms-powered-website.v1",
+  "goals": [
+    "build a cms website",
+    "cms powered site",
+    "content management website",
+    "website with cms",
+    "build with payload cms",
+    "create a content platform",
+    "add cms to my site",
+    "headless cms website",
+    "build a blog platform",
+    "content driven website"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "CMS-powered Website with Payload CMS",
+  "description": "Full route from zero to a production CMS website: UI, Payload CMS content management, S3 media storage, transactional email, error monitoring, and Vercel deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Bootstrap a Next.js App Router project with TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Style with Tailwind CSS v4"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui component library for the public-facing frontend"
+    },
+    {
+      "order": 4,
+      "keyword": "payload cms",
+      "description": "Install Payload CMS — content collections, admin panel, built-in auth for editors"
+    },
+    {
+      "order": 5,
+      "keyword": "s3",
+      "description": "Wire S3 or Cloudflare R2 as the Payload media adapter for image and file uploads"
+    },
+    {
+      "order": 6,
+      "keyword": "resend",
+      "description": "Transactional email for contact forms, newsletter sign-ups, and editor notifications"
+    },
+    {
+      "order": 7,
+      "keyword": "setup sentry",
+      "description": "Error monitoring for both the Next.js frontend and Payload API"
+    },
+    {
+      "order": 8,
+      "keyword": "github actions",
+      "description": "CI pipeline: TypeScript check, lint, and build verification on every push"
+    },
+    {
+      "order": 9,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel with environment variables for the Payload secret and database URL"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-20T00:00:00Z"
+}
