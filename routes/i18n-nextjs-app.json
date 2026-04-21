@@ -1,0 +1,65 @@
+{
+  "id": "route.i18n-nextjs-app.v1",
+  "goals": [
+    "internationalize nextjs app",
+    "add i18n to next.js",
+    "multi-language nextjs",
+    "localization nextjs",
+    "add translations",
+    "next-intl setup",
+    "multilingual website",
+    "setup locale routing"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Internationalized Next.js Application (next-intl)",
+  "description": "Complete route for building a multi-language Next.js app with locale-based routing, JSON translation files, authentication with locale-aware redirects, database, and production deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize Next.js with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Configure Tailwind CSS v4 for styling"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui component library"
+    },
+    {
+      "order": 4,
+      "keyword": "next-intl",
+      "description": "Add next-intl: locale routing, JSON message files, useTranslations hook, middleware locale detection"
+    },
+    {
+      "order": 5,
+      "keyword": "add auth",
+      "description": "Add authentication with locale-aware sign-in redirects"
+    },
+    {
+      "order": 6,
+      "keyword": "prisma",
+      "description": "Set up Prisma ORM for persisting user locale preferences"
+    },
+    {
+      "order": 7,
+      "keyword": "setup vitest",
+      "description": "Unit testing with locale message mocking"
+    },
+    {
+      "order": 8,
+      "keyword": "github actions",
+      "description": "CI/CD pipeline with TypeScript check and build"
+    },
+    {
+      "order": 9,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel with locale URL configuration and i18n headers"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-21T00:00:00Z"
+}
