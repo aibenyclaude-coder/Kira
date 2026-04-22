@@ -1,0 +1,64 @@
+{
+  "id": "route.graphql-api.v1",
+  "goals": [
+    "build a graphql api",
+    "add graphql backend",
+    "setup graphql api",
+    "graphql server",
+    "apollo api",
+    "graphql endpoint",
+    "build an api with graphql",
+    "add graphql to nextjs"
+  ],
+  "contexts": [
+    "nextjs",
+    "react",
+    "typescript"
+  ],
+  "title": "GraphQL API Backend with Next.js",
+  "description": "Complete route for building a type-safe GraphQL API: Apollo Server 4 in Next.js App Router, Prisma database layer, Clerk authentication in resolver context, Zod input validation, error monitoring, CI, and Vercel deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup graphql",
+      "description": "Set up Apollo Server 4 with Next.js App Router catch-all route handler, define schema and resolvers"
+    },
+    {
+      "order": 3,
+      "keyword": "prisma",
+      "description": "Add Prisma ORM as the data layer — resolvers call Prisma client to fetch and mutate database records"
+    },
+    {
+      "order": 4,
+      "keyword": "add auth clerk",
+      "description": "Add Clerk authentication and inject session into Apollo context so resolvers can verify the current user"
+    },
+    {
+      "order": 5,
+      "keyword": "zod validation",
+      "description": "Validate mutation inputs with Zod before they reach the database layer"
+    },
+    {
+      "order": 6,
+      "keyword": "setup sentry",
+      "description": "Add Sentry error monitoring to capture resolver errors and schema validation failures"
+    },
+    {
+      "order": 7,
+      "keyword": "github actions",
+      "description": "Configure CI to run TypeScript checks and tests on every push"
+    },
+    {
+      "order": 8,
+      "keyword": "deploy vercel",
+      "description": "Deploy the GraphQL endpoint to Vercel — configure DATABASE_URL and Clerk secrets as environment variables"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-22T00:00:00Z"
+}
