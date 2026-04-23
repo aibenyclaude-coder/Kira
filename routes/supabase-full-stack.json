@@ -1,0 +1,60 @@
+{
+  "id": "route.supabase-full-stack.v1",
+  "goals": [
+    "build with supabase",
+    "supabase full stack",
+    "supabase app",
+    "nextjs supabase",
+    "supabase postgres",
+    "supabase auth nextjs",
+    "supabase storage",
+    "build app with supabase"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Full-stack Next.js App with Supabase",
+  "description": "Complete route for building a Next.js app using Supabase as the all-in-one backend: PostgreSQL database with RLS, built-in auth (no separate auth service needed), and object storage — from project init to production deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a new Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Set up styling with Tailwind CSS v4"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui component library"
+    },
+    {
+      "order": 4,
+      "keyword": "setup supabase",
+      "description": "Wire up Supabase: @supabase/ssr clients for server/browser/middleware, cookie-based auth sessions, Row Level Security policies, and TypeScript type generation"
+    },
+    {
+      "order": 5,
+      "keyword": "zod validation",
+      "description": "Add Zod schema validation for forms and API inputs before hitting Supabase"
+    },
+    {
+      "order": 6,
+      "keyword": "setup sentry",
+      "description": "Add error monitoring for server components, route handlers, and client-side errors"
+    },
+    {
+      "order": 7,
+      "keyword": "github actions",
+      "description": "Configure CI pipeline: TypeScript check, lint, and build on every push"
+    },
+    {
+      "order": 8,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel with NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY configured"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-23T00:00:00Z"
+}
