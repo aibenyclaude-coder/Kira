@@ -1,0 +1,59 @@
+{
+  "id": "route.email-saas.v1",
+  "goals": [
+    "build an email saas",
+    "email campaign platform",
+    "newsletter platform",
+    "transactional email service",
+    "email marketing app",
+    "build email app",
+    "email sending platform"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Event-driven Email SaaS",
+  "description": "Full route for an email-focused SaaS: auth, subscriber database, Stripe billing, background email processing with Inngest, sending via Resend, and production deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "add auth clerk",
+      "description": "Add user authentication and organization management with Clerk"
+    },
+    {
+      "order": 3,
+      "keyword": "setup drizzle",
+      "description": "Set up Drizzle ORM for subscribers, campaigns, and send-log tables"
+    },
+    {
+      "order": 4,
+      "keyword": "stripe",
+      "description": "Add subscription billing — free/pro plans gating send volume"
+    },
+    {
+      "order": 5,
+      "keyword": "inngest",
+      "description": "Set up Inngest for async email batch processing, retry logic, and scheduled sends"
+    },
+    {
+      "order": 6,
+      "keyword": "resend",
+      "description": "Integrate Resend for transactional and bulk email delivery"
+    },
+    {
+      "order": 7,
+      "keyword": "setup sentry",
+      "description": "Add error monitoring for failed sends and background job failures"
+    },
+    {
+      "order": 8,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel — Inngest connects to the deployed endpoint automatically"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-24T00:00:00Z"
+}
