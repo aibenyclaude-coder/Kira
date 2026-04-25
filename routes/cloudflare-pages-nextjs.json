@@ -1,0 +1,64 @@
+{
+  "id": "route.cloudflare-pages-nextjs.v1",
+  "goals": [
+    "deploy to cloudflare",
+    "cloudflare pages next.js",
+    "edge deployment nextjs",
+    "build and deploy to cloudflare",
+    "cloudflare full stack",
+    "next.js on cloudflare",
+    "wrangler deploy nextjs"
+  ],
+  "contexts": ["nextjs", "react", "typescript", "cloudflare", "edge"],
+  "title": "Full-stack Next.js App on Cloudflare Pages",
+  "description": "Build and deploy a complete Next.js application to Cloudflare Pages with edge-compatible auth, database, caching, and CI.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Bootstrap a Next.js App Router project with TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Add Tailwind CSS v4 for styling"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui component library"
+    },
+    {
+      "order": 4,
+      "keyword": "setup drizzle",
+      "description": "Set up Drizzle ORM — use the D1 HTTP driver for Cloudflare edge compatibility"
+    },
+    {
+      "order": 5,
+      "keyword": "add auth clerk",
+      "description": "Add Clerk authentication — Clerk's Edge middleware is fully compatible with Cloudflare Pages"
+    },
+    {
+      "order": 6,
+      "keyword": "setup redis",
+      "description": "Add Upstash Redis for rate limiting and caching — HTTP-based, works on the Edge"
+    },
+    {
+      "order": 7,
+      "keyword": "setup sentry",
+      "description": "Instrument error monitoring before going live"
+    },
+    {
+      "order": 8,
+      "keyword": "github actions",
+      "description": "CI pipeline: type-check and build on every push"
+    },
+    {
+      "order": 9,
+      "keyword": "deploy cloudflare",
+      "description": "Deploy to Cloudflare Pages via Wrangler — set env vars in the Pages dashboard"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-25T00:00:00Z"
+}
