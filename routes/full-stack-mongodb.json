@@ -1,0 +1,66 @@
+{
+  "id": "route.full-stack-mongodb.v1",
+  "goals": [
+    "build app with mongodb",
+    "create mongodb app",
+    "fullstack app with mongoose",
+    "build nosql app",
+    "mongodb nextjs app",
+    "setup mongodb backend",
+    "build with nosql database",
+    "next.js mongodb",
+    "mongoose next.js project"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Full-stack Next.js App with MongoDB",
+  "description": "Build a complete Next.js application using MongoDB Atlas for flexible NoSQL storage, Auth.js with the MongoDB adapter for authentication, and Vercel for deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a new Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Set up styling with Tailwind CSS v4"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install UI component library"
+    },
+    {
+      "order": 4,
+      "keyword": "mongodb",
+      "description": "Connect to MongoDB Atlas with Mongoose ODM — define models, indexes, and connection singleton"
+    },
+    {
+      "order": 5,
+      "keyword": "add auth",
+      "description": "Add authentication with Auth.js using the MongoDB adapter for database-backed sessions"
+    },
+    {
+      "order": 6,
+      "keyword": "zod validation",
+      "description": "Add schema validation for API route inputs and form data"
+    },
+    {
+      "order": 7,
+      "keyword": "setup vitest",
+      "description": "Set up unit testing for models and API logic"
+    },
+    {
+      "order": 8,
+      "keyword": "github actions",
+      "description": "Configure CI/CD pipeline with type-check and test jobs"
+    },
+    {
+      "order": 9,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel — set MONGODB_URI and AUTH_SECRET as environment variables"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-26T00:00:00Z"
+}
