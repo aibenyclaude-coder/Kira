@@ -1,0 +1,24 @@
+{
+  "id": "community.setup-husky-lint-staged.v1",
+  "keywords": [
+    "husky",
+    "lint-staged",
+    "pre-commit",
+    "git hooks",
+    "setup husky",
+    "add husky",
+    "commitlint",
+    "commit hooks",
+    "pre-commit hooks",
+    "code quality hooks",
+    "conventional commits"
+  ],
+  "contexts": ["nextjs", "react", "typescript", "nodejs"],
+  "title": "Set Up Git Hooks with Husky + lint-staged",
+  "summary": "Add pre-commit hooks that run ESLint and type checking on staged files only, keeping every commit clean without slowing down the workflow.",
+  "source": "community",
+  "declaration": "I'll configure Husky v9 and lint-staged to automatically run linting and type checks on staged files before every commit.",
+  "instructions": "## Set Up Husky v9 + lint-staged\n\n### 1. Install dependencies\n\n```bash\nnpm install --save-dev husky lint-staged\n```\n\n### 2. Initialize Husky\n\n```bash\nnpx husky init\n```\n\nThis creates a `.husky/` directory and adds a `prepare` script to `package.json`:\n\n```json\n{\n  \"scripts\": {\n    \"prepare\": \"husky\"\n  }\n}\n```\n\nEvery subsequent `npm install` on a fresh clone will automatically set up hooks.\n\n### 3. Configure the pre-commit hook\n\nReplace the generated `.husky/pre-commit` content:\n\n```sh\nnpx lint-staged\n```\n\n### 4. Configure lint-staged in package.json\n\n```json\n{\n  \"lint-staged\": {\n    \"*.{ts,tsx}\": [\n      \"eslint --fix --max-warnings=0\",\n      \"bash -c 'tsc --noEmit'\"\n    ],\n    \"*.{js,jsx,ts,tsx,json,md,css}\": \"prettier --write\"\n  }\n}\n```\n\n> **Note:** Wrap `tsc --noEmit` in `bash -c '...'` so lint-staged does not append staged filenames as arguments to tsc.\n\n### 5. Add commit message linting (optional)\n\nInstall commitlint:\n\n```bash\nnpm install --save-dev @commitlint/cli @commitlint/config-conventional\n```\n\nCreate `commitlint.config.js` (ESM format for modern Node.js):\n\n```js\nexport default { extends: ['@commitlint/config-conventional'] };\n```\n\nOr `commitlint.config.cjs` for CommonJS projects:\n\n```js\nmodule.exports = { extends: ['@commitlint/config-conventional'] };\n```\n\nAdd the commit-msg hook:\n\n```bash\necho 'npx --no -- commitlint --edit $1' > .husky/commit-msg\n```\n\nThis enforces Conventional Commits format, e.g.:\n- `feat: add user login page`\n- `fix: correct redirect after auth`\n- `chore: update dependencies`\n\n### 6. Ensure hook files are executable\n\nHusky sets execute permissions automatically on your machine. For CI/CD and cross-platform teams, explicitly commit the permission:\n\n```bash\ngit add .husky\ngit update-index --chmod=+x .husky/pre-commit\ngit update-index --chmod=+x .husky/commit-msg  # if using commitlint\n```\n\n### 7. Disable hooks in CI\n\nCI pipelines run linting separately — skip Husky hooks to avoid double work:\n\n```yaml\n# .github/workflows/ci.yml\nenv:\n  HUSKY: 0\n```\n\n### 8. Test the full setup\n\nModify a file, stage it, and commit:\n\n```bash\ngit add .\ngit commit -m \"chore: add husky and lint-staged\"\n```\n\nYou should see lint-staged output before the commit completes. Introduce a lint error to confirm it blocks the commit.\n\n## Common Errors\n\n- **`husky: command not found` after cloning**: Run `npm install` — the `prepare` script runs `husky` automatically.\n- **lint-staged runs tsc on individual files**: Use `bash -c 'tsc --noEmit'` — without this, lint-staged passes staged filenames as args to tsc, which breaks project-wide type checking.\n- **Hooks not running in Docker or CI**: Set `HUSKY=0` environment variable to skip hooks intentionally.\n- **`permission denied: .husky/pre-commit`**: Run `chmod +x .husky/pre-commit` to restore execute permission.\n- **commitlint fails with `Cannot find module`**: Ensure `@commitlint/config-conventional` is installed and the config file matches your project's module format (ESM vs CJS).\n- **ESLint `--max-warnings=0` blocks commit on warnings**: This is intentional — either fix the warnings or change to `--max-warnings=10` to allow some.\n\n## What NOT to do\n\n- Do NOT run `tsc --noEmit` directly (without `bash -c`) in lint-staged — it receives filenames as args and checks only those files, missing project-wide errors.\n- Do NOT commit `.husky/_/` directory contents — the `_/husky.sh` shim is generated automatically and must not be version-controlled.\n- Do NOT use `--no-verify` to skip hooks routinely — fix the underlying linting issue instead.\n- Do NOT use the Husky v4 config style (`.huskyrc` / `\"husky\"` key in package.json) — v9 uses the `.husky/` directory exclusively.\n- Do NOT add slow test suites to the pre-commit hook — pre-commit should finish in under 10 seconds; use `pre-push` for full test runs.",
+  "version": "1.0.0",
+  "updated_at": "2026-04-26T00:00:00Z"
+}
