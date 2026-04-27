@@ -1,0 +1,80 @@
+{
+  "id": "route.e-commerce-nextjs.v1",
+  "goals": [
+    "build an e-commerce store",
+    "create an online shop",
+    "build a shop",
+    "e-commerce with next.js",
+    "sell products online",
+    "product catalog",
+    "shopping cart",
+    "build a store"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "E-Commerce Store with Next.js",
+  "description": "Complete route from zero to a production e-commerce store: product catalog, shopping cart, Stripe Checkout, customer auth, product image uploads, order confirmation emails, analytics, error monitoring, and Vercel deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup tailwind",
+      "description": "Set up styling with Tailwind CSS v4"
+    },
+    {
+      "order": 2,
+      "keyword": "shadcn",
+      "description": "Install UI components for product cards, modals, and cart drawer"
+    },
+    {
+      "order": 3,
+      "keyword": "prisma",
+      "description": "Set up database for products, orders, and customers"
+    },
+    {
+      "order": 4,
+      "keyword": "add auth clerk",
+      "description": "Add customer authentication with Clerk"
+    },
+    {
+      "order": 5,
+      "keyword": "setup stripe",
+      "description": "Integrate Stripe Checkout for payment processing and webhooks"
+    },
+    {
+      "order": 6,
+      "keyword": "s3 upload",
+      "description": "Set up product image storage with S3 or Cloudflare R2"
+    },
+    {
+      "order": 7,
+      "keyword": "resend",
+      "description": "Send order confirmation and shipping notification emails"
+    },
+    {
+      "order": 8,
+      "keyword": "posthog",
+      "description": "Track product views, add-to-cart events, and conversion funnel"
+    },
+    {
+      "order": 9,
+      "keyword": "sentry",
+      "description": "Monitor checkout errors and payment failures in production"
+    },
+    {
+      "order": 10,
+      "keyword": "setup vitest",
+      "description": "Test pricing calculations, discount logic, and cart utilities"
+    },
+    {
+      "order": 11,
+      "keyword": "github actions",
+      "description": "Configure CI/CD pipeline with automated tests"
+    },
+    {
+      "order": 12,
+      "keyword": "deploy vercel",
+      "description": "Deploy to production on Vercel"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-27T00:00:00Z"
+}
