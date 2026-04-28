@@ -1,0 +1,77 @@
+{
+  "id": "route.admin-dashboard-nextjs.v1",
+  "goals": [
+    "build an admin dashboard",
+    "create an admin panel",
+    "build a data app",
+    "build a management dashboard",
+    "admin interface",
+    "internal tool",
+    "build a backoffice",
+    "data management app",
+    "crud admin",
+    "build an operations dashboard"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Admin Dashboard & Data Management App",
+  "description": "Build a production-ready admin dashboard with role-based access, data tables, CRUD operations, and full observability — from project init to deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Add Tailwind CSS v4 for utility-first styling"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui for data tables, dialogs, forms, and charts"
+    },
+    {
+      "order": 4,
+      "keyword": "add auth clerk",
+      "description": "Add Clerk for authentication with organization and role support (admin vs member)"
+    },
+    {
+      "order": 5,
+      "keyword": "setup drizzle",
+      "description": "Set up Drizzle ORM for type-safe database access and schema migrations"
+    },
+    {
+      "order": 6,
+      "keyword": "zod validation",
+      "description": "Add Zod for server action and form schema validation"
+    },
+    {
+      "order": 7,
+      "keyword": "add cache",
+      "description": "Add Upstash Redis for API rate limiting and server-side caching of expensive queries"
+    },
+    {
+      "order": 8,
+      "keyword": "setup sentry",
+      "description": "Add Sentry for error tracking and performance monitoring"
+    },
+    {
+      "order": 9,
+      "keyword": "setup vitest",
+      "description": "Add Vitest for unit testing server actions and utilities"
+    },
+    {
+      "order": 10,
+      "keyword": "github actions",
+      "description": "Configure CI/CD with type checking, lint, and test gates"
+    },
+    {
+      "order": 11,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel with environment variables configured"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-28T00:00:00Z"
+}
