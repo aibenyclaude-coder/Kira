@@ -1,0 +1,41 @@
+{
+  "id": "route.add-observability.v1",
+  "goals": [
+    "add error monitoring",
+    "add observability",
+    "monitor my app",
+    "add application monitoring",
+    "track errors in production",
+    "add analytics and monitoring",
+    "production monitoring",
+    "add crash reporting",
+    "add performance monitoring"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Add Observability & Monitoring Pipeline",
+  "description": "Complete route for production-grade observability: error monitoring and crash reporting with Sentry, product analytics and session recording with PostHog, end-to-end health check tests with Playwright, and automated CI enforcement via GitHub Actions.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup sentry",
+      "description": "Add Sentry for error monitoring, crash reporting, and performance tracing — captures unhandled exceptions in both server and client components"
+    },
+    {
+      "order": 2,
+      "keyword": "posthog",
+      "description": "Add PostHog for product analytics, session recording, and feature flags — understand how users interact with the app and spot UX issues before they become errors"
+    },
+    {
+      "order": 3,
+      "keyword": "setup playwright",
+      "description": "Add Playwright end-to-end tests as health checks for critical user paths — catches regressions that unit tests miss"
+    },
+    {
+      "order": 4,
+      "keyword": "github actions",
+      "description": "Configure CI to run Playwright health checks on every push and surface failures as GitHub Checks — so broken paths are caught before they reach production"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-04-29T00:00:00Z"
+}
