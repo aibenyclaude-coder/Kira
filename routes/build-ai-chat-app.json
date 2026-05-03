@@ -1,0 +1,72 @@
+{
+  "id": "route.build-ai-chat-app.v1",
+  "goals": [
+    "build an ai chat app",
+    "create an ai chatbot",
+    "add ai chat",
+    "build a chatbot",
+    "ai powered app",
+    "add openai chat",
+    "build a llm app",
+    "streaming chat",
+    "add ai assistant",
+    "build a gpt app"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "AI Chat Application with Next.js",
+  "description": "Complete route from zero to a production AI chat app: streaming LLM responses, auth, rate limiting, and Vercel deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Bootstrap a new Next.js project with TypeScript and App Router"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Add Tailwind CSS for styling"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install UI component library for chat interface primitives"
+    },
+    {
+      "order": 4,
+      "keyword": "zod validation",
+      "description": "Add Zod for validating AI request/response schemas"
+    },
+    {
+      "order": 5,
+      "keyword": "openai streaming chat",
+      "description": "Integrate Vercel AI SDK with OpenAI/Anthropic for streaming chat responses"
+    },
+    {
+      "order": 6,
+      "keyword": "add auth clerk",
+      "description": "Add user authentication to protect the chat interface"
+    },
+    {
+      "order": 7,
+      "keyword": "setup redis",
+      "description": "Add Upstash Redis for per-user rate limiting to control API costs"
+    },
+    {
+      "order": 8,
+      "keyword": "prisma",
+      "description": "Persist chat history to a database with Prisma ORM"
+    },
+    {
+      "order": 9,
+      "keyword": "setup sentry",
+      "description": "Add error monitoring to catch LLM API failures and timeouts"
+    },
+    {
+      "order": 10,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel — streaming responses require Edge Runtime or Node.js runtime, not static export"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-03T00:00:00Z"
+}
