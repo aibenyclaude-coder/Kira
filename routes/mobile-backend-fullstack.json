@@ -1,0 +1,65 @@
+{
+  "id": "route.mobile-backend-fullstack.v1",
+  "goals": [
+    "build a mobile app with backend",
+    "react native with api",
+    "expo app with nextjs api",
+    "connect expo to backend",
+    "mobile app with authentication and database",
+    "full-stack mobile application",
+    "react native backend",
+    "build expo with api backend"
+  ],
+  "contexts": ["nextjs", "react-native", "expo", "typescript"],
+  "title": "React Native Mobile App + Next.js API Backend",
+  "description": "End-to-end route for building a production mobile app: a Next.js API backend with auth, database, caching, file uploads, and background jobs — paired with an Expo React Native client that consumes it.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialise the Next.js API backend with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup drizzle",
+      "description": "Add Drizzle ORM for type-safe database access"
+    },
+    {
+      "order": 3,
+      "keyword": "add auth clerk",
+      "description": "Add Clerk authentication — Clerk supports Expo natively so the same tenant works for both the API and the mobile app"
+    },
+    {
+      "order": 4,
+      "keyword": "setup redis",
+      "description": "Add Upstash Redis for API response caching and rate limiting on mobile endpoints"
+    },
+    {
+      "order": 5,
+      "keyword": "upload files",
+      "description": "Add S3-compatible file uploads for profile images and attachments sent from the mobile client"
+    },
+    {
+      "order": 6,
+      "keyword": "inngest",
+      "description": "Add background jobs for push notification delivery, data sync, and scheduled tasks"
+    },
+    {
+      "order": 7,
+      "keyword": "setup sentry",
+      "description": "Add error monitoring — Sentry supports both Next.js and React Native in the same org"
+    },
+    {
+      "order": 8,
+      "keyword": "deploy vercel",
+      "description": "Deploy the Next.js API backend to Vercel and note the production URL"
+    },
+    {
+      "order": 9,
+      "keyword": "setup expo",
+      "description": "Initialise the Expo React Native client, point API_BASE_URL at the deployed backend, and wire up Clerk Expo SDK for auth"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-06T00:00:00Z"
+}
