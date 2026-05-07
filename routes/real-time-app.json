@@ -1,0 +1,67 @@
+{
+  "id": "route.real-time-app.v1",
+  "goals": [
+    "build a real-time app",
+    "create a chat app",
+    "add real-time features",
+    "websocket app",
+    "live collaboration",
+    "real-time dashboard",
+    "build a live app",
+    "socket.io app",
+    "real-time notifications",
+    "add live updates"
+  ],
+  "contexts": ["nextjs", "react", "typescript", "nodejs"],
+  "title": "Real-time Web Application with WebSocket",
+  "description": "End-to-end route for building a real-time Next.js app with Socket.io, Upstash Redis for pub/sub, authentication, and deployment to a long-running host (Railway or Fly.io).",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a new Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Set up Tailwind CSS v4 for styling"
+    },
+    {
+      "order": 3,
+      "keyword": "websocket",
+      "description": "Set up Socket.io with a custom Node.js server for real-time bi-directional communication"
+    },
+    {
+      "order": 4,
+      "keyword": "setup redis",
+      "description": "Add Upstash Redis for pub/sub, message persistence, and presence tracking across server instances"
+    },
+    {
+      "order": 5,
+      "keyword": "add auth",
+      "description": "Add authentication (Lucia Auth for stateful sessions, or Auth.js for OAuth)"
+    },
+    {
+      "order": 6,
+      "keyword": "setup vitest",
+      "description": "Set up unit tests for event handlers and server logic"
+    },
+    {
+      "order": 7,
+      "keyword": "setup docker",
+      "description": "Containerize the app with a multi-stage Dockerfile for the custom server"
+    },
+    {
+      "order": 8,
+      "keyword": "github actions",
+      "description": "Configure CI/CD pipeline to build and test on every push"
+    },
+    {
+      "order": 9,
+      "keyword": "deploy railway",
+      "description": "Deploy to Railway or Fly.io — platforms that support persistent WebSocket connections (not Vercel)"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-07T00:00:00Z"
+}
