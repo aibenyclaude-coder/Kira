@@ -1,0 +1,41 @@
+{
+  "id": "route.vps-docker-nginx.v1",
+  "goals": [
+    "deploy to vps",
+    "self-host my app",
+    "deploy with docker and nginx",
+    "deploy to a linux server",
+    "host on my own server",
+    "deploy without vercel",
+    "deploy to digitalocean",
+    "deploy to hetzner",
+    "containerize and deploy"
+  ],
+  "contexts": ["nextjs", "nodejs", "typescript", "docker"],
+  "title": "Deploy Next.js App to VPS with Docker & Nginx",
+  "description": "Self-hosted production deployment route: containerize with Docker, set up Nginx as a reverse proxy with SSL, and wire up CI/CD via GitHub Actions.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup vitest",
+      "description": "Ensure tests pass before containerizing"
+    },
+    {
+      "order": 2,
+      "keyword": "setup docker",
+      "description": "Containerize the Next.js app with a multi-stage Dockerfile"
+    },
+    {
+      "order": 3,
+      "keyword": "github actions",
+      "description": "Add CI to build and push the Docker image on every push to main"
+    },
+    {
+      "order": 4,
+      "keyword": "nginx",
+      "description": "Configure Nginx as a reverse proxy with SSL on the VPS"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-08T00:00:00Z"
+}
