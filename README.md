@@ -16,7 +16,7 @@ Install Kira once — your AI agent automatically finds the right instructions, 
 
 ## Install (10 seconds)
 
-Add to your MCP config (`~/.claude/settings.json`, `.cursor/mcp.json`, etc.):
+Add this snippet to your MCP host config:
 
 ```json
 {
@@ -30,6 +30,23 @@ Add to your MCP config (`~/.claude/settings.json`, `.cursor/mcp.json`, etc.):
 ```
 
 That's it. Your agent now has Kira.
+
+<details>
+<summary><b>Per-client paths (click)</b></summary>
+
+| Client | Config file |
+|---|---|
+| **Claude Code** | `~/.claude/settings.json` (global) or `.claude/settings.json` (per-project) |
+| **Claude Desktop** | macOS: `~/Library/Application Support/Claude/claude_desktop_config.json` · Windows: `%APPDATA%\Claude\claude_desktop_config.json` |
+| **Cursor** | `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (per-project) |
+| **Cline / Continue** | extension settings → MCP servers |
+| **Windsurf** | `~/.codeium/windsurf/mcp_config.json` |
+| **VS Code (MCP preview)** | `.vscode/mcp.json` |
+| **Goose** | `~/.config/goose/profiles.yaml` (under `extensions:`) |
+| **Zed** | `~/.config/zed/settings.json` (`context_servers`) |
+
+The snippet above works as-is in every one of them — just paste it under `mcpServers` (or the equivalent key for your client).
+</details>
 
 ---
 
