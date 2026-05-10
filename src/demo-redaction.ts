@@ -18,12 +18,12 @@ const BOLD = "\x1b[1m";
 const cases = [
   {
     label: "OpenAI API key",
-    input: "deploy failed; OPENAI_KEY=sk-ABCDEFGHIJKLMNOPQRSTUVWXYZ012345 broke",
+    input: "deploy failed; OPENAI_KEY=sk-NOTREALNOTREALNOTREALNOTREALNOT broke",
   },
   {
     label: "GitHub token + home path",
     input:
-      "wrangler login error in /home/alice/projects/my-app with ghp_abcdefghijklmnopqrstuvwxyz0123456789",
+      "wrangler login error in /home/alice/projects/my-app with ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
   },
   {
     label: "JWT in Authorization header",
@@ -32,7 +32,7 @@ const cases = [
   },
   {
     label: "Stripe secret",
-    input: "STRIPE_SECRET_KEY=sk_live_1234567890abcdefghijkl webhook 401",
+    input: "STRIPE_SECRET_KEY=sk_live_AAAAAAAAAAAAAAAA webhook 401",
   },
   {
     label: "Email + IP + UUID",

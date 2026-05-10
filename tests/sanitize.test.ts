@@ -36,14 +36,14 @@ describe("sanitize edge cases", () => {
 
   it("truncates to maxLen before applying patterns", () => {
     // Use uppercase non-hex filler to avoid triggering any redaction pattern.
-    const long = "X".repeat(1000) + " sk-ABCDEFGHIJKLMNOPQRSTUVWXYZ012345";
+    const long = "X".repeat(1000) + " sk-NOTREALNOTREALNOTREALNOTREALNOT";
     const out = sanitize(long, 100)!;
     expect(out.length).toBe(100);
-    expect(out).not.toContain("sk-ABCDEFGHIJKLMNOPQRSTUVWXYZ012345");
+    expect(out).not.toContain("sk-NOTREALNOTREALNOTREALNOTREALNOT");
   });
 
   it("is idempotent", () => {
-    const input = "sk-ABCDEFGHIJKLMNOPQRSTUVWXYZ012345 in /home/u/p";
+    const input = "sk-NOTREALNOTREALNOTREALNOTREALNOT in /home/u/p";
     const once = sanitize(input, 4096)!;
     const twice = sanitize(once, 4096)!;
     expect(twice).toBe(once);
@@ -69,13 +69,13 @@ describe("sanitizePayload", () => {
     const p: ReportPayloadV1 = {
       ...base,
       detail: {
-        note: "leaked sk-ABCDEFGHIJKLMNOPQRSTUVWXYZ012345 here",
+        note: "leaked sk-NOTREALNOTREALNOTREALNOTREALNOT here",
         context: "in /home/alice/proj",
       },
     };
     const out = sanitizePayload(p);
     expect(out.detail?.note).toContain("[REDACTED]");
-    expect(out.detail?.note).not.toContain("sk-ABCDEFG");
+    expect(out.detail?.note).not.toContain("sk-NOTREAL");
     expect(out.detail?.context).toContain("/[USER]");
   });
 

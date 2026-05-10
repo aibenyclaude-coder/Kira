@@ -63,7 +63,7 @@ describe("telemetry buildPayload + enqueue", () => {
       {
         skill_id: "community.x.v1",
         status: "retry",
-        note: "leaked sk-ABCDEFGHIJKLMNOPQRSTUVWXYZ012345",
+        note: "leaked sk-NOTREALNOTREALNOTREALNOTREALNOT",
       },
       "free"
     );
@@ -71,7 +71,7 @@ describe("telemetry buildPayload + enqueue", () => {
     const log = readFileSync(join(tmp, "reports.log"), "utf-8").trim();
     const entry = JSON.parse(log);
     expect(entry.detail.note).toContain("[REDACTED]");
-    expect(entry.detail.note).not.toContain("sk-ABCDEFG");
+    expect(entry.detail.note).not.toContain("sk-NOTREAL");
   });
 
   it("flush retries on 5xx and drops on 4xx", async () => {

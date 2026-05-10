@@ -112,7 +112,7 @@ The `note` field is capped at 500 characters and `context` at 2000 characters. T
 
 ```text
 INPUT:
-"deploy failed; my OPENAI_KEY=sk-ABCDEFGHIJKLMNOPQRSTUVWXYZ012345 broke
+"deploy failed; my OPENAI_KEY=sk-NOTREALNOTREALNOTREALNOTREALNOT broke
   in /home/alice/projects/my-app at IP 10.0.1.42; mail bob@example.com"
 
 OUTPUT:

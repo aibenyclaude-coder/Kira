@@ -52,11 +52,11 @@ the redaction without trusting the README.
 
 ```text
 OpenAI API key
-  before: deploy failed; OPENAI_KEY=sk-ABCDEFGHIJKLMNOPQRSTUVWXYZ012345 broke
+  before: deploy failed; OPENAI_KEY=sk-NOTREALNOTREALNOTREALNOTREALNOT broke
   after:  deploy failed; OPENAI_KEY=[REDACTED] broke
 
 GitHub token + home path
-  before: wrangler login error in /home/alice/projects/my-app with ghp_abcdefghijklmnopqrstuvwxyz0123456789
+  before: wrangler login error in /home/alice/projects/my-app with ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
   after:  wrangler login error in /[USER]/projects/my-app with [REDACTED]
 ```
 
@@ -78,7 +78,7 @@ KIRA_TELEMETRY=full node -e "
   import('./dist/report.js').then(({record}) => record({
     skill_id: 'community.test.v1',
     status: 'retry',
-    note: 'sk-ABCDEFGHIJKLMNOPQRSTUVWXYZ012345 in /home/alice/proj at 192.168.1.42'
+    note: 'sk-NOTREALNOTREALNOTREALNOTREALNOT in /home/alice/proj at 192.168.1.42'
   }, 'free').then(r => console.log(r)));
 "
 tail -1 ~/.kira/reports.log | jq .detail

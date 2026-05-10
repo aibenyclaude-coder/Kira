@@ -70,7 +70,7 @@ describe("worker routes", () => {
     const dirty = {
       ...validPayload,
       detail: {
-        note: "leaked sk-ABCDEFGHIJKLMNOPQRSTUVWXYZ012345 here",
+        note: "leaked sk-NOTREALNOTREALNOTREALNOTREALNOT here",
       },
     };
     const res = await SELF.fetch("https://w/v1/reports", {
@@ -83,7 +83,7 @@ describe("worker routes", () => {
       "SELECT note FROM events ORDER BY id DESC LIMIT 1"
     ).first<{ note: string }>();
     expect(row?.note).toContain("[REDACTED]");
-    expect(row?.note).not.toContain("sk-ABCDEFG");
+    expect(row?.note).not.toContain("sk-NOTREAL");
   });
 
   it("returns aggregate stats", async () => {
