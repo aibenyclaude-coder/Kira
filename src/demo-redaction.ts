@@ -9,11 +9,15 @@
  */
 import { sanitize } from "./sanitize.js";
 
-const RESET = "\x1b[0m";
-const RED = "\x1b[31m";
-const GREEN = "\x1b[32m";
-const DIM = "\x1b[2m";
-const BOLD = "\x1b[1m";
+// Honor NO_COLOR / non-TTY (CI) so the redaction smoke test can grep
+// the actual literals out of the captured output.
+const COLOR =
+  !process.env.NO_COLOR && (process.stdout.isTTY ?? false);
+const RESET = COLOR ? "\x1b[0m" : "";
+const RED = COLOR ? "\x1b[31m" : "";
+const GREEN = COLOR ? "\x1b[32m" : "";
+const DIM = COLOR ? "\x1b[2m" : "";
+const BOLD = COLOR ? "\x1b[1m" : "";
 
 const cases = [
   {

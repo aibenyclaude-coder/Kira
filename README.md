@@ -1,5 +1,10 @@
 # Kira
 
+[![CI](https://github.com/aibenyclaude-coder/Kira/actions/workflows/ci.yml/badge.svg)](https://github.com/aibenyclaude-coder/Kira/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/kira-mcp.svg)](https://www.npmjs.com/package/kira-mcp)
+[![npm downloads](https://img.shields.io/npm/dw/kira-mcp.svg)](https://www.npmjs.com/package/kira-mcp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 ### One MCP. Your agent becomes a genius.
 
 Stop managing CLAUDE.md files, .cursorrules, and skill folders across projects.
