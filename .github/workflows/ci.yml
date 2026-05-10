@@ -1,20 +1,101 @@
-name: CI — Build & Test
+name: CI
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  client:
+    name: client (build + tests + skill validation)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - run: npm run demo
+
+      - name: Validate skill / scar JSON
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys
+          bad = []
+          for p in pathlib.Path("skills").rglob("*.json"):
+              try:
+                  data = json.loads(p.read_text(encoding="utf-8"))
+              except json.JSONDecodeError as e:
+                  bad.append(f"{p}: {e}")
+                  continue
+              required = ["id", "keywords", "title", "summary", "version", "updated_at"]
+              missing = [k for k in required if k not in data]
+              if missing:
+                  bad.append(f"{p}: missing keys {missing}")
+          for p in pathlib.Path("routes").rglob("*.json"):
+              try:
+                  json.loads(p.read_text(encoding="utf-8"))
+              except json.JSONDecodeError as e:
+                  bad.append(f"{p}: {e}")
+          if bad:
+              for b in bad:
+                  print("FAIL", b)
+              sys.exit(1)
+          print("OK — all skill/scar/route JSON validates")
+          PY
+
+  worker:
+    name: worker (typecheck + tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm test
+
+  privacy-demo:
+    name: demo:privacy smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: client
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run build
-      - run: npm run demo
+      - run: npm run demo:privacy | tee /tmp/demo-privacy.txt
+      - name: Assert redactions
+        run: |
+          grep -F '[REDACTED]' /tmp/demo-privacy.txt
+          grep -F '[EMAIL]'    /tmp/demo-privacy.txt
+          grep -F '[IP]'       /tmp/demo-privacy.txt
+          grep -F '[UUID]'     /tmp/demo-privacy.txt
+          grep -F '/[USER]'    /tmp/demo-privacy.txt
