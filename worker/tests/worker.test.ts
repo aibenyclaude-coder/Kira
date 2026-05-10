@@ -47,6 +47,26 @@ describe("worker routes", () => {
     expect(res.status).toBe(404);
   });
 
+  it("serves the MCP server card per SEP-2127", async () => {
+    const res = await SELF.fetch("https://w/.well-known/mcp/server-card.json");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("application/json");
+    const body = (await res.json()) as {
+      name: string;
+      version: string;
+      tools: Array<{ name: string; annotations?: Record<string, unknown> }>;
+    };
+    expect(body.name).toBe("io.github.aibenyclaude-coder/kira");
+    expect(body.version).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(body.tools.length).toBeGreaterThanOrEqual(5);
+    expect(body.tools.find((t) => t.name === "kira_lookup")?.annotations?.readOnlyHint).toBe(true);
+  });
+
+  it("also accepts the legacy server-card path without the /mcp/ segment", async () => {
+    const res = await SELF.fetch("https://w/.well-known/mcp-server-card.json");
+    expect(res.status).toBe(200);
+  });
+
   it("rejects malformed JSON with 400", async () => {
     const res = await SELF.fetch("https://w/v1/reports", {
       method: "POST",

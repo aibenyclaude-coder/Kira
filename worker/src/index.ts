@@ -10,6 +10,7 @@
  */
 import { z } from "zod";
 import { sanitize } from "./sanitize.js";
+import { SERVER_CARD } from "./server-card.js";
 
 const NOTE_MAX = 500;
 const CONTEXT_MAX = 2000;
@@ -176,6 +177,20 @@ export default {
     }
     if (req.method === "GET" && url.pathname === "/v1/health") {
       return jsonResponse({ ok: true }, 200);
+    }
+    if (
+      req.method === "GET" &&
+      (url.pathname === "/.well-known/mcp/server-card.json" ||
+        url.pathname === "/.well-known/mcp-server-card.json")
+    ) {
+      return new Response(JSON.stringify(SERVER_CARD, null, 2), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "public, max-age=600",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
     }
     return errorResponse("not_found", `No route for ${req.method} ${url.pathname}`, 404);
   },
