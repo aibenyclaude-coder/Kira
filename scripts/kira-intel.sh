@@ -24,7 +24,7 @@ set -o pipefail
 # ── Config (env-overridable) ─────────────────────────────────────────────
 KIRA_REPO="${KIRA_REPO:-/home/beni/Kira}"
 KIRA_GH_REPO="${KIRA_GH_REPO:-aibenyclaude-coder/Kira}"
-KIRA_INTEL_DIR="${KIRA_INTEL_DIR:-$HOME/Kira/intel}"
+KIRA_INTEL_DIR="${KIRA_INTEL_DIR:-$HOME/.kira/intel}"
 KIRA_HOME_DIR="${KIRA_HOME_DIR:-$HOME/.kira}"
 OLLAMA_URL="${OLLAMA_URL:-http://localhost:11434}"
 OLLAMA_MODEL="${OLLAMA_MODEL:-gemma3:12b}"

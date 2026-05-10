@@ -8,9 +8,9 @@ Collects daily signal (GitHub stats, npm downloads, local telemetry, missing key
 
 **Outputs:**
 
-- `~/Kira/intel/YYYY-MM-DD.md` — full digest with raw signal appended
-- `~/Kira/intel/latest.md` — symlink to today's digest
-- `~/Kira/intel/.last-run` — ISO timestamp; the next run only counts events newer than this
+- `~/.kira/intel/YYYY-MM-DD.md` — full digest with raw signal appended
+- `~/.kira/intel/latest.md` — symlink to today's digest
+- `~/.kira/intel/.last-run` — ISO timestamp; the next run only counts events newer than this
 
 **Auto-issues** (controlled by `OPEN_ISSUES_ON_MISSING=1`, default on):
 opens a `needs-skill`-labeled GitHub issue for each of the top-N keywords that returned 0 results from `kira_lookup`. Idempotent — skips a keyword whose substring already appears in any open issue title.
@@ -69,7 +69,7 @@ journalctl --user -u kira-intel -e   # tail recent runs
 |---|---|---|
 | `KIRA_REPO` | `/home/beni/Kira` | Local repo path (where `reports/missing-keywords.log` lives) |
 | `KIRA_GH_REPO` | `aibenyclaude-coder/Kira` | `owner/repo` for `gh` calls |
-| `KIRA_INTEL_DIR` | `$HOME/Kira/intel` | Where digests are written |
+| `KIRA_INTEL_DIR` | `$HOME/.kira/intel` | Where digests are written |
 | `KIRA_HOME_DIR` | `$HOME/.kira` | Where `reports.log` lives |
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama endpoint |
 | `OLLAMA_MODEL` | `gemma3:12b` | Model name |
