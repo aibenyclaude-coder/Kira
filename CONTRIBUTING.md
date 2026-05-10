@@ -104,9 +104,19 @@ For server changes (`src/`):
 npm install
 npm run build    # must pass
 npm run demo     # must complete successfully
+npm test         # vitest suite (sanitizer, schema, consent, telemetry)
 ```
 
 Follow the commit convention in [CLAUDE.md](./CLAUDE.md).
+
+### Telemetry contributions
+
+Anything touching `src/telemetry.ts`, `src/sanitize.ts`, `src/consent.ts`, or `worker/` must:
+
+- Update **both** sanitizer copies (`src/sanitize.ts` and `worker/src/sanitize.ts`) — they intentionally do not share code at build time.
+- Add fixtures to `tests/fixtures/redaction-cases.json` for any new pattern, with positive AND negative cases.
+- Update [PRIVACY.md](./PRIVACY.md) if the wire format, retention, or sanitizer pattern set changes.
+- Never include real secrets, real paths, or real personal data in fixtures or sample skills — use placeholder values like `sk-NOTREALNOTREALNOTREALNOTREALNOT`.
 
 ## Quality philosophy
 

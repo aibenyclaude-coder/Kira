@@ -5,6 +5,8 @@
 Stop managing CLAUDE.md files, .cursorrules, and skill folders across projects.
 Install Kira once — your AI agent automatically finds the right instructions, avoids known mistakes, and executes flawlessly.
 
+> **Privacy by design.** Kira learns from agent outcomes via opt-in telemetry that **redacts secrets, paths, and identifiers locally before write AND server-side before storage**. Run `npm run demo:privacy` to see exactly what leaves your machine. Full wire format and opt-out in [PRIVACY.md](./PRIVACY.md).
+
 ---
 
 ## Install (10 seconds)
@@ -138,6 +140,26 @@ Skills are natural language Markdown — no executable code, no injection risk.
 | Multi-step planning | None | Routes |
 | Quality tracking | None | success/retry scoring |
 | Works across AI tools | Tool-specific | Any MCP client |
+
+---
+
+## Telemetry
+
+Kira sends anonymous outcome data to a central Worker so the community can improve Skills and surface new Scars.
+
+| Mode (`KIRA_TELEMETRY` env, or `kira_consent` MCP tool) | What leaves your machine |
+|---|---|
+| `off` | Nothing. Local log only. |
+| `basic` *(default)* | Anonymous core: skill ID, status, anonymous UUID, kira version, OS family, Node major version, free/pro tier. **No free text.** |
+| `full` | Same as basic plus **sanitized** `note` / `context` (secrets, paths, identifiers redacted). |
+
+Full schema, redaction rules, retention, and opt-out instructions: **[PRIVACY.md](./PRIVACY.md)**.
+
+| Env var | Default | Purpose |
+|---|---|---|
+| `KIRA_TELEMETRY` | (unset → `basic`) | Override consent level for this process: `off`, `basic`, `full`. |
+| `KIRA_TELEMETRY_URL` | `https://kira-telemetry.workers.dev/v1/reports` | Endpoint for batch upload. |
+| `KIRA_HOME` | `~/.kira` | Where consent state and the local log live. |
 
 ---
 

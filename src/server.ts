@@ -9,7 +9,9 @@ import { loadRoutes, resolveRoute } from "./route.js";
 import { lookup, indexItems } from "./lookup.js";
 import { record, logMissingKeyword } from "./report.js";
 import { verifyProKey } from "./license.js";
-import type { Skill, Scar, ReportStatus } from "./types.js";
+import { startFlusher, shutdownFlush } from "./telemetry.js";
+import { KIRA_CONSENT_TOOL, handleKiraConsent } from "./tools/kira_consent.js";
+import type { Skill, Scar, ReportStatus, ConsentLevel } from "./types.js";
 import type { KiraTier } from "./license.js";
 
 const TOOLS = [
@@ -63,7 +65,12 @@ const TOOLS = [
         note: {
           type: "string",
           description:
-            "What went wrong (for retry/failure). This becomes a scar for future agents.",
+            "What went wrong (for retry/failure). This becomes a scar for future agents. Sent to the telemetry server only when consent level is 'full'.",
+        },
+        context: {
+          type: "string",
+          description:
+            "Optional sanitized snippet of agent context (project type, framework, etc.). Sent only when consent level is 'full'.",
         },
       },
       required: ["skill_id", "status"],
@@ -114,6 +121,7 @@ const TOOLS = [
       required: ["id"],
     },
   },
+  KIRA_CONSENT_TOOL,
 ];
 
 export async function startServer(): Promise<void> {
@@ -190,6 +198,7 @@ export async function startServer(): Promise<void> {
       const skill_id = String(args?.skill_id ?? "").slice(0, 200);
       const status = String(args?.status ?? "");
       const note = args?.note ? String(args.note).slice(0, 1000) : undefined;
+      const context = args?.context ? String(args.context).slice(0, 4000) : undefined;
 
       if (!/^[a-z0-9][a-z0-9._-]*$/.test(skill_id)) {
         throw new Error(
@@ -202,12 +211,29 @@ export async function startServer(): Promise<void> {
         );
       }
 
-      const result = await record({
-        skill_id,
-        status: status as ReportStatus,
-        note,
-      });
+      const result = await record(
+        {
+          skill_id,
+          status: status as ReportStatus,
+          note,
+          context,
+        },
+        tier
+      );
 
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
+      };
+    }
+
+    if (name === "kira_consent") {
+      const level = args?.level as ConsentLevel | undefined;
+      const result = await handleKiraConsent({ level });
       return {
         content: [
           {
@@ -273,6 +299,15 @@ export async function startServer(): Promise<void> {
 
     throw new Error(`Unknown tool: ${name}`);
   });
+
+  startFlusher();
+  const onShutdown = (signal: NodeJS.Signals) => {
+    void shutdownFlush().finally(() => {
+      process.exit(signal === "SIGTERM" ? 143 : 130);
+    });
+  };
+  process.once("SIGTERM", onShutdown);
+  process.once("SIGINT", onShutdown);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

@@ -1,0 +1,25 @@
+{
+  "_note": "Inputs use NOTREAL/EXAMPLE/AAAA-style low-entropy fillers to satisfy our sanitizer regex without tripping GitHub Push Protection scanners. They are not real credentials.",
+  "cases": [
+    { "name": "openai key", "input": "key=sk-NOTREALNOTREALNOTREALNOTREALNOT done", "expectContains": "[REDACTED]", "expectNotContains": "sk-NOTREAL" },
+    { "name": "stripe live", "input": "billing sk_live_AAAAAAAAAAAAAAAA", "expectContains": "[REDACTED]" },
+    { "name": "github token", "input": "ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "expectContains": "[REDACTED]" },
+    { "name": "github pat", "input": "github_pat_11NOTREALNOTREALNOTREALNOTREALNOTREALNOTREAL", "expectContains": "[REDACTED]" },
+    { "name": "slack bot", "input": "xoxb-AAAAAAAAAA-AAAAAAAAAA", "expectContains": "[REDACTED]" },
+    { "name": "jwt", "input": "Bearer eyJEXAMPLE0.eyJEXAMPLE1.eyJEXAMPLE2 token", "expectContains": "[REDACTED]" },
+    { "name": "aws key", "input": "AKIAEXAMPLEEXAMPLEEX", "expectContains": "[REDACTED]" },
+    { "name": "long hex", "input": "blob 1234567890abcdef1234567890abcdef12345678 done", "expectContains": "[REDACTED]" },
+    { "name": "email", "input": "contact alice@example.com please", "expectContains": "[EMAIL]", "expectNotContains": "alice@example.com" },
+    { "name": "ipv4", "input": "host 192.168.1.42 reachable", "expectContains": "[IP]" },
+    { "name": "uuid", "input": "id 550e8400-e29b-41d4-a716-446655440000 in db", "expectContains": "[UUID]" },
+    { "name": "linux home path", "input": "see /home/alice/projects/foo", "expectContains": "/[USER]" },
+    { "name": "macos home", "input": "config in /Users/bob/.config/x", "expectContains": "/[USER]" },
+    { "name": "windows home", "input": "C:\\Users\\Alice\\Documents", "expectContains": "C:\\[USER]" },
+    { "name": "deep posix path", "input": "checked /etc/nginx/conf.d/site.conf", "expectContains": "[PATH]" },
+    { "name": "key=value", "input": "DATABASE_URL=postgres://x", "expectContains": "DATABASE_URL=[REDACTED]" }
+  ],
+  "negative_cases": [
+    { "name": "short sk", "input": "sk-short", "expectEqual": "sk-short" },
+    { "name": "url not path", "input": "see https://example.com/a/b/c for help", "expectContains": "https://example.com" }
+  ]
+}

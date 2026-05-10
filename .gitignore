@@ -9,3 +9,6 @@ reports/*.log
 .npmrc
 .playwright-mcp/
 .kira-pro-v1.priv.pem
+worker/.wrangler/
+worker/.dev.vars
+coverage/
