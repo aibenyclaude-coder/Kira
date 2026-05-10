@@ -32,6 +32,18 @@ export const KIRA_CONSENT_TOOL = {
     },
     required: [],
   },
+  annotations: {
+    title: "Kira Consent",
+    // Persists ~/.kira/consent.json; not a pure read.
+    readOnlyHint: false,
+    // Setting a level cannot harm the user's environment or external state;
+    // worst case the user re-runs to flip back. Not destructive.
+    destructiveHint: false,
+    // Calling with the same level twice converges on the same end state
+    // (modulo a regenerated client_id when transitioning to "off").
+    idempotentHint: true,
+    openWorldHint: false,
+  },
 } as const;
 
 interface KiraConsentArgs {

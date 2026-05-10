@@ -39,6 +39,13 @@ export const KIRA_STATUS_TOOL = {
     properties: {},
     required: [],
   },
+  annotations: {
+    title: "Kira Status",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false,
+  },
 } as const;
 
 export interface KiraStatusResult {
