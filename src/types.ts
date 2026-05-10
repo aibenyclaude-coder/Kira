@@ -138,9 +138,69 @@ export interface ReportRequest {
   skill_id: string;
   status: ReportStatus;
   note?: string;
+  context?: string;
 }
 
 export interface ReportResponse {
   ack: true;
   recorded_at: string;
+  /** One-time consent prompt — non-null only on the first report after install. */
+  consent_notice?: string;
+}
+
+// ── Telemetry payload (wire format v1) ─────────────────────────────────
+
+export type ConsentLevel = "off" | "basic" | "full";
+export type OsFamily = "linux" | "darwin" | "win32" | "other";
+
+/**
+ * Wire format sent to the telemetry Worker.
+ *
+ * - level=basic adds anonymous core only (no detail{})
+ * - level=full additionally includes sanitized note/context in detail{}
+ *
+ * MUST NEVER carry: file paths, env var names/values, project/repo names,
+ * git remote URLs, raw error messages, hostname/username/IP/MAC,
+ * API keys, JWTs, OAuth tokens, session cookies, emails, phone numbers,
+ * or any process.env value other than the kira version.
+ */
+export interface ReportPayloadV1 {
+  v: 1;
+  skill_id: string;
+  status: ReportStatus;
+  /** Anonymous client UUID — local-only, regenerated on opt-out. */
+  client_id: string;
+  /** Kira package version (build-time read from package.json). */
+  kira_version: string;
+  /** ISO-8601 timestamp, client-generated. */
+  ts: string;
+  env: {
+    os: OsFamily;
+    /** Major version only — never minor/patch. */
+    node_major: number;
+    tier: "free" | "pro";
+  };
+  /** Detail layer — present only when consent level === "full". */
+  detail?: {
+    note?: string;
+    context?: string;
+  };
+}
+
+/** Local NDJSON entry — superset of wire format with send-state fields. */
+export interface ReportLogEntry extends ReportPayloadV1 {
+  /** Whether this entry was uploaded successfully. */
+  sent: boolean;
+  send_attempts: number;
+}
+
+// ── Consent state ──────────────────────────────────────────────────────
+
+export interface ConsentState {
+  v: 1;
+  level: ConsentLevel;
+  /** UUIDv4 — regenerated whenever level transitions to "off". */
+  client_id: string;
+  decided_at: string;
+  source: "default_basic" | "first_run_prompt" | "tool" | "env";
 }
