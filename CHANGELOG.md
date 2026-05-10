@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-11
+
 ### Added
+- **MCP tool annotations** on all six tools (`kira_lookup`, `kira_route`, `kira_get`, `kira_report`, `kira_consent`, `kira_status`) — `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`. Follows the recent Anthropic post on Tool Annotations as Risk Vocabulary; clients can now skip confirmation prompts for the read-only tools and reserve them for the actual mutators.
+- **MCP Server Card** at `/.well-known/mcp/server-card.json` (and the legacy `/.well-known/mcp-server-card.json` path) per draft SEP-2127. Includes identity, npm package descriptor, full tool surface with annotations, and a `_meta` block describing the privacy posture (sanitizer summary, retention windows). Cached 10 minutes at the edge.
 - `kira_status` MCP tool — single-call introspection of version, tier, consent level, and the counts of loaded skills/scars/routes.
-- GitHub Actions CI: client build + tests + skill/scar/route JSON validation, worker typecheck + tests, and a smoke check that `npm run demo:privacy` redacts every expected pattern.
-- README badges (CI status, npm version, npm weekly downloads, license).
+- GitHub Actions CI: client build + tests + skill/scar/route JSON validation, worker tests, and a smoke job that asserts `npm run demo:privacy` redacts every expected pattern. `NO_COLOR=1` honored end-to-end so CI captures plain text.
+- README badges (CI status, npm version, npm weekly downloads, license) and a `<details>` block under "Install" with per-client config paths (Claude Code/Desktop, Cursor, Cline, Windsurf, VS Code, Goose, Zed).
+- MCP Registry publish prep: `"mcpName": "io.github.aibenyclaude-coder/kira"` in `package.json`, `server.json` at the repo root against the 2025-12-11 schema, and `scripts/registry-publish.md` documenting the `mcp-publisher` flow.
 - Maintainer scripts under `scripts/` (`kira-intel.sh` + `kira-intel-issues.py`) for nightly Ollama-powered intel digests and idempotent `needs-skill` issue creation. Excluded from the npm package.
 
 ## [0.5.0] - 2026-05-10
@@ -41,7 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2026-04-XX
 - Initial public release with 31 skills, 12 scars, 7 routes, and three core MCP tools (`kira_lookup`, `kira_route`, `kira_report`).
 
-[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.6.0
 [0.5.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.5.0
 [0.4.1]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.4.1
 [0.4.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.4.0

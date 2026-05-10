@@ -24,7 +24,7 @@ export const SERVER_CARD = {
     url: "https://github.com/aibenyclaude-coder/Kira.git",
     source: "github",
   },
-  version: "0.5.0",
+  version: "0.6.0",
   icons: [
     {
       src: "https://raw.githubusercontent.com/aibenyclaude-coder/Kira/main/demo.gif",
@@ -36,7 +36,7 @@ export const SERVER_CARD = {
       registryType: "npm",
       registryBaseUrl: "https://registry.npmjs.org",
       identifier: "kira-mcp",
-      version: "0.5.0",
+      version: "0.6.0",
       runtimeHint: "npx",
       transport: { type: "stdio" },
     },
