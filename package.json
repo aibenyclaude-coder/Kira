@@ -33,16 +33,24 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "demo": "tsc && node dist/demo.js",
+    "demo:privacy": "tsc && node dist/demo-redaction.js",
     "aggregate": "tsc && node dist/aggregate.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "worker:dev": "cd worker && wrangler dev --port 8787",
+    "worker:deploy": "cd worker && wrangler deploy",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0"
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
-    "typescript": "^5.4.0"
+    "@vitest/coverage-v8": "^2.1.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.1.0"
   },
   "engines": {
     "node": ">=18"
