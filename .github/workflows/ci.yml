@@ -60,7 +60,7 @@ jobs:
           PY
 
   worker:
-    name: worker (typecheck + tests)
+    name: worker (tests)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -76,7 +76,8 @@ jobs:
           cache-dependency-path: worker/package-lock.json
 
       - run: npm ci
-      - run: npx tsc --noEmit
+      # vitest's miniflare pool provides the cloudflare:test types at run
+      # time, which standalone tsc cannot see — rely on vitest for typing.
       - run: npm test
 
   privacy-demo:
@@ -84,6 +85,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: client
+    env:
+      NO_COLOR: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
