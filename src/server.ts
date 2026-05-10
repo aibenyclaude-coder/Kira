@@ -43,6 +43,13 @@ const TOOLS = [
       },
       required: ["keyword"],
     },
+    annotations: {
+      title: "Kira Lookup",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   },
   {
     name: "kira_report",
@@ -76,6 +83,18 @@ const TOOLS = [
       },
       required: ["skill_id", "status"],
     },
+    annotations: {
+      title: "Kira Report",
+      // Mutates remote state (telemetry queue + central D1 when consent=basic|full)
+      // and the local NDJSON log; not a pure read.
+      readOnlyHint: false,
+      destructiveHint: false,
+      // Same (skill_id, status) submitted twice are recorded as two distinct
+      // events by design (frequency is signal), so this is not idempotent.
+      idempotentHint: false,
+      // Reaches the kira-telemetry Worker over the network when consent != off.
+      openWorldHint: true,
+    },
   },
   {
     name: "kira_route",
@@ -102,6 +121,13 @@ const TOOLS = [
       },
       required: ["goal"],
     },
+    annotations: {
+      title: "Kira Route",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   },
   {
     name: "kira_get",
@@ -120,6 +146,13 @@ const TOOLS = [
         },
       },
       required: ["id"],
+    },
+    annotations: {
+      title: "Kira Get",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
     },
   },
   KIRA_CONSENT_TOOL,
