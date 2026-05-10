@@ -1,0 +1,49 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.aibenyclaude-coder/kira",
+  "description": "Auto-manages Skills (how to do it) and Scars (failures already learned) for AI coding agents. One MCP install, zero per-project config.",
+  "repository": {
+    "url": "https://github.com/aibenyclaude-coder/Kira.git",
+    "source": "github"
+  },
+  "version": "0.5.0",
+  "websiteUrl": "https://github.com/aibenyclaude-coder/Kira",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "kira-mcp",
+      "version": "0.5.0",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "KIRA_TELEMETRY",
+          "description": "Override telemetry consent level for the process: off | basic | full. Default: basic on first run, with detail (note/context) gated by explicit opt-in. Full wire format and redaction rules in PRIVACY.md.",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "KIRA_TELEMETRY_URL",
+          "description": "Override the telemetry ingest endpoint. Default: https://kira-telemetry.workers.dev/v1/reports.",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "KIRA_HOME",
+          "description": "Where consent state and the local report log live. Default: ~/.kira",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "KIRA_PRO_KEY",
+          "description": "Optional ES256-signed JWT for the Kira Pro tier (real-time skill/scar updates from CDN). Free tier works without this.",
+          "isRequired": false,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
