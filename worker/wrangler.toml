@@ -1,0 +1,20 @@
+name = "kira-telemetry"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Daily salt rotated by env var; production deployments override this.
+[vars]
+DAILY_SALT = "dev-only-salt-replace-in-production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "kira-events-dev"
+database_id = "PLACEHOLDER_REPLACE_AFTER_d1_create"
+
+# Retention cron — purge raw events older than 180 days, ip_hash older than 24h.
+[triggers]
+crons = ["17 3 * * *"]
+
+[observability]
+enabled = true
