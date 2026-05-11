@@ -1,0 +1,76 @@
+{
+  "id": "route.turborepo-monorepo.v1",
+  "goals": [
+    "monorepo setup",
+    "turborepo",
+    "setup monorepo",
+    "build a monorepo",
+    "create a turborepo",
+    "multiple next.js apps",
+    "shared packages monorepo",
+    "pnpm workspace",
+    "monorepo with shared ui"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Turborepo Monorepo with Shared Packages",
+  "description": "Complete route for a Turborepo-managed monorepo: apps (Next.js), shared packages (UI, config, types), type-safe API layer, database ORM, testing, and Vercel deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup turborepo",
+      "description": "Scaffold a Turborepo monorepo with pnpm workspaces and build pipeline caching"
+    },
+    {
+      "order": 2,
+      "keyword": "create nextjs app",
+      "description": "Add a Next.js application inside apps/ with App Router and TypeScript"
+    },
+    {
+      "order": 3,
+      "keyword": "setup tailwind",
+      "description": "Configure shared Tailwind CSS v4 preset across all apps"
+    },
+    {
+      "order": 4,
+      "keyword": "shadcn",
+      "description": "Create a shared packages/ui with shadcn/ui components consumed by all apps"
+    },
+    {
+      "order": 5,
+      "keyword": "setup drizzle",
+      "description": "Add Drizzle ORM in a shared packages/db package with schema and migration scripts"
+    },
+    {
+      "order": 6,
+      "keyword": "setup trpc",
+      "description": "Set up tRPC router in a shared packages/api package for type-safe cross-app RPC"
+    },
+    {
+      "order": 7,
+      "keyword": "add auth",
+      "description": "Add authentication (Auth.js or Clerk) configured for the monorepo's apps"
+    },
+    {
+      "order": 8,
+      "keyword": "setup eslint",
+      "description": "Set up a shared ESLint flat config in packages/eslint-config consumed by all workspaces"
+    },
+    {
+      "order": 9,
+      "keyword": "setup vitest",
+      "description": "Configure Vitest with a shared setup across all packages"
+    },
+    {
+      "order": 10,
+      "keyword": "github actions",
+      "description": "Configure CI with Turborepo remote caching to skip unchanged packages"
+    },
+    {
+      "order": 11,
+      "keyword": "deploy vercel",
+      "description": "Deploy each Next.js app independently from the monorepo using Vercel's monorepo support"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-11T00:00:00Z"
+}
