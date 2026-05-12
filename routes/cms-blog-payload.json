@@ -1,0 +1,76 @@
+{
+  "id": "route.cms-blog-payload.v1",
+  "goals": [
+    "build a blog",
+    "create a blog",
+    "cms blog",
+    "payload cms blog",
+    "headless cms blog",
+    "content blog",
+    "blog with cms",
+    "blog with payload",
+    "build blog nextjs"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "CMS-driven Blog with Payload CMS",
+  "description": "Build a full-featured content blog from zero to production: Next.js App Router, Payload CMS for content management, email newsletter with Resend, error monitoring, and Vercel deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Scaffold the Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Set up Tailwind CSS v4 for styling"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui for accessible UI components"
+    },
+    {
+      "order": 4,
+      "keyword": "payload cms",
+      "description": "Set up Payload CMS as the headless content backend (posts, authors, categories, media)"
+    },
+    {
+      "order": 5,
+      "keyword": "resend",
+      "description": "Set up Resend for newsletter subscription emails"
+    },
+    {
+      "order": 6,
+      "keyword": "react email",
+      "description": "Create branded newsletter and notification email templates"
+    },
+    {
+      "order": 7,
+      "keyword": "sentry",
+      "description": "Add error monitoring and performance tracking"
+    },
+    {
+      "order": 8,
+      "keyword": "setup vitest",
+      "description": "Set up unit tests for utilities and content helpers"
+    },
+    {
+      "order": 9,
+      "keyword": "setup playwright",
+      "description": "Add E2E tests for reading posts and newsletter sign-up"
+    },
+    {
+      "order": 10,
+      "keyword": "github actions",
+      "description": "Configure CI/CD pipeline to run tests on every push"
+    },
+    {
+      "order": 11,
+      "keyword": "deploy vercel",
+      "description": "Deploy the blog and Payload CMS admin panel to Vercel"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-12T00:00:00Z"
+}
