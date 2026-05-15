@@ -1,0 +1,60 @@
+{
+  "id": "route.edge-api-hono.v1",
+  "goals": [
+    "build an edge api",
+    "edge api backend",
+    "build a rest api",
+    "build an api backend",
+    "hono api",
+    "type safe rest api",
+    "build backend with hono",
+    "edge compatible backend"
+  ],
+  "contexts": ["nextjs", "typescript", "edge", "cloudflare-workers"],
+  "title": "Edge-Compatible API Backend with Hono",
+  "description": "Route for building a type-safe, edge-compatible REST/RPC API using Hono, Drizzle ORM, Upstash Redis, and Vercel deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup drizzle",
+      "description": "Set up Drizzle ORM — edge-compatible, no connection pooling required"
+    },
+    {
+      "order": 3,
+      "keyword": "setup redis",
+      "description": "Add Upstash Redis for caching and rate limiting via HTTP (edge-compatible)"
+    },
+    {
+      "order": 4,
+      "keyword": "setup hono",
+      "description": "Configure Hono as the API layer with typed RPC client and Zod validation"
+    },
+    {
+      "order": 5,
+      "keyword": "setup sentry",
+      "description": "Add error monitoring and performance tracing"
+    },
+    {
+      "order": 6,
+      "keyword": "setup vitest",
+      "description": "Set up unit tests for route handlers and business logic"
+    },
+    {
+      "order": 7,
+      "keyword": "github actions",
+      "description": "Configure CI/CD to run tests and type-check on every push"
+    },
+    {
+      "order": 8,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel edge runtime for globally distributed low-latency responses"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-15T00:00:00Z"
+}
