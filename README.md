@@ -5,12 +5,15 @@
 [![npm downloads](https://img.shields.io/npm/dw/kira-mcp.svg)](https://www.npmjs.com/package/kira-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-### One MCP. Your agent becomes a genius.
+### Stop your AI from making the same mistake twice.
 
-Stop managing CLAUDE.md files, .cursorrules, and skill folders across projects.
-Install Kira once — your AI agent automatically finds the right instructions, avoids known mistakes, and executes flawlessly.
+**The failure database for AI agents.**
 
-> **Privacy by design.** Kira learns from agent outcomes via opt-in telemetry that **redacts secrets, paths, and identifiers locally before write AND server-side before storage**. Run `npm run demo:privacy` to see exactly what leaves your machine. Full wire format and opt-out in [PRIVACY.md](./PRIVACY.md).
+Right now, AI agents around the world are independently making the same mistakes — `auth.js v5` server/client import swap, `Clerk` middleware in the wrong directory, `Stripe` webhook signed against a parsed body, missing `'use client'` for hooks. No one records these failures. Every agent rediscovers every bug.
+
+Kira is a neutral third-party layer that captures those failure patterns — **Scars** — and gives every AI agent a vaccination card before it works on your project.
+
+> **Privacy by design.** Personal scars never leave your machine unless you explicitly promote them. Public scars go through a sanitizer that redacts secrets, paths, IPs, and identifiers — locally before write, and again server-side before storage. Run `npm run demo:privacy` to see exactly what leaves your machine. Full wire format and opt-out in [PRIVACY.md](./PRIVACY.md).
 
 ---
 
@@ -50,158 +53,102 @@ The snippet above works as-is in every one of them — just paste it under `mcpS
 
 ---
 
-## Demo
+## What you'll see
 
-![Kira Demo](./demo.gif)
+Open a Next.js + Auth.js + Stripe project. New session. The agent's first message:
 
----
+> **Kira brief — 3 known failures for this project type**
+>
+> 1. **Auth.js v5 signIn/signOut fails because server and client imports are swapped** (critical)
+> 2. **Clerk middleware placed in wrong directory — auth silently does nothing** (critical)
+> 3. **Next.js App Router component uses Client Hooks without 'use client'** (critical)
+>
+> _I'll keep these in mind as I work._
 
-## What happens
-
-**Before Kira:** Agent deploys to Vercel, forgets env vars, app crashes. Retries 3 times. Burns tokens.
-
-**After Kira:** Agent automatically calls `kira_lookup("deploy vercel")` before acting. Gets step-by-step instructions + a Scar warning: *"847 agents forgot env vars — run `vercel env ls` first."* Deploys correctly on the first try.
-
-### Three tools, zero config
-
-| Tool | What it does |
-|------|-------------|
-| `kira_lookup` | Give it a keyword ("stripe", "deploy", "auth") → get proven instructions + past failure warnings |
-| `kira_route` | Give it a goal ("build a web app") → get an ordered plan with skills for each step |
-| `kira_report` | Agent reports success/retry after each task → feeds the quality system |
-
-### Auto-firing
-
-You don't call Kira. **Kira tells your agent to call it.** Via MCP instructions, the agent automatically looks up skills before starting any task. You literally do nothing.
+That's three retries you don't pay for. Three Slack pings you don't have to send. Three commits that don't need a "fix:" prefix.
 
 ---
 
-## What's inside
+## Why Scars, not Skills?
 
-### 31 Skills (and growing daily)
+Skills (how to do something) are being commoditized fast — Anthropic Skills, OpenAI Skills, and the emerging `SKILL.md` standard mean platform vendors will ship the canonical "how-to" set within their own ecosystems. Third-party skill catalogs get absorbed.
 
-| Category | Skills |
-|----------|--------|
-| **Deploy** | Vercel, Cloudflare Pages |
-| **Database** | Prisma, Drizzle, Supabase |
-| **Auth** | Clerk, Auth.js v5 |
-| **Payments** | Stripe Checkout |
-| **UI** | Tailwind CSS v4, shadcn/ui |
-| **Testing** | Vitest, Playwright E2E |
-| **CI/CD** | GitHub Actions |
-| **Infra** | Docker, ESLint flat config |
-| **Services** | Resend email, React Email, Sentry, tRPC, S3/R2 upload, Upstash Redis |
-| **Background** | Inngest |
-| **State** | Zustand, Zod validation |
-| **Upload** | UploadThing, S3/R2 |
-| **Observability** | PostHog analytics, Sentry |
-| **Mobile** | Expo / React Native |
-| **i18n** | next-intl |
-| **CMS** | Payload CMS |
-| **Monorepo** | Turborepo |
+Scars (where things actually break) are different:
 
-### 12 Scars (past failure patterns)
+- **Vendors can't publish their own failure patterns.** Stripe won't write "here's how 847 agents break our webhooks." Their position prevents it.
+- **Failures compound.** Every agent that hits a known scar adds to its hit_count. The same scar that helped 12 users yesterday helps 47 today. A neutral third-party is the only place this can accumulate.
+- **Loss aversion beats novelty.** "Stop making this mistake" is a stronger promise than "Get smarter." Humans share regret faster than discovery.
 
-Scars warn your agent about mistakes other agents already made:
-- Next.js "use client" directive missing — client hooks in server components
-- Vercel deploy succeeds but app crashes — missing env vars
-- Stripe webhook signature fails — body already parsed
-- Auth.js signIn/signOut wrong import — server/client mixup
-- Prisma types are stale — forgot `generate`
-- Clerk middleware in wrong directory — auth silently broken
-- Supabase RLS not enabled — data publicly exposed
-- Tailwind v4 PostCSS config wrong — v3 plugin breaks v4
-- Vitest path alias mismatch — tsconfig vs vitest.config desync
-- And more — hit counts updated from real agent data
-
-### 7 Routes (goal-to-plan)
-
-Ask "build a web app" → Kira returns 8 ordered steps, each with its skill and scars:
-
-```
-1. Tailwind CSS v4
-2. shadcn/ui
-3. ESLint
-4. Prisma + Scar: "don't forget prisma generate"
-5. Clerk Auth + Scar: "middleware goes in root, not app/"
-6. Vitest
-7. GitHub Actions CI
-8. Vercel Deploy + Scar: "check env vars before --prod"
-```
+Kira is building the failure pattern database. Skills are the recovery paths attached to each scar. Inverted on purpose.
 
 ---
 
 ## How it works
 
-```
-Your agent gets a task
-    ↓
-Kira auto-fires (MCP instructions)
-    ↓
-kira_lookup("deploy vercel", context: ["nextjs"])
-    ↓
-Returns: Skill (step-by-step) + Scars (what to avoid)
-    ↓
-Agent announces choice → follows instructions → reports result
-    ↓
-kira_report("community.deploy-vercel-nextjs.v1", "success")
-```
-
-Skills are natural language Markdown — no executable code, no injection risk.
-
----
-
-## Why not just use CLAUDE.md?
-
-| | CLAUDE.md / .cursorrules | Kira |
+| Tool | What it does | Read or write |
 |---|---|---|
-| Setup | Copy per project | Install once |
-| Updates | Manual | Automatic |
-| Selection | You choose | Agent chooses |
-| Failure avoidance | None | Scars (past failures) |
-| Multi-step planning | None | Routes |
-| Quality tracking | None | success/retry scoring |
-| Works across AI tools | Tool-specific | Any MCP client |
+| `kira_lookup(keyword, context)` | Find scars + skills matching the current task | read |
+| `kira_route(goal)` | Get an ordered plan with the scars and skills for each step | read |
+| `kira_get(id)` | Fetch a specific scar or skill in full | read |
+| `kira_report(skill_id, status, note)` | Tell Kira whether a skill worked, so the system learns | write |
+| `kira_consent(level)` | Toggle telemetry (`off` / `basic` / `full`) | write |
+| `kira_status()` | Single-call introspection (version / tier / consent / counts) | read |
+
+### Auto-firing
+
+You don't call Kira. **Kira tells your agent to call it** via the MCP `instructions` field. The agent looks up scars before starting any task. You literally do nothing.
 
 ---
 
-## Telemetry
+## What's inside (today)
 
-Kira sends anonymous outcome data to a central Worker so the community can improve Skills and surface new Scars.
+**12 Scars** — `auth.js` server/client mixup, `Clerk` middleware path, missing `'use client'`, `Stripe` webhook parsed body, `Prisma` stale generate, `Vercel` env var loss, `Supabase` RLS not enabled, `Tailwind v4` PostCSS config, `Vitest` path alias desync, `Drizzle` SQLite vs Postgres dialect, `Docker` no multi-stage build, `Next.js` middleware path.
 
-| Mode (`KIRA_TELEMETRY` env, or `kira_consent` MCP tool) | What leaves your machine |
+**34 Skills** as recovery paths attached to scars — Deploy, Database, Auth, Payments, UI, Testing, CI/CD, Infra, Services, Mobile, i18n.
+
+**8 Routes** that thread scars and skills into ordered plans — web-app-nextjs, deploy-production, add-auth, api-stripe, setup-dev-environment, and more.
+
+Scars grow whenever an agent hits a known failure. Skills grow when contributors write a recovery path for a documented scar. The shape: **failures first, fixes second.**
+
+---
+
+## Privacy
+
+- Personal scars stay in `~/.kira/personal-scars/` — never sent anywhere by default.
+- Public scars go through a regex-based sanitizer that redacts tokens, JWTs, AWS keys, hex strings, emails, IPs, UUIDs, file paths, and `KEY=value` assignments before leaving your machine. Server-side, the worker re-sanitizes on ingest.
+- All free-text (`note`, `context`) is dropped unless you set `kira_consent("full")`.
+- Three opt-out paths: `KIRA_TELEMETRY=off`, `kira_consent("off")`, or delete `~/.kira/consent.json`.
+- Full wire format examples and retention windows in [PRIVACY.md](./PRIVACY.md).
+
+---
+
+## Roadmap
+
+| Status | Feature |
 |---|---|
-| `off` | Nothing. Local log only. |
-| `basic` *(default)* | Anonymous core: skill ID, status, anonymous UUID, kira version, OS family, Node major version, free/pro tier. **No free text.** |
-| `full` | Same as basic plus **sanitized** `note` / `context` (secrets, paths, identifiers redacted). |
-
-Full schema, redaction rules, retention, and opt-out instructions: **[PRIVACY.md](./PRIVACY.md)**.
-
-| Env var | Default | Purpose |
-|---|---|---|
-| `KIRA_TELEMETRY` | (unset → `basic`) | Override consent level for this process: `off`, `basic`, `full`. |
-| `KIRA_TELEMETRY_URL` | `https://kira-telemetry.workers.dev/v1/reports` | Endpoint for batch upload. |
-| `KIRA_HOME` | `~/.kira` | Where consent state and the local log live. |
+| done | Skills + Scars + Routes with auto-firing |
+| done | Privacy-first telemetry (Phase A) — sanitizer, consent, Cloudflare Worker ingest |
+| done | MCP tool annotations + MCP Server Card |
+| in-progress | `kira_record_failure` — auto-capture retries as personal scars (no manual report needed) |
+| in-progress | `kira_personal_brief` — surface "last session's failures" at start of new session |
+| in-progress | `kira_premortem(goal)` — heat map of past failure patterns before a task starts |
+| in-progress | Personal-scar → public-scar opt-in promotion flow (3+ hits → "share this?") |
+| in-progress | `kira_digest` — end-of-session report of scars consulted + estimated minutes saved |
+| planned | Phase B — HMAC signing, rate limit, replay protection on Worker |
+| planned | Distributed alarm + reward loop (DESIGN.md §4) |
 
 ---
 
 ## Contributing
 
-The first **1,000 contributors** get permanent free access to all Kira features (including future Pro tier).
+Scars are the highest-value contribution. If you've seen an AI agent fail in a reproducible pattern, write it up — even a one-paragraph description is enough to seed a scar.
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to add Skills and Scars.
-
----
-
-## Links
-
-- [npm](https://www.npmjs.com/package/kira-mcp)
-- [Design Philosophy](./DESIGN.md)
-- [Business Plan](./PLAN.md)
-- [Usage Guide](./USAGE.md)
+See [CONTRIBUTING.md](./CONTRIBUTING.md). Early contributors get permanent Pro tier when paid features launch.
 
 ---
 
-**Where agents shine.**
+## Naming
 
-*A [B Button Corporation](https://github.com/aibenyclaude-coder) project.*
+**Kira** (輝) — Japanese root for *shine*. The tagline used to be *"Where agents shine."* The product turned out to be more about preventing the moments when they don't.
+
+License: MIT.
