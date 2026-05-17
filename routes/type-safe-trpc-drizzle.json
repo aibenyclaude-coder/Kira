@@ -1,0 +1,70 @@
+{
+  "id": "route.type-safe-trpc-drizzle.v1",
+  "goals": [
+    "build a type-safe api",
+    "trpc drizzle",
+    "setup trpc with drizzle",
+    "type-safe fullstack",
+    "end-to-end type safety",
+    "trpc api nextjs",
+    "add trpc to nextjs",
+    "trpc drizzle zod"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Type-safe Full-Stack Next.js with tRPC + Drizzle ORM",
+  "description": "Build an end-to-end type-safe Next.js application: Drizzle ORM for the database, tRPC for the API layer, Zod for shared validation, and Zustand for client state. No code generation, no runtime type mismatches.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a new Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Set up styling with Tailwind CSS v4"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install Shadcn UI component library"
+    },
+    {
+      "order": 4,
+      "keyword": "drizzle",
+      "description": "Set up Drizzle ORM with PostgreSQL for type-safe database access"
+    },
+    {
+      "order": 5,
+      "keyword": "zod validation",
+      "description": "Define shared Zod schemas for input validation and type inference"
+    },
+    {
+      "order": 6,
+      "keyword": "trpc",
+      "description": "Set up tRPC for end-to-end type-safe API procedures"
+    },
+    {
+      "order": 7,
+      "keyword": "zustand",
+      "description": "Add Zustand for lightweight client-side state management"
+    },
+    {
+      "order": 8,
+      "keyword": "setup vitest",
+      "description": "Set up Vitest for unit and integration testing"
+    },
+    {
+      "order": 9,
+      "keyword": "github actions",
+      "description": "Configure CI/CD pipeline with type-checking and tests"
+    },
+    {
+      "order": 10,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel with environment variables"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-17T00:00:00Z"
+}
