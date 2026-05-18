@@ -1,0 +1,40 @@
+{
+  "id": "route.testing-quality-pipeline.v1",
+  "goals": [
+    "set up testing",
+    "add tests to my project",
+    "set up ci cd",
+    "testing pipeline",
+    "add quality checks",
+    "set up linting and testing",
+    "add e2e and unit tests",
+    "testing and ci setup"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Testing & Quality Pipeline",
+  "description": "End-to-end quality setup: unit tests with Vitest, E2E tests with Playwright, linting with ESLint flat config, and CI/CD with GitHub Actions.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup vitest",
+      "description": "Set up Vitest for unit and integration tests"
+    },
+    {
+      "order": 2,
+      "keyword": "setup playwright",
+      "description": "Add Playwright for end-to-end browser testing"
+    },
+    {
+      "order": 3,
+      "keyword": "setup eslint",
+      "description": "Configure ESLint v9 flat config for code quality"
+    },
+    {
+      "order": 4,
+      "keyword": "github actions",
+      "description": "Wire up CI pipeline to run tests and lint on every push"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-18T00:00:00Z"
+}
