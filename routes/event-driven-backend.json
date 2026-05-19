@@ -1,0 +1,54 @@
+{
+  "id": "route.event-driven-backend.v1",
+  "goals": [
+    "event-driven backend",
+    "background jobs nextjs",
+    "build api with background jobs",
+    "type-safe api backend",
+    "add background tasks",
+    "queue system nextjs",
+    "inngest trpc drizzle"
+  ],
+  "contexts": ["nextjs", "typescript"],
+  "title": "Event-Driven Next.js Backend",
+  "description": "Build a production-grade Next.js backend with a type-safe API layer, relational database, background job queue, and serverless caching — all optimised for edge and serverless deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "drizzle",
+      "description": "Set up Drizzle ORM with Postgres for the relational data layer"
+    },
+    {
+      "order": 2,
+      "keyword": "setup trpc",
+      "description": "Add tRPC for fully type-safe API procedures shared between server and client"
+    },
+    {
+      "order": 3,
+      "keyword": "zod validation",
+      "description": "Add Zod for input validation on tRPC procedures and form schemas"
+    },
+    {
+      "order": 4,
+      "keyword": "inngest",
+      "description": "Integrate Inngest for durable background jobs, cron tasks, and event fan-out"
+    },
+    {
+      "order": 5,
+      "keyword": "setup redis",
+      "description": "Add Upstash Redis for serverless caching and API rate limiting"
+    },
+    {
+      "order": 6,
+      "keyword": "setup vitest",
+      "description": "Configure Vitest for unit and integration tests of API procedures and job handlers"
+    },
+    {
+      "order": 7,
+      "keyword": "github actions",
+      "description": "Set up CI to run type checks, tests, and schema migrations on every push"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-19T00:00:00Z"
+}
