@@ -1,0 +1,44 @@
+{
+  "id": "route.design-system-nextjs.v1",
+  "goals": [
+    "build a design system",
+    "create a component library",
+    "set up storybook",
+    "ui component system",
+    "design system nextjs",
+    "component documentation",
+    "shared ui library"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Design System & Component Library",
+  "description": "Build a documented, tested, and linted component library: Tailwind CSS v4 for styling, shadcn/ui for base components, Storybook for interactive docs, Vitest for unit tests, and ESLint for code quality.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup tailwind",
+      "description": "Configure Tailwind CSS v4 as the styling foundation"
+    },
+    {
+      "order": 2,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui to scaffold accessible base components"
+    },
+    {
+      "order": 3,
+      "keyword": "setup storybook",
+      "description": "Add Storybook for interactive component documentation and visual testing"
+    },
+    {
+      "order": 4,
+      "keyword": "setup vitest",
+      "description": "Set up Vitest for component unit tests alongside Storybook stories"
+    },
+    {
+      "order": 5,
+      "keyword": "setup eslint",
+      "description": "Configure ESLint flat config to enforce consistent code style across components"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-21T00:00:00Z"
+}
