@@ -1,0 +1,35 @@
+{
+  "id": "route.add-email-pipeline.v1",
+  "goals": [
+    "add email",
+    "send emails",
+    "email notifications",
+    "transactional email",
+    "email templates",
+    "setup email",
+    "welcome email",
+    "password reset email"
+  ],
+  "contexts": ["nextjs", "react", "typescript", "nodejs"],
+  "title": "Transactional Email Pipeline",
+  "description": "Add production-ready transactional email to a Next.js app: configure a delivery service, build reusable React Email templates, and add test coverage.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup resend",
+      "description": "Configure Resend as the email delivery service and wire up an API route"
+    },
+    {
+      "order": 2,
+      "keyword": "react email",
+      "description": "Create reusable React Email templates (welcome, password reset, notifications)"
+    },
+    {
+      "order": 3,
+      "keyword": "setup vitest",
+      "description": "Add unit tests for template rendering and email sending logic"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-22T00:00:00Z"
+}
