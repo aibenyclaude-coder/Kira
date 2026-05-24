@@ -1,0 +1,41 @@
+{
+  "id": "route.add-ai-features.v1",
+  "goals": [
+    "add ai features",
+    "add openai",
+    "add ai to my app",
+    "integrate ai",
+    "add chatgpt",
+    "add llm",
+    "add ai chat",
+    "ai powered features",
+    "add gpt to my app"
+  ],
+  "contexts": ["nextjs", "typescript"],
+  "title": "Add AI Features to an Existing Next.js App",
+  "description": "Production-ready AI integration: OpenAI API with streaming, rate limiting via Upstash Redis, async job processing via Inngest, and structured output validation with Zod.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup openai",
+      "description": "Integrate OpenAI API with streaming chat completions and function calling"
+    },
+    {
+      "order": 2,
+      "keyword": "setup redis",
+      "description": "Add Upstash Redis for rate limiting AI requests and caching repeated prompts"
+    },
+    {
+      "order": 3,
+      "keyword": "zod validation",
+      "description": "Validate structured AI outputs (JSON mode responses) with Zod schemas"
+    },
+    {
+      "order": 4,
+      "keyword": "inngest",
+      "description": "Offload slow AI jobs (document processing, batch inference) to Inngest background functions"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-24T00:00:00Z"
+}
