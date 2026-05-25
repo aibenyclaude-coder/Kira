@@ -1,0 +1,75 @@
+{
+  "id": "route.ecommerce-nextjs.v1",
+  "goals": [
+    "build an ecommerce store",
+    "create an online shop",
+    "build a shop",
+    "add a product catalog",
+    "sell products online",
+    "build ecommerce with nextjs",
+    "create a storefront",
+    "add shopping cart"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "E-commerce Storefront with Next.js",
+  "description": "Complete route for building a production-ready e-commerce store: product catalog, image uploads, Stripe checkout, email receipts, error monitoring, and Vercel deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a new Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Set up Tailwind CSS v4 for styling"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Add shadcn/ui component library for product cards, modals, and cart UI"
+    },
+    {
+      "order": 4,
+      "keyword": "setup prisma",
+      "description": "Set up Prisma ORM with a Product, Order, and User schema"
+    },
+    {
+      "order": 5,
+      "keyword": "add auth",
+      "description": "Add user authentication for customer accounts and order history"
+    },
+    {
+      "order": 6,
+      "keyword": "file upload",
+      "description": "Add product image uploads to S3-compatible storage"
+    },
+    {
+      "order": 7,
+      "keyword": "stripe checkout",
+      "description": "Integrate Stripe Checkout for one-time product purchases"
+    },
+    {
+      "order": 8,
+      "keyword": "setup resend",
+      "description": "Send transactional order confirmation emails with Resend"
+    },
+    {
+      "order": 9,
+      "keyword": "setup sentry",
+      "description": "Add error monitoring for checkout and payment flows"
+    },
+    {
+      "order": 10,
+      "keyword": "github actions",
+      "description": "Set up CI pipeline to run tests on every push"
+    },
+    {
+      "order": 11,
+      "keyword": "deploy vercel",
+      "description": "Deploy the storefront to Vercel with production environment variables"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-25T00:00:00Z"
+}
