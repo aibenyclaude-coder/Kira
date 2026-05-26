@@ -1,0 +1,37 @@
+{
+  "id": "route.add-monitoring-analytics.v1",
+  "goals": [
+    "add monitoring",
+    "add error tracking",
+    "add analytics",
+    "add observability",
+    "setup sentry",
+    "add posthog",
+    "monitor my app",
+    "track errors in production",
+    "add product analytics",
+    "add user tracking"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Add Monitoring & Analytics to Next.js App",
+  "description": "Route for adding production observability: error tracking with Sentry, product analytics with PostHog, and CI to catch regressions before they reach users.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "add sentry",
+      "description": "Set up Sentry for real-time error monitoring and alerting"
+    },
+    {
+      "order": 2,
+      "keyword": "posthog",
+      "description": "Add PostHog for product analytics, user session recording, and feature flags"
+    },
+    {
+      "order": 3,
+      "keyword": "github actions",
+      "description": "Configure CI pipeline so regressions are caught before reaching production"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-26T00:00:00Z"
+}
