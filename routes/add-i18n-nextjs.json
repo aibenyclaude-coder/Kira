@@ -1,0 +1,52 @@
+{
+  "id": "route.add-i18n-nextjs.v1",
+  "goals": [
+    "add i18n",
+    "add internationalization",
+    "add translations",
+    "add language support",
+    "add multilingual support",
+    "internationalize next.js app",
+    "add localization",
+    "make app multilingual",
+    "translate my app",
+    "setup next-intl"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Add Internationalization (i18n) to a Next.js App",
+  "description": "Add multi-language support to an existing Next.js App Router project using next-intl: configure routing, wrap layouts, extract strings into message files, add a locale switcher, and deploy.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup next-intl",
+      "description": "Install next-intl, create locale message files (en.json, etc.), configure next.config, add middleware for locale detection, and wrap the root layout with NextIntlClientProvider"
+    },
+    {
+      "order": 2,
+      "keyword": "setup eslint",
+      "description": "Ensure linting catches missing translation keys (eslint-plugin-i18n-json or similar) and TypeScript types for message keys are generated"
+    },
+    {
+      "order": 3,
+      "keyword": "setup vitest",
+      "description": "Add unit tests for locale-switching logic and verify translated strings render correctly with mocked messages"
+    },
+    {
+      "order": 4,
+      "keyword": "setup playwright",
+      "description": "Add E2E tests that navigate to each locale route and assert locale-specific text appears"
+    },
+    {
+      "order": 5,
+      "keyword": "github actions",
+      "description": "Add a CI step to validate all locale message files have the same keys (no missing translations)"
+    },
+    {
+      "order": 6,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel — verify locale-based routing works in production and hreflang tags are present for SEO"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-27T00:00:00Z"
+}
