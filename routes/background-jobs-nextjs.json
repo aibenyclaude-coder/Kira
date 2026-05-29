@@ -1,0 +1,60 @@
+{
+  "id": "route.background-jobs-nextjs.v1",
+  "goals": [
+    "add background jobs",
+    "async processing nextjs",
+    "setup inngest",
+    "background processing",
+    "job queue nextjs",
+    "scheduled jobs nextjs",
+    "async tasks nextjs",
+    "queue system nextjs"
+  ],
+  "contexts": ["nextjs", "typescript", "react"],
+  "title": "Background Jobs & Async Processing for Next.js",
+  "description": "Add reliable background job processing to a Next.js app: Inngest for event-driven jobs, Redis for rate limiting and caching, error monitoring, and production deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "drizzle",
+      "description": "Set up Drizzle ORM for the database (job state and user data)"
+    },
+    {
+      "order": 3,
+      "keyword": "add auth",
+      "description": "Add authentication so jobs can run in the context of a real user"
+    },
+    {
+      "order": 4,
+      "keyword": "setup inngest",
+      "description": "Add Inngest for event-driven background jobs with retries and observability"
+    },
+    {
+      "order": 5,
+      "keyword": "setup redis",
+      "description": "Add Upstash Redis for rate limiting job triggers and caching results"
+    },
+    {
+      "order": 6,
+      "keyword": "setup sentry",
+      "description": "Add Sentry for error monitoring on failing background jobs"
+    },
+    {
+      "order": 7,
+      "keyword": "github actions",
+      "description": "Configure CI to run tests on every push before deploying"
+    },
+    {
+      "order": 8,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel — Inngest works with serverless functions"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-29T00:00:00Z"
+}
