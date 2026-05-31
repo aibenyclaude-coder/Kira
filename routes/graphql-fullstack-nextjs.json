@@ -1,0 +1,69 @@
+{
+  "id": "route.graphql-fullstack-nextjs.v1",
+  "goals": [
+    "build a graphql api",
+    "graphql next.js",
+    "apollo server nextjs",
+    "schema first api",
+    "graphql fullstack",
+    "add graphql to next.js",
+    "apollo client nextjs"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "GraphQL Full-Stack Next.js App (Apollo + Prisma)",
+  "description": "Schema-first full-stack Next.js app with Apollo Server 4, Prisma ORM, authentication, error monitoring, and CI/CD.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a new Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Set up styling with Tailwind CSS v4"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install UI component library"
+    },
+    {
+      "order": 4,
+      "keyword": "prisma",
+      "description": "Set up Prisma ORM with database schema and migrations"
+    },
+    {
+      "order": 5,
+      "keyword": "setup graphql",
+      "description": "Add Apollo Server 4 API route and Apollo Client with typed resolvers"
+    },
+    {
+      "order": 6,
+      "keyword": "add auth",
+      "description": "Add authentication and attach session to GraphQL context"
+    },
+    {
+      "order": 7,
+      "keyword": "setup sentry",
+      "description": "Add error monitoring for resolver failures"
+    },
+    {
+      "order": 8,
+      "keyword": "setup vitest",
+      "description": "Set up unit and integration testing"
+    },
+    {
+      "order": 9,
+      "keyword": "github actions",
+      "description": "Configure CI/CD with type-check, lint, and test pipeline"
+    },
+    {
+      "order": 10,
+      "keyword": "deploy vercel",
+      "description": "Deploy to production on Vercel"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-31T00:00:00Z"
+}
