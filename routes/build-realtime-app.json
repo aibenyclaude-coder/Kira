@@ -1,0 +1,65 @@
+{
+  "id": "route.build-realtime-app.v1",
+  "goals": [
+    "build a realtime app",
+    "add live updates",
+    "build a chat app",
+    "add websocket to nextjs",
+    "build a collaborative app",
+    "real-time notifications",
+    "build a live dashboard",
+    "add socket.io to nextjs"
+  ],
+  "contexts": ["nextjs", "react", "typescript", "nodejs"],
+  "title": "Real-Time Next.js Application with WebSocket",
+  "description": "Complete route for adding real-time push communication to a Next.js app — WebSocket server, pub/sub scaling with Upstash Redis, background job processing, and production deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a new Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Set up styling with Tailwind CSS v4"
+    },
+    {
+      "order": 3,
+      "keyword": "websocket",
+      "description": "Add Socket.io with a custom Node.js server for real-time bidirectional communication"
+    },
+    {
+      "order": 4,
+      "keyword": "add redis",
+      "description": "Add Upstash Redis as the Socket.io adapter for broadcasting events across multiple server instances"
+    },
+    {
+      "order": 5,
+      "keyword": "inngest",
+      "description": "Add background job processing for async work triggered by real-time events (e.g., fanout, rate-limited notifications)"
+    },
+    {
+      "order": 6,
+      "keyword": "setup sentry",
+      "description": "Add error monitoring for both the Next.js app and the Socket.io server"
+    },
+    {
+      "order": 7,
+      "keyword": "setup vitest",
+      "description": "Set up unit testing for event handlers and business logic"
+    },
+    {
+      "order": 8,
+      "keyword": "github actions",
+      "description": "Configure CI/CD pipeline"
+    },
+    {
+      "order": 9,
+      "keyword": "deploy vercel",
+      "description": "Deploy the Next.js app to Vercel (Socket.io server needs a persistent host like Railway or Fly.io)"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-02T00:00:00Z"
+}
