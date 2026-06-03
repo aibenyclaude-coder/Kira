@@ -1,0 +1,46 @@
+{
+  "id": "route.deploy-vps-self-hosted.v1",
+  "goals": [
+    "deploy to vps",
+    "self host my app",
+    "deploy to digitalocean",
+    "deploy to aws ec2",
+    "set up nginx",
+    "self-hosted deployment",
+    "deploy without vercel",
+    "deploy to my own server",
+    "containerized vps deployment"
+  ],
+  "contexts": ["nextjs", "nodejs", "typescript"],
+  "title": "Self-Hosted VPS Deployment (Docker + Nginx)",
+  "description": "Deploy a Next.js or Node.js app to a VPS (DigitalOcean, AWS EC2, Hetzner) using Docker containers, Nginx as a reverse proxy with SSL, and GitHub Actions for CI/CD.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup vitest",
+      "description": "Ensure tests pass before deploying"
+    },
+    {
+      "order": 2,
+      "keyword": "docker",
+      "description": "Containerize the app with multi-stage Dockerfile and .dockerignore"
+    },
+    {
+      "order": 3,
+      "keyword": "nginx",
+      "description": "Configure Nginx as reverse proxy with SSL/TLS via Certbot, HTTP/2, gzip, security headers"
+    },
+    {
+      "order": 4,
+      "keyword": "github actions",
+      "description": "Set up CI/CD to build Docker image, push to registry, and deploy to VPS on every push to main"
+    },
+    {
+      "order": 5,
+      "keyword": "setup sentry",
+      "description": "Add error monitoring for production"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-03T00:00:00Z"
+}
