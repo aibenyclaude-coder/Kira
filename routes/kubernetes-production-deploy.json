@@ -1,0 +1,41 @@
+{
+  "id": "route.kubernetes-production-deploy.v1",
+  "goals": [
+    "deploy to kubernetes",
+    "kubernetes production deployment",
+    "deploy to k8s",
+    "container orchestration production",
+    "self-hosted kubernetes",
+    "cloud native deployment",
+    "eks deployment",
+    "gke deployment",
+    "aks deployment"
+  ],
+  "contexts": ["nodejs", "docker", "devops", "typescript"],
+  "title": "Container-Native Production Deployment (Kubernetes)",
+  "description": "End-to-end route for deploying a containerised Node.js or Next.js app to Kubernetes with CI/CD, rolling updates, and production observability.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "docker",
+      "description": "Containerize the app with a production multi-stage Dockerfile and health check"
+    },
+    {
+      "order": 2,
+      "keyword": "github actions",
+      "description": "Set up CI to build, test, and push the Docker image to the registry on every push"
+    },
+    {
+      "order": 3,
+      "keyword": "kubernetes",
+      "description": "Create K8s manifests (Deployment, Service, Ingress, HPA) and configure rolling updates"
+    },
+    {
+      "order": 4,
+      "keyword": "setup sentry",
+      "description": "Add Sentry error tracking so crashes surface immediately in production"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-04T00:00:00Z"
+}
