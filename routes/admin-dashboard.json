@@ -1,0 +1,59 @@
+{
+  "id": "route.admin-dashboard.v1",
+  "goals": [
+    "build an admin dashboard",
+    "create a crud dashboard",
+    "build a data management app",
+    "admin panel",
+    "admin interface",
+    "build a backoffice",
+    "crud app with tables and forms"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "CRUD Admin Dashboard",
+  "description": "Complete route for a data management admin dashboard: auth-gated UI, data tables with sorting and filtering, and validated forms for create/edit/delete.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup tailwind",
+      "description": "Set up styling with Tailwind CSS v4"
+    },
+    {
+      "order": 2,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui for admin UI components"
+    },
+    {
+      "order": 3,
+      "keyword": "setup drizzle",
+      "description": "Set up Drizzle ORM for type-safe database access"
+    },
+    {
+      "order": 4,
+      "keyword": "add auth",
+      "description": "Add authentication and protect admin routes"
+    },
+    {
+      "order": 5,
+      "keyword": "tanstack table",
+      "description": "Add sortable, filterable, paginated data tables"
+    },
+    {
+      "order": 6,
+      "keyword": "react hook form",
+      "description": "Build validated create/edit forms with Zod"
+    },
+    {
+      "order": 7,
+      "keyword": "setup vitest",
+      "description": "Set up unit and integration tests"
+    },
+    {
+      "order": 8,
+      "keyword": "deploy vercel",
+      "description": "Deploy to production"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-05T00:00:00Z"
+}
