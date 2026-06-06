@@ -1,0 +1,60 @@
+{
+  "id": "route.supabase-nextjs-app.v1",
+  "goals": [
+    "build app with supabase",
+    "supabase nextjs app",
+    "create app with supabase database",
+    "nextjs supabase fullstack",
+    "supabase auth and database",
+    "add supabase to nextjs",
+    "supabase project setup",
+    "build with supabase backend"
+  ],
+  "contexts": ["nextjs", "react", "typescript", "supabase"],
+  "title": "Supabase-Powered Next.js Application",
+  "description": "Complete route for building a Next.js App Router application backed by Supabase — covering auth, database with Row Level Security, UI, testing, and Vercel deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a new Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Set up styling with Tailwind CSS v4"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui component library for accessible UI primitives"
+    },
+    {
+      "order": 4,
+      "keyword": "setup eslint",
+      "description": "Configure ESLint flat config for linting and code quality"
+    },
+    {
+      "order": 5,
+      "keyword": "setup supabase",
+      "description": "Configure Supabase client for server/client/middleware, enable auth with cookie sessions, and set up Row Level Security policies"
+    },
+    {
+      "order": 6,
+      "keyword": "setup vitest",
+      "description": "Set up Vitest for unit and integration testing"
+    },
+    {
+      "order": 7,
+      "keyword": "github actions",
+      "description": "Configure CI/CD pipeline with GitHub Actions"
+    },
+    {
+      "order": 8,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel with Supabase environment variables configured"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-06T00:00:00Z"
+}
