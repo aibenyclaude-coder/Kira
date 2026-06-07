@@ -1,0 +1,41 @@
+{
+  "id": "route.auth-lucia-turso.v1",
+  "goals": [
+    "add self-hosted auth",
+    "auth without clerk",
+    "auth without supabase",
+    "session based auth nextjs",
+    "lucia auth setup",
+    "diy authentication nextjs",
+    "add login without third party",
+    "custom auth nextjs",
+    "build own auth system"
+  ],
+  "contexts": ["nextjs", "typescript"],
+  "title": "Self-Hosted Auth with Lucia Auth + Turso",
+  "description": "Add session-based authentication backed by a Turso (LibSQL) edge database — no Clerk, no Supabase, full control.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a new Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup turso drizzle",
+      "description": "Set up Turso (LibSQL) as the edge-compatible database with Drizzle ORM for user and session tables"
+    },
+    {
+      "order": 3,
+      "keyword": "setup lucia",
+      "description": "Configure Lucia Auth v3 with the Drizzle adapter for session-based authentication"
+    },
+    {
+      "order": 4,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel with Turso database connection strings set as environment variables"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-07T00:00:00Z"
+}
