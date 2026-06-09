@@ -1,0 +1,51 @@
+{
+  "id": "route.cms-powered-nextjs.v1",
+  "goals": [
+    "build a cms website",
+    "content managed website nextjs",
+    "payload cms setup",
+    "headless cms nextjs",
+    "cms powered nextjs app",
+    "blog with payload",
+    "create a marketing site",
+    "add payload cms",
+    "nextjs blog setup"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "CMS-Powered Website with Next.js + Payload CMS",
+  "description": "Complete route for a content-managed website using Payload CMS for the admin panel and structured content, with Next.js App Router for the frontend.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a new Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Configure Tailwind CSS v4 for styling"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install UI component library for the frontend"
+    },
+    {
+      "order": 4,
+      "keyword": "payload cms",
+      "description": "Set up Payload CMS — admin panel, Postgres or MongoDB database, and content collections"
+    },
+    {
+      "order": 5,
+      "keyword": "setup sentry",
+      "description": "Add error monitoring for production visibility"
+    },
+    {
+      "order": 6,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel (requires an external Postgres database such as Neon or Supabase)"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-09T00:00:00Z"
+}
