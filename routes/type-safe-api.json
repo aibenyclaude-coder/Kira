@@ -1,0 +1,51 @@
+{
+  "id": "route.type-safe-api.v1",
+  "goals": [
+    "build a type-safe api",
+    "type safe api nextjs",
+    "trpc prisma setup",
+    "end to end type safety",
+    "trpc zod",
+    "add trpc to nextjs",
+    "type safe backend",
+    "fullstack type safety",
+    "trpc prisma zod"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Full Type-Safe API with tRPC + Prisma + Zod",
+  "description": "End-to-end type-safe API layer for Next.js using tRPC for the API layer, Prisma as the ORM, and Zod for input validation — no code generation, no REST, no schema drift.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize the Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "prisma",
+      "description": "Set up Prisma ORM with your database (PostgreSQL, SQLite, etc.) and generate the client"
+    },
+    {
+      "order": 3,
+      "keyword": "zod validation",
+      "description": "Install Zod for runtime input validation and type inference on procedure inputs"
+    },
+    {
+      "order": 4,
+      "keyword": "trpc",
+      "description": "Install and configure tRPC with Next.js App Router, creating the router, context, and React Query integration"
+    },
+    {
+      "order": 5,
+      "keyword": "setup vitest",
+      "description": "Set up Vitest to unit-test tRPC procedures using the createCallerFactory helper"
+    },
+    {
+      "order": 6,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel with the production database connection string configured as an environment variable"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-10T00:00:00Z"
+}
