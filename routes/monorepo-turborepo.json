@@ -1,0 +1,60 @@
+{
+  "id": "route.monorepo-turborepo.v1",
+  "goals": [
+    "monorepo",
+    "setup monorepo",
+    "create monorepo",
+    "turborepo setup",
+    "multiple apps",
+    "shared packages",
+    "workspace",
+    "pnpm workspace"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Scalable Monorepo with Turborepo",
+  "description": "Set up a Turborepo monorepo with shared UI packages, shared config (ESLint, TypeScript), testing, and CI/CD for multiple Next.js applications.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup turborepo",
+      "description": "Initialize the Turborepo workspace with apps/ and packages/ structure"
+    },
+    {
+      "order": 2,
+      "keyword": "create nextjs app",
+      "description": "Add the main Next.js app to apps/ and configure it to consume shared packages"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Set up a shared UI component library in packages/ui consumable across all apps"
+    },
+    {
+      "order": 4,
+      "keyword": "setup eslint",
+      "description": "Configure shared ESLint flat config in packages/eslint-config, extended by every app and package"
+    },
+    {
+      "order": 5,
+      "keyword": "setup zod",
+      "description": "Add shared validation schemas and TypeScript types in packages/validators"
+    },
+    {
+      "order": 6,
+      "keyword": "setup vitest",
+      "description": "Configure testing for each package with a shared Vitest setup in packages/vitest-config"
+    },
+    {
+      "order": 7,
+      "keyword": "github actions",
+      "description": "Set up CI that uses Turborepo remote caching to only build and test affected packages"
+    },
+    {
+      "order": 8,
+      "keyword": "deploy vercel",
+      "description": "Deploy each Next.js app independently to Vercel, with root directory pointing to apps/<name>"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-11T00:00:00Z"
+}
