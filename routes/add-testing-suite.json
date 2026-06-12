@@ -1,0 +1,42 @@
+{
+  "id": "route.add-testing-suite.v1",
+  "goals": [
+    "add testing suite",
+    "add tests",
+    "set up testing",
+    "add unit tests and e2e tests",
+    "add full testing",
+    "add playwright and vitest",
+    "set up test coverage",
+    "add component testing",
+    "testing strategy nextjs",
+    "add storybook and playwright"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Add a Full Testing Suite to Your Next.js App",
+  "description": "Layer unit tests, E2E tests, and visual component tests onto an existing Next.js project, then wire them all into CI.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup vitest",
+      "description": "Add unit and integration tests with Vitest — fast, TypeScript-native, and compatible with React Testing Library"
+    },
+    {
+      "order": 2,
+      "keyword": "setup playwright",
+      "description": "Add end-to-end tests with Playwright — browser automation for critical user flows"
+    },
+    {
+      "order": 3,
+      "keyword": "setup storybook",
+      "description": "Add Storybook for isolated component development and visual regression testing"
+    },
+    {
+      "order": 4,
+      "keyword": "github actions",
+      "description": "Wire all three test suites (Vitest, Playwright, Storybook) into the CI pipeline so every PR is gated on green tests"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-12T00:00:00Z"
+}
