@@ -1,0 +1,35 @@
+{
+  "id": "route.add-email-nextjs.v1",
+  "goals": [
+    "add email to my app",
+    "send transactional email",
+    "setup email sending",
+    "add resend",
+    "email templates",
+    "send welcome email",
+    "send notification email",
+    "email with react"
+  ],
+  "contexts": ["nextjs", "typescript"],
+  "title": "Add Email to Your Next.js App",
+  "description": "Full email pipeline: React Email templates, Resend delivery, and Inngest background jobs for reliable sends with retries and scheduling.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "react email",
+      "description": "Build type-safe, reusable email templates as React components (welcome, password reset, notifications)"
+    },
+    {
+      "order": 2,
+      "keyword": "resend",
+      "description": "Connect React Email templates to Resend for reliable transactional delivery with analytics"
+    },
+    {
+      "order": 3,
+      "keyword": "inngest",
+      "description": "Wrap email sends in Inngest background functions for automatic retries, scheduling, and fan-out (e.g. onboarding sequences)"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-13T00:00:00Z"
+}
