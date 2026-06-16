@@ -1,0 +1,70 @@
+{
+  "id": "route.ecommerce-nextjs.v1",
+  "goals": [
+    "build an ecommerce store",
+    "build an ecommerce app",
+    "create an online store",
+    "nextjs ecommerce",
+    "ecommerce with stripe",
+    "build a shop",
+    "product catalog with payments",
+    "add ecommerce to nextjs"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "E-Commerce Store with Next.js",
+  "description": "Full e-commerce store from zero: product catalog, authentication, database, product image uploads, Stripe Checkout payments, transactional order emails, error monitoring, and Vercel deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Scaffold the Next.js application with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Add Tailwind CSS v4 for styling"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui for product cards, cart drawer, and checkout forms"
+    },
+    {
+      "order": 4,
+      "keyword": "prisma",
+      "description": "Set up Prisma ORM with a Product, Order, and User schema"
+    },
+    {
+      "order": 5,
+      "keyword": "clerk",
+      "description": "Add Clerk for customer authentication and account management"
+    },
+    {
+      "order": 6,
+      "keyword": "add upload",
+      "description": "Set up S3 file uploads for product images"
+    },
+    {
+      "order": 7,
+      "keyword": "stripe",
+      "description": "Integrate Stripe Checkout for payments and webhooks to fulfill orders"
+    },
+    {
+      "order": 8,
+      "keyword": "resend",
+      "description": "Send transactional emails for order confirmation and shipping updates"
+    },
+    {
+      "order": 9,
+      "keyword": "sentry",
+      "description": "Add Sentry error monitoring for the checkout flow"
+    },
+    {
+      "order": 10,
+      "keyword": "deploy vercel",
+      "description": "Deploy the store to Vercel with production environment variables"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-16T00:00:00Z"
+}
