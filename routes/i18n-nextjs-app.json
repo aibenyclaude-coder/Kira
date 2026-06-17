@@ -1,0 +1,70 @@
+{
+  "id": "route.i18n-nextjs-app.v1",
+  "goals": [
+    "build an international app",
+    "add internationalization to nextjs",
+    "nextjs i18n",
+    "multilingual next.js",
+    "multi-language next.js app",
+    "setup i18n nextjs",
+    "localize next.js app",
+    "next-intl setup"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Internationalized Next.js App (i18n)",
+  "description": "Build a production-ready multi-language Next.js application: locale routing with next-intl, shadcn UI, auth, Prisma, email, error monitoring, and Vercel deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup tailwind",
+      "description": "Set up Tailwind CSS v4 for styling"
+    },
+    {
+      "order": 2,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui for accessible, locale-ready components"
+    },
+    {
+      "order": 3,
+      "keyword": "setup next-intl",
+      "description": "Configure next-intl: middleware, locale routing, message JSON files, and useTranslations hook"
+    },
+    {
+      "order": 4,
+      "keyword": "prisma",
+      "description": "Set up Prisma with a User model that stores preferred locale"
+    },
+    {
+      "order": 5,
+      "keyword": "add auth",
+      "description": "Add Auth.js (NextAuth v5) with locale-aware sign-in pages"
+    },
+    {
+      "order": 6,
+      "keyword": "zod",
+      "description": "Validate locale-specific form inputs with Zod schemas"
+    },
+    {
+      "order": 7,
+      "keyword": "resend",
+      "description": "Send transactional emails rendered in the user's locale"
+    },
+    {
+      "order": 8,
+      "keyword": "sentry",
+      "description": "Monitor errors across all locale route segments"
+    },
+    {
+      "order": 9,
+      "keyword": "github actions",
+      "description": "CI/CD pipeline that runs type checks and tests for all locales"
+    },
+    {
+      "order": 10,
+      "keyword": "deploy vercel",
+      "description": "Deploy with Vercel, setting NEXT_PUBLIC_DEFAULT_LOCALE and all locale env vars"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-17T00:00:00Z"
+}
