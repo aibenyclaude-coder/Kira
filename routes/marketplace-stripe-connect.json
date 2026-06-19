@@ -1,0 +1,55 @@
+{
+  "id": "route.marketplace-stripe-connect.v1",
+  "goals": [
+    "build a marketplace",
+    "create a marketplace app",
+    "multi-vendor platform",
+    "seller platform",
+    "build a platform app",
+    "split payments between sellers",
+    "marketplace with stripe",
+    "connect sellers to buyers"
+  ],
+  "contexts": ["nextjs", "typescript", "react"],
+  "title": "Build a Marketplace with Stripe Connect",
+  "description": "End-to-end route for a multi-vendor marketplace: project setup, database, authentication, seller onboarding, split payments, and production deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a Next.js App Router project with TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup drizzle",
+      "description": "Set up Drizzle ORM with a Postgres database (users, sellers, listings, orders)"
+    },
+    {
+      "order": 3,
+      "keyword": "add auth",
+      "description": "Add authentication so buyers and sellers can sign in"
+    },
+    {
+      "order": 4,
+      "keyword": "stripe connect",
+      "description": "Set up Stripe Connect Express accounts for seller onboarding and split payments"
+    },
+    {
+      "order": 5,
+      "keyword": "setup upstash redis",
+      "description": "Add Redis for rate limiting checkout and seller onboarding endpoints"
+    },
+    {
+      "order": 6,
+      "keyword": "setup sentry",
+      "description": "Add error tracking for payment and webhook failures"
+    },
+    {
+      "order": 7,
+      "keyword": "deploy vercel",
+      "description": "Deploy to production and configure Stripe webhook endpoints with live keys"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-19T00:00:00Z"
+}
