@@ -1,0 +1,40 @@
+{
+  "id": "route.self-host-vps-nginx.v1",
+  "goals": [
+    "self host",
+    "self-host nextjs",
+    "deploy to vps",
+    "deploy without vercel",
+    "host on my own server",
+    "deploy to ubuntu",
+    "deploy to digitalocean",
+    "deploy to hetzner",
+    "deploy to fly.io",
+    "deploy to railway",
+    "nginx deployment",
+    "docker production deployment",
+    "vps deployment"
+  ],
+  "contexts": ["nextjs", "nodejs", "docker", "linux"],
+  "title": "Self-Host Next.js on a VPS (Docker + Nginx + SSL)",
+  "description": "Deploy a Next.js application to your own server using Docker for containerization, Nginx as a reverse proxy, Let's Encrypt SSL, and GitHub Actions for automated CI/CD.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "docker",
+      "description": "Containerize the Next.js app with a multi-stage Dockerfile"
+    },
+    {
+      "order": 2,
+      "keyword": "github actions",
+      "description": "Set up CI/CD pipeline to build and push the Docker image on merge"
+    },
+    {
+      "order": 3,
+      "keyword": "nginx",
+      "description": "Configure Nginx as a reverse proxy with SSL via Certbot on the VPS"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-20T00:00:00Z"
+}
