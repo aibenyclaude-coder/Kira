@@ -1,0 +1,32 @@
+{
+  "id": "route.add-observability-nextjs.v1",
+  "goals": [
+    "add analytics",
+    "add monitoring",
+    "add error tracking",
+    "add observability",
+    "track user behaviour",
+    "monitor errors",
+    "add posthog and sentry",
+    "set up analytics and monitoring",
+    "add product analytics",
+    "instrument my app"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Add Observability to Your Next.js App",
+  "description": "Complete observability route — product analytics with PostHog and error monitoring with Sentry. Covers user tracking, custom events, feature flags, error capture, and performance tracing.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "posthog",
+      "description": "Set up PostHog for product analytics: pageview tracking, custom events, user identification, and feature flags"
+    },
+    {
+      "order": 2,
+      "keyword": "sentry",
+      "description": "Set up Sentry for error monitoring: automatic error capture, performance tracing, source maps, and release tracking"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-21T00:00:00Z"
+}
