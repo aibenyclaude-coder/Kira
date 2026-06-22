@@ -1,0 +1,40 @@
+{
+  "id": "route.async-workflows-nextjs.v1",
+  "goals": [
+    "add background jobs",
+    "send emails on events",
+    "add async workflows",
+    "background processing with emails",
+    "event-driven architecture",
+    "add job queue",
+    "user onboarding email flow",
+    "scheduled tasks with email notifications"
+  ],
+  "contexts": ["nextjs", "typescript"],
+  "title": "Add Async Workflows & Transactional Email to Next.js",
+  "description": "Route for adding event-driven background jobs and transactional email to a Next.js app — covering job orchestration, email templates, and delivery.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "inngest",
+      "description": "Set up Inngest for event-driven background jobs and cron schedules"
+    },
+    {
+      "order": 2,
+      "keyword": "react email",
+      "description": "Build type-safe, reusable email templates with React Email"
+    },
+    {
+      "order": 3,
+      "keyword": "resend",
+      "description": "Connect Resend as the email delivery provider, send from Inngest step functions"
+    },
+    {
+      "order": 4,
+      "keyword": "redis",
+      "description": "Optionally add Upstash Redis for rate-limiting and deduplication of email sends"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-22T00:00:00Z"
+}
