@@ -1,0 +1,39 @@
+{
+  "id": "route.deploy-kubernetes.v1",
+  "goals": [
+    "deploy to kubernetes",
+    "deploy to k8s",
+    "run on kubernetes",
+    "containerize and deploy",
+    "deploy with kubectl",
+    "production kubernetes deployment",
+    "self-host with kubernetes"
+  ],
+  "contexts": ["nodejs", "nextjs", "docker", "infra"],
+  "title": "Deploy a Next.js App to Kubernetes",
+  "description": "End-to-end route from containerizing your app to running it on a Kubernetes cluster with TLS, health checks, and rolling-update CI/CD.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "docker",
+      "description": "Containerize the app with a multi-stage Dockerfile and .dockerignore"
+    },
+    {
+      "order": 2,
+      "keyword": "github actions",
+      "description": "Set up CI to build and push the Docker image on every main-branch push"
+    },
+    {
+      "order": 3,
+      "keyword": "kubernetes",
+      "description": "Create k8s manifests (Deployment, Service, Ingress) and apply to cluster"
+    },
+    {
+      "order": 4,
+      "keyword": "setup sentry",
+      "description": "Add error monitoring so you know when pods crash in production"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-23T00:00:00Z"
+}
