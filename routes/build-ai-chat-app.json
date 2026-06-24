@@ -1,0 +1,60 @@
+{
+  "id": "route.build-ai-chat-app.v1",
+  "goals": [
+    "build an ai app",
+    "build ai chatbot",
+    "create ai chat app",
+    "add ai to my app",
+    "build a chatbot",
+    "ai powered app",
+    "ai chat application",
+    "llm app nextjs"
+  ],
+  "contexts": ["nextjs", "react", "typescript", "ai"],
+  "title": "Build an AI Chat App with Next.js",
+  "description": "End-to-end route for building a streaming AI chat application with authentication, persistent chat history, and production deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a new Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Set up Tailwind CSS for styling"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui for chat UI components"
+    },
+    {
+      "order": 4,
+      "keyword": "add auth",
+      "description": "Add authentication to protect the chat interface"
+    },
+    {
+      "order": 5,
+      "keyword": "prisma",
+      "description": "Set up database to persist chat conversations and message history"
+    },
+    {
+      "order": 6,
+      "keyword": "setup ai",
+      "description": "Integrate Vercel AI SDK v4 with streaming chat API route and useChat hook"
+    },
+    {
+      "order": 7,
+      "keyword": "setup redis",
+      "description": "Add Upstash Redis for per-user rate limiting on the AI endpoint"
+    },
+    {
+      "order": 8,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel with AI API key env vars configured"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-24T00:00:00Z"
+}
