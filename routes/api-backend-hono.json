@@ -1,0 +1,61 @@
+{
+  "id": "route.api-backend-hono.v1",
+  "goals": [
+    "build a rest api",
+    "create an api server",
+    "build an api backend",
+    "hono api",
+    "setup hono",
+    "build an edge api",
+    "cloudflare workers api",
+    "create a backend",
+    "build a type-safe api"
+  ],
+  "contexts": ["nodejs", "typescript", "cloudflare", "bun"],
+  "title": "Build a Type-Safe REST API with Hono.js",
+  "description": "Complete route from zero to deployed API: Hono server setup, database with Drizzle ORM, Zod request validation, Redis rate limiting, Vitest tests, and Docker or Cloudflare Workers deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup hono",
+      "description": "Initialize a Hono.js API with typed routes, CORS, and error handling"
+    },
+    {
+      "order": 2,
+      "keyword": "zod validation",
+      "description": "Add Zod request validation with @hono/zod-validator"
+    },
+    {
+      "order": 3,
+      "keyword": "setup drizzle",
+      "description": "Set up Drizzle ORM for type-safe database access"
+    },
+    {
+      "order": 4,
+      "keyword": "redis",
+      "description": "Add Upstash Redis for caching and rate limiting"
+    },
+    {
+      "order": 5,
+      "keyword": "setup msw",
+      "description": "Mock external APIs for testing with MSW"
+    },
+    {
+      "order": 6,
+      "keyword": "setup vitest",
+      "description": "Write unit and integration tests"
+    },
+    {
+      "order": 7,
+      "keyword": "docker",
+      "description": "Containerize and deploy the API"
+    },
+    {
+      "order": 8,
+      "keyword": "github actions",
+      "description": "Configure CI/CD pipeline"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-25T00:00:00Z"
+}
