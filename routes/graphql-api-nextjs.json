@@ -1,0 +1,59 @@
+{
+  "id": "route.graphql-api-nextjs.v1",
+  "goals": [
+    "build a graphql api",
+    "create graphql backend",
+    "setup graphql server",
+    "add graphql to nextjs",
+    "graphql with nextjs",
+    "apollo server nextjs",
+    "build api with graphql"
+  ],
+  "contexts": ["nextjs", "typescript"],
+  "title": "GraphQL API with Next.js",
+  "description": "Build a type-safe GraphQL API in Next.js using Apollo Server 4, Drizzle ORM, Zod input validation, Auth.js for authentication, and deploy to Vercel.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a Next.js project with TypeScript and App Router"
+    },
+    {
+      "order": 2,
+      "keyword": "drizzle",
+      "description": "Set up Drizzle ORM with your database (Neon, Supabase, or Turso)"
+    },
+    {
+      "order": 3,
+      "keyword": "graphql",
+      "description": "Install Apollo Server 4, define schema and resolvers, wire up the /api/graphql route"
+    },
+    {
+      "order": 4,
+      "keyword": "zod validation",
+      "description": "Add Zod schemas for validating GraphQL mutation inputs in resolvers"
+    },
+    {
+      "order": 5,
+      "keyword": "add auth",
+      "description": "Add Auth.js for session-based authentication; attach session to Apollo context"
+    },
+    {
+      "order": 6,
+      "keyword": "setup vitest",
+      "description": "Write unit tests for resolvers using Vitest"
+    },
+    {
+      "order": 7,
+      "keyword": "github actions",
+      "description": "Configure CI to run tests and type-check on every push"
+    },
+    {
+      "order": 8,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel — GraphQL route works as a serverless function automatically"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-26T00:00:00Z"
+}
