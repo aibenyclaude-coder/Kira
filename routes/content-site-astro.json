@@ -1,0 +1,56 @@
+{
+  "id": "route.content-site-astro.v1",
+  "goals": [
+    "build a blog",
+    "create a content site",
+    "build with astro",
+    "make a documentation site",
+    "static site generator",
+    "build a landing page",
+    "create a marketing site",
+    "build a personal site",
+    "astro project"
+  ],
+  "contexts": ["astro", "typescript", "nodejs"],
+  "title": "Content Site with Astro + MDX",
+  "description": "Complete route for a content-focused site (blog, docs, marketing) built with Astro — from project setup to production deployment with zero-JS by default.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup astro",
+      "description": "Initialize an Astro project with content collections and TypeScript (strict)"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Add Tailwind CSS via the official Astro integration"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Optionally add shadcn/ui for interactive UI islands (Button, Dialog, etc.)"
+    },
+    {
+      "order": 4,
+      "keyword": "setup vitest",
+      "description": "Add unit testing for utility functions and content transformations"
+    },
+    {
+      "order": 5,
+      "keyword": "setup playwright",
+      "description": "Add end-to-end tests for navigation, search, and content rendering"
+    },
+    {
+      "order": 6,
+      "keyword": "setup sentry",
+      "description": "Add error monitoring for SSR pages and API routes"
+    },
+    {
+      "order": 7,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel with automatic CDN, image optimization, and preview deployments"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-27T00:00:00Z"
+}
