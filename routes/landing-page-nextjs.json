@@ -1,0 +1,55 @@
+{
+  "id": "route.landing-page-nextjs.v1",
+  "goals": [
+    "build a landing page",
+    "create a marketing site",
+    "make a portfolio site",
+    "build a company website",
+    "create a product page",
+    "build a personal website",
+    "make a marketing landing page",
+    "build a startup landing page"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Animated Marketing Landing Page with Next.js",
+  "description": "Build a polished marketing or portfolio landing page — Tailwind styling, shadcn/ui components, Framer Motion animations, a Resend-powered contact form, and Vercel deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize a new Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Set up Tailwind CSS v4 for utility-first styling"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui for polished, accessible UI components"
+    },
+    {
+      "order": 4,
+      "keyword": "framer motion",
+      "description": "Add Framer Motion for scroll-triggered animations and page transitions"
+    },
+    {
+      "order": 5,
+      "keyword": "setup resend",
+      "description": "Wire up a contact form with Resend email delivery"
+    },
+    {
+      "order": 6,
+      "keyword": "setup sentry",
+      "description": "Add error monitoring for production reliability"
+    },
+    {
+      "order": 7,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel for CDN-backed global delivery"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-28T00:00:00Z"
+}
