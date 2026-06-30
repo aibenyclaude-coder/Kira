@@ -1,0 +1,75 @@
+{
+  "id": "route.admin-dashboard-nextjs.v1",
+  "goals": [
+    "build an admin dashboard",
+    "create admin panel",
+    "admin dashboard nextjs",
+    "build a dashboard",
+    "create a management interface",
+    "admin ui nextjs",
+    "build an admin panel",
+    "internal tools dashboard"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Admin Dashboard with Next.js",
+  "description": "Build a fully-featured admin dashboard: authentication with role-based access, data tables, charts, file uploads, form validation, error monitoring, and production deployment.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Initialize Next.js project with App Router and TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Set up Tailwind CSS v4 for styling"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui for data tables, charts, forms, and dialogs"
+    },
+    {
+      "order": 4,
+      "keyword": "setup prisma",
+      "description": "Set up Prisma ORM with PostgreSQL for the admin data layer"
+    },
+    {
+      "order": 5,
+      "keyword": "add auth clerk",
+      "description": "Add Clerk auth with role-based access control (admin vs user roles)"
+    },
+    {
+      "order": 6,
+      "keyword": "setup zod validation",
+      "description": "Add Zod schema validation for admin forms and API inputs"
+    },
+    {
+      "order": 7,
+      "keyword": "zustand",
+      "description": "Add Zustand for client-side state (filters, selections, sidebar state)"
+    },
+    {
+      "order": 8,
+      "keyword": "upload files",
+      "description": "Add file upload support (avatars, attachments) with UploadThing"
+    },
+    {
+      "order": 9,
+      "keyword": "setup vitest",
+      "description": "Add unit and integration tests for admin logic"
+    },
+    {
+      "order": 10,
+      "keyword": "setup sentry",
+      "description": "Add error monitoring to catch production issues early"
+    },
+    {
+      "order": 11,
+      "keyword": "deploy vercel",
+      "description": "Deploy the admin dashboard to production"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-06-30T00:00:00Z"
+}
