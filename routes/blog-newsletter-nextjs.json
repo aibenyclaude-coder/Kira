@@ -1,0 +1,62 @@
+{
+  "id": "route.blog-newsletter-nextjs.v1",
+  "goals": [
+    "build a blog with newsletter",
+    "create a publication",
+    "blog with email newsletter",
+    "content site with newsletter",
+    "build a blog and newsletter",
+    "cms blog with email subscribers",
+    "nextjs blog newsletter",
+    "create a newsletter with cms",
+    "add newsletter to my blog",
+    "build a content newsletter site"
+  ],
+  "contexts": ["nextjs", "typescript"],
+  "title": "Blog with Newsletter (Payload CMS + Resend)",
+  "description": "Build a content-driven blog with a subscriber newsletter: Payload CMS for content management, React Email for templates, Resend for delivery, and Inngest for scheduled and triggered sends.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Scaffold Next.js App Router with TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Tailwind CSS v4 for blog post layout and subscriber form styling"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "UI components for subscriber forms, newsletter opt-in banner, and post cards"
+    },
+    {
+      "order": 4,
+      "keyword": "payload cms",
+      "description": "Headless CMS for blog posts, authors, tags, and subscriber list management via the built-in admin panel"
+    },
+    {
+      "order": 5,
+      "keyword": "setup react email",
+      "description": "Type-safe React components for welcome email and newsletter digest templates"
+    },
+    {
+      "order": 6,
+      "keyword": "setup resend",
+      "description": "Reliable email delivery for welcome emails on subscribe and newsletter broadcasts"
+    },
+    {
+      "order": 7,
+      "keyword": "setup inngest",
+      "description": "Trigger welcome emails on subscribe event; schedule weekly newsletter digests with cron; retry failed sends automatically"
+    },
+    {
+      "order": 8,
+      "keyword": "deploy vercel",
+      "description": "Production deployment — note: Payload CMS requires an external Postgres database (e.g., Neon or Railway Postgres)"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-07-02T00:00:00Z"
+}
