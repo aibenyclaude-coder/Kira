@@ -1,0 +1,72 @@
+{
+  "id": "route.trpc-fullstack-nextjs.v1",
+  "goals": [
+    "build a trpc api",
+    "setup trpc full stack",
+    "trpc nextjs app",
+    "type safe api nextjs",
+    "build api with trpc",
+    "end-to-end type safety",
+    "trpc drizzle nextjs",
+    "type-safe full stack",
+    "build with trpc",
+    "trpc app router"
+  ],
+  "contexts": ["nextjs", "typescript", "react"],
+  "title": "Type-Safe Full-Stack App with tRPC + Drizzle",
+  "description": "Build a production-ready Next.js application with end-to-end type safety: tRPC for the API layer, Drizzle ORM for the database, Auth.js for authentication, and Zod for validation — zero code generation required.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "create nextjs app",
+      "description": "Scaffold a Next.js App Router project with TypeScript"
+    },
+    {
+      "order": 2,
+      "keyword": "setup tailwind",
+      "description": "Add Tailwind CSS v4 for styling"
+    },
+    {
+      "order": 3,
+      "keyword": "shadcn",
+      "description": "Install shadcn/ui component library"
+    },
+    {
+      "order": 4,
+      "keyword": "setup drizzle",
+      "description": "Add Drizzle ORM for type-safe database queries without a code-gen step"
+    },
+    {
+      "order": 5,
+      "keyword": "setup trpc",
+      "description": "Set up tRPC for end-to-end type-safe API procedures"
+    },
+    {
+      "order": 6,
+      "keyword": "zod validation",
+      "description": "Add Zod schemas for input validation on tRPC procedures"
+    },
+    {
+      "order": 7,
+      "keyword": "add auth",
+      "description": "Add Auth.js v5 authentication with session access in tRPC context"
+    },
+    {
+      "order": 8,
+      "keyword": "setup vitest",
+      "description": "Configure Vitest for unit and integration testing of tRPC procedures"
+    },
+    {
+      "order": 9,
+      "keyword": "github actions",
+      "description": "Set up CI/CD pipeline with type checking and tests"
+    },
+    {
+      "order": 10,
+      "keyword": "deploy vercel",
+      "description": "Deploy to Vercel production"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-07-03T00:00:00Z"
+}
