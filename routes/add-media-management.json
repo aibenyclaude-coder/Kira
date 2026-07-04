@@ -1,0 +1,48 @@
+{
+  "id": "route.add-media-management.v1",
+  "goals": [
+    "add image management",
+    "add video management",
+    "add media management",
+    "cloudinary nextjs",
+    "add image cdn",
+    "add media to nextjs"
+  ],
+  "contexts": ["nextjs", "react", "typescript"],
+  "title": "Add Image & Video Management to Next.js",
+  "description": "Complete media pipeline: Cloudinary CDN for image/video delivery and transformations, UploadThing for the browser upload widget, S3 for durable raw-file backup, and Prisma to track media metadata.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "cloudinary",
+      "description": "Set up Cloudinary for image/video upload, auto-optimization, and CDN delivery"
+    },
+    {
+      "order": 2,
+      "keyword": "upload files",
+      "description": "Add UploadThing for a type-safe browser upload widget integrated with Next.js"
+    },
+    {
+      "order": 3,
+      "keyword": "aws s3",
+      "description": "Configure S3 (or Cloudflare R2) for durable raw-file storage and backup"
+    },
+    {
+      "order": 4,
+      "keyword": "add prisma",
+      "description": "Store media metadata (public ID, URL, size, mime type) in the database"
+    },
+    {
+      "order": 5,
+      "keyword": "sentry",
+      "description": "Monitor upload errors and failed transformations in production"
+    },
+    {
+      "order": 6,
+      "keyword": "deploy vercel",
+      "description": "Deploy the media-enabled app to production"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-07-04T00:00:00Z"
+}
