@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Scar submission intake: issue form (`scar-submission.yml`), an intake bot that validates submissions with the exact rules the shipped corpus passes (`scripts/validate-entry.mjs` + sanitizer no-op gate), and auto-labeling (`valid-scar` / `invalid-scar`).
 - Corpus quality gate in CI: every shipped skill/scar must pass the submission validator (`tests/corpus-lint.test.ts`) — the poisoning/leak defense for text that gets injected into agents' contexts.
 - "scars absorbed" README badge backed by `docs/stats.json` (deterministic; CI fails if stale so the badge can never lie).
+- **Reciprocity (F5): share a scar, or subscribe, or wait.** New `contributor` tier (earned: one accepted scar = a signed key), `KIRA_KEY` env (legacy `KIRA_PRO_KEY` still honored), and a tier-gated corpus feed: `GET /v1/corpus/{skills,scars}.json` on the worker serves the fresh feed to contributor/supporter keys and the 90-day-delayed commons to everyone else. Free tier stays zero-phone-home by default (opt-in via `KIRA_REMOTE_URL`). Enforcement starts in grace mode — see `RECIPROCITY.md`.
+- `scripts/sign-key.mjs` (maintainer key issuance, private key via env only) and `scripts/gen-corpus.mjs` (deterministic `docs/corpus.json` bundle the feed serves; CI-freshness-checked).
+
+### Changed
+- Key verification standardized on proper ES256 (raw ieee-p1363 signatures) in both the client (`src/license.ts`) and the worker (WebCrypto). Pre-standard DER-signed keys — none were ever issued — would no longer verify.
+- Telemetry wire format unchanged: `contributor` reports as `free` on the wire (earned status is a distribution entitlement, not a telemetry class).
 
 ## [0.7.0] - 2026-07-06
 
