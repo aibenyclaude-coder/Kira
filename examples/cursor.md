@@ -59,7 +59,7 @@ or `off` for local log only. See [../PRIVACY.md](../PRIVACY.md).
 ## Verify
 
 1. Open **Cursor Settings → MCP** (or **Tools & Integrations → MCP**).
-2. `kira` should show a green dot and list six tools
+2. `kira` should show a green dot and list ten tools
    (`kira_lookup`, `kira_route`, `kira_get`, `kira_report`, `kira_consent`,
    `kira_status`).
 3. If it stays grey, hit the refresh icon or restart Cursor — `npx` downloads

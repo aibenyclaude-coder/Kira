@@ -29,7 +29,7 @@ No API key, no account, no build step. `npx` fetches `kira-mcp` on first run.
 
 ## What your agent gets
 
-Once loaded, Kira exposes **six tools**. You never call them — Kira's MCP
+Once loaded, Kira exposes **ten tools** (as of v0.8.0). You never call them — Kira's MCP
 instructions tell the agent to call them automatically before and after tasks.
 
 | Tool | What it does |
@@ -71,6 +71,6 @@ You don't need a client to prove the server works. From any shell:
   sleep 0.5) | npx kira-mcp
 ```
 
-You should see the `initialize` reply, a `tools/list` listing all six tools,
+You should see the `initialize` reply, a `tools/list` listing all ten tools,
 and a `kira_lookup` result. Inside a client, confirm the same list appears in
 the client's MCP panel after a restart.

@@ -53,9 +53,10 @@ kira_lookup("deploy vercel", context: ["nextjs"])
 
 Returns:
 - **Skill**: Step-by-step deployment instructions
-- **Scars**: "847 agents forgot env vars — run `vercel env ls` first"
+- **Scars**: real recorded failures, e.g. *"Vercel deploy succeeds but the app crashes — missing env vars. Run `vercel env ls` first."*
+- **Your own scars first**: failures recorded on this machine (see below) outrank shared ones at equal severity
 
-Fuzzy matching works — "deploy", "database", "auth" all resolve correctly.
+Fuzzy matching works — "deploy", "database", "auth" all resolve correctly, and Japanese queries are first-class (CJK bigram matching). On a total miss you get scored `near_skills` / `near_scars` instead of a shrug.
 
 ### kira_route — plan multi-step goals
 
@@ -82,6 +83,22 @@ kira_report("community.deploy-vercel-nextjs.v1", "success")
 ```
 
 Status options: `success`, `retry`, `failure`. This data drives quality scoring and future Scar generation.
+
+## The personal failure loop (the part that works on day one)
+
+No network, no community required — your agent stops repeating **its own** mistakes:
+
+```
+kira_record_failure(title, mistake, instead)   ← the moment something burns
+kira_personal_brief()                          ← session start: "here's where you got burned"
+kira_premortem("deploy the worker")            ← before a task: failure heat-map for THIS goal
+kira_share_scar(scar_id)                       ← optional: promote your scar to everyone
+```
+
+- Personal scars live in `~/.kira/personal-scars/` — **local-only, never uploaded, on any tier**.
+- Re-recording a similar failure merges into the existing scar (`hit_count` counts real recurrences).
+- Personal scars fire automatically in `kira_lookup`, `kira_premortem`, `kira_get` and `kira_status`.
+- Sharing is always an explicit act: `kira_share_scar` only *prepares* a submission (sanitized twice); you click submit. Accepted scars earn contributor status — see [RECIPROCITY.md](./RECIPROCITY.md).
 
 ## Run the demo (no MCP client needed)
 
@@ -111,8 +128,11 @@ You should see three JSON-RPC responses: `initialize`, `tools/list`, and the `ki
 
 | Variable | Default | Description |
 |---|---|---|
-| `KIRA_REMOTE_URL` | (none) | URL for remote skill index auto-updates |
-| `KIRA_PRO_KEY` | (none) | Pro license key (coming soon) |
+| `KIRA_KEY` | (none) | Contributor / supporter key — unlocks the fresh community feed ([RECIPROCITY.md](./RECIPROCITY.md)) |
+| `KIRA_REMOTE_URL` | (none) | Opt-in corpus feed URL for the free tier (90-day-delayed commons) |
+| `KIRA_PRO_KEY` | (none) | Legacy alias of `KIRA_KEY` |
+| `KIRA_HOME` | `~/.kira` | Personal scars, consent state, miss log, flywheel output |
+| `KIRA_TELEMETRY` | `basic` | `off` / `basic` / `full` — see [PRIVACY.md](./PRIVACY.md) |
 
 ## Contributing
 

@@ -101,7 +101,7 @@ above instead.
 ## Verify
 
 1. Reload Continue (or restart the IDE).
-2. Open the Continue **agent/tools** panel — Kira's six tools should be
+2. Open the Continue **agent/tools** panel — Kira's ten tools should be
    selectable (`kira_lookup`, `kira_route`, `kira_get`, `kira_report`,
    `kira_consent`, `kira_status`).
 3. First launch downloads `kira-mcp` via `npx`; give it a few seconds.
