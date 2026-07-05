@@ -8,6 +8,12 @@
   "bin": {
     "kira-mcp": "./dist/index.js"
   },
+  "exports": {
+    "./types": {
+      "types": "./dist/types-public.d.ts",
+      "import": "./dist/types-public.js"
+    }
+  },
   "files": [
     "dist/",
     "skills/",
@@ -31,7 +37,7 @@
     "url": "https://github.com/aibenyclaude-coder/Kira"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --declaration",
     "start": "node dist/index.js",
     "demo": "tsc && node dist/demo.js",
     "demo:privacy": "tsc && node dist/demo-redaction.js",
