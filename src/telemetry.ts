@@ -19,6 +19,7 @@ import { gzipSync } from "node:zlib";
 import { loadConsent } from "./consent.js";
 import { sanitizePayload } from "./sanitize.js";
 import { KIRA_HOME } from "./consent.js";
+import type { KiraTier } from "./license.js";
 import type {
   ConsentLevel,
   OsFamily,
@@ -75,7 +76,7 @@ interface BuildArgs {
   request: ReportRequest;
   level: ConsentLevel;
   client_id: string;
-  tier: "free" | "pro";
+  tier: KiraTier;
 }
 
 export function buildPayload(args: BuildArgs): ReportPayloadV1 {
@@ -87,7 +88,9 @@ export function buildPayload(args: BuildArgs): ReportPayloadV1 {
     client_id,
     kira_version: readVersion(),
     ts: new Date().toISOString(),
-    env: { os: osFamily(), node_major: nodeMajor(), tier },
+    // Wire format v1 knows free|pro only; contributor reports as free —
+    // earned status is a distribution entitlement, not a telemetry class.
+    env: { os: osFamily(), node_major: nodeMajor(), tier: tier === "pro" ? "pro" : "free" },
   };
   if (level === "full") {
     const note = request.note;
@@ -123,7 +126,7 @@ async function appendLog(payload: ReportPayloadV1, sent: boolean): Promise<void>
  * Append the report locally and (if consent allows) enqueue for upload.
  * Returns immediately — network work is deferred to the flush loop.
  */
-export async function enqueue(request: ReportRequest, tier: "free" | "pro"): Promise<void> {
+export async function enqueue(request: ReportRequest, tier: KiraTier): Promise<void> {
   const consent = await loadConsent();
   // Always append the locally-sanitized payload, even if consent is "off",
   // so users can audit what would have been sent.

@@ -8,7 +8,7 @@ import { loadAllSkills, loadAllScars } from "./index-loader.js";
 import { loadRoutes, resolveRoute } from "./route.js";
 import { lookup, indexItems } from "./lookup.js";
 import { record, logMiss } from "./report.js";
-import { verifyProKey } from "./license.js";
+import { verifyProKey, resolveKiraKey } from "./license.js";
 import { startFlusher, shutdownFlush } from "./telemetry.js";
 import { KIRA_CONSENT_TOOL, handleKiraConsent } from "./tools/kira_consent.js";
 import { KIRA_STATUS_TOOL, buildStatus, readVersion } from "./tools/kira_status.js";
@@ -177,10 +177,14 @@ const TOOLS = [
 ];
 
 export async function startServer(): Promise<void> {
-  const tier: KiraTier = verifyProKey(process.env.KIRA_PRO_KEY);
-  if (tier === "pro") {
+  const tier: KiraTier = verifyProKey(resolveKiraKey());
+  if (tier !== "free") {
     // eslint-disable-next-line no-console
-    console.error("[kira] Pro license verified. Real-time updates enabled.");
+    console.error(
+      tier === "pro"
+        ? "[kira] Supporter key verified. Fresh community feed enabled."
+        : "[kira] Contributor key verified — thanks for sharing a scar. Fresh community feed enabled."
+    );
   }
 
   const server = new Server(

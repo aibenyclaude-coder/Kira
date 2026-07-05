@@ -1,24 +1,29 @@
 /**
- * Kira Pro license verification.
+ * Kira key verification — free / contributor / pro tiers (RECIPROCITY.md).
  *
- * JWT (ES256) verification using Node.js crypto — zero external dependencies.
- * Public key ships with npm package. Private key stays on the signing server.
+ * - `contributor` is EARNED: one accepted community scar → a signed key.
+ * - `pro` (supporter) is paid.
+ * - Both unlock the fresh community feed; everything else is free forever.
+ *
+ * ES256 JWTs with standard raw (ieee-p1363) signatures, verified with Node
+ * crypto — zero external dependencies. The public key ships with the npm
+ * package; the private key never leaves the signing machine.
  *
  * Invalid/expired/missing key → "free" tier (never an error).
  */
-import { createVerify } from "node:crypto";
+import { verify as cryptoVerify } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-export type KiraTier = "free" | "pro";
+export type KiraTier = "free" | "contributor" | "pro";
 
-interface ProClaims {
+interface KeyClaims {
   sub: string;
-  email: string;
-  tier: "pro";
+  email?: string;
+  tier: "pro" | "contributor";
   iss: string;
   iat: number;
   exp: number;
@@ -46,12 +51,22 @@ function decodeJwtPart<T>(part: string): T {
   return JSON.parse(base64UrlDecode(part).toString("utf-8")) as T;
 }
 
+/** The key env var: KIRA_KEY, with KIRA_PRO_KEY kept as a legacy alias. */
+export function resolveKiraKey(
+  env: NodeJS.ProcessEnv = process.env
+): string | undefined {
+  return env.KIRA_KEY ?? env.KIRA_PRO_KEY;
+}
+
 /**
- * Verify a KIRA_PRO_KEY JWT and return the effective tier.
- * Any failure → "free" (graceful degradation, never breaks the agent).
+ * Verify a Kira key JWT against a specific public key PEM.
+ * Exported for tests; production callers use verifyProKey (embedded keys).
  */
-export function verifyProKey(key: string | undefined): KiraTier {
-  if (!key) return "free";
+export function verifyKeyWithPem(
+  key: string | undefined,
+  publicKeyPem: string | undefined
+): KiraTier {
+  if (!key || !publicKeyPem) return "free";
 
   try {
     const parts = key.split(".");
@@ -59,30 +74,41 @@ export function verifyProKey(key: string | undefined): KiraTier {
 
     const [headerB64, payloadB64, signatureB64] = parts;
 
-    // Decode header to find kid
     const header = decodeJwtPart<{ alg: string; kid?: string }>(headerB64);
     if (header.alg !== "ES256") return "free";
 
-    const kid = header.kid ?? "kira-pro-v1";
-    const publicKeyPem = PUBLIC_KEYS[kid];
-    if (!publicKeyPem) return "free";
-
-    // Verify signature
-    const verifier = createVerify("SHA256");
-    verifier.update(`${headerB64}.${payloadB64}`);
-    const signatureValid = verifier.verify(
-      publicKeyPem,
+    // Standard ES256: raw r||s signature (ieee-p1363), not DER.
+    const signatureValid = cryptoVerify(
+      "sha256",
+      Buffer.from(`${headerB64}.${payloadB64}`),
+      { key: publicKeyPem, dsaEncoding: "ieee-p1363" },
       base64UrlDecode(signatureB64)
     );
     if (!signatureValid) return "free";
 
-    // Decode and validate claims
-    const claims = decodeJwtPart<ProClaims>(payloadB64);
+    const claims = decodeJwtPart<KeyClaims>(payloadB64);
     if (claims.iss !== "kira.sh") return "free";
-    if (claims.tier !== "pro") return "free";
     if (claims.exp < Date.now() / 1000) return "free";
+    if (claims.tier === "pro") return "pro";
+    if (claims.tier === "contributor") return "contributor";
+    return "free";
+  } catch {
+    return "free";
+  }
+}
 
-    return "pro";
+/**
+ * Verify a Kira key (KIRA_KEY / KIRA_PRO_KEY) and return the effective tier.
+ * Name kept from the pro-only era for call-site compatibility.
+ */
+export function verifyProKey(key: string | undefined): KiraTier {
+  if (!key) return "free";
+  try {
+    const parts = key.split(".");
+    if (parts.length !== 3) return "free";
+    const header = decodeJwtPart<{ alg: string; kid?: string }>(parts[0]!);
+    const kid = header.kid ?? "kira-pro-v1";
+    return verifyKeyWithPem(key, PUBLIC_KEYS[kid]);
   } catch {
     return "free";
   }
