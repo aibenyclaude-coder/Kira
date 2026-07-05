@@ -3,6 +3,7 @@
 [![CI](https://github.com/aibenyclaude-coder/Kira/actions/workflows/ci.yml/badge.svg)](https://github.com/aibenyclaude-coder/Kira/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/kira-mcp.svg)](https://www.npmjs.com/package/kira-mcp)
 [![npm downloads](https://img.shields.io/npm/dw/kira-mcp.svg)](https://www.npmjs.com/package/kira-mcp)
+[![scars absorbed](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Faibenyclaude-coder%2FKira%2Fmain%2Fdocs%2Fstats.json&query=%24.community_scars&label=scars%20absorbed&color=orange)](./skills/scars/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 ### Your agent stops repeating its own mistakes.
@@ -95,7 +96,9 @@ A lookup miss is not a dead end — it's demand data. Kira returns the closest s
 
 34 community skills across deploy / database / auth / payments / UI / testing / CI / infra / mobile / CMS, and 12 community scars — real failure patterns like *"Vercel deploy succeeds but the app crashes: missing env vars"* or *"Auth.js v5 signIn imported from the wrong side"*. `kira_route` turns a goal ("build a web app") into an ordered plan with the right skill and scars per step.
 
-Community scars are where personal scars graduate to: a promotion flow (opt-in, sanitized, human-reviewed) is on the roadmap — see [FLYWHEEL.md](./FLYWHEEL.md) for what ships when.
+**Community scars are where personal scars graduate to — and the flow is live.** Ask your agent to run `kira_share_scar(scar_id)`: it re-sanitizes your personal scar, generalizes it, and hands you a prefilled submission link (nothing uploads until you click). An intake bot validates the JSON; a human reviews the content; on merge it ships to every Kira user. Prefer forms? [Submit a scar directly](../../issues/new?template=scar-submission.yml).
+
+Every accepted scar earns **contributor status** — sharing is how you get the fresh feed for free (see Contributing below).
 
 ---
 

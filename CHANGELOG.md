@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `kira_share_scar` (F4 v1, 10th tool) — promote a personal scar into a community submission: re-sanitizes, generalizes to the community shape, and returns a prefilled GitHub issue URL + `gh` fallback. The tool uploads NOTHING; submitting stays an explicit human act.
+- Scar submission intake: issue form (`scar-submission.yml`), an intake bot that validates submissions with the exact rules the shipped corpus passes (`scripts/validate-entry.mjs` + sanitizer no-op gate), and auto-labeling (`valid-scar` / `invalid-scar`).
+- Corpus quality gate in CI: every shipped skill/scar must pass the submission validator (`tests/corpus-lint.test.ts`) — the poisoning/leak defense for text that gets injected into agents' contexts.
+- "scars absorbed" README badge backed by `docs/stats.json` (deterministic; CI fails if stale so the badge can never lie).
+
 ## [0.7.0] - 2026-07-06
 
 ### Added

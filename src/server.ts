@@ -21,6 +21,7 @@ import {
   KIRA_PERSONAL_BRIEF_TOOL,
   handlePersonalBrief,
 } from "./tools/personal-brief.js";
+import { KIRA_SHARE_SCAR_TOOL, handleShareScar } from "./tools/share-scar.js";
 import { loadPersonalScars } from "./personal-scars.js";
 import type { Skill, Scar, ReportStatus, ConsentLevel } from "./types.js";
 import type { KiraTier } from "./license.js";
@@ -172,6 +173,7 @@ const TOOLS = [
   KIRA_PREMORTEM_TOOL,
   KIRA_RECORD_FAILURE_TOOL,
   KIRA_PERSONAL_BRIEF_TOOL,
+  KIRA_SHARE_SCAR_TOOL,
 ];
 
 export async function startServer(): Promise<void> {
@@ -365,6 +367,18 @@ export async function startServer(): Promise<void> {
 
     if (name === "kira_personal_brief") {
       const result = await handlePersonalBrief(args);
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
+      };
+    }
+
+    if (name === "kira_share_scar") {
+      const result = await handleShareScar(args);
       return {
         content: [
           {

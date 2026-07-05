@@ -70,6 +70,12 @@ The best reference is an existing skill. Start with:
 
 Scars warn agents about mistakes other agents already made.
 
+**The 2-minute path (recommended):** if the failure already lives in your `~/.kira/personal-scars/` (your agent recorded it with `kira_record_failure`), just ask your agent to run **`kira_share_scar(scar_id)`**. It re-sanitizes, generalizes, and hands you a prefilled submission link — nothing is uploaded until *you* open it. Or use the [scar submission form](../../issues/new?template=scar-submission.yml) directly. The intake bot validates your JSON on the spot and a maintainer reviews content before merge.
+
+**Why share:** every accepted scar ships to every Kira user — and earns you **contributor status** (the fresh community feed that non-contributors will subscribe for; first 1,000 contributors keep it permanently free).
+
+All submissions must pass `scripts/validate-entry.mjs` — the same gate every shipped scar passes: 3+ keywords, concrete `mistake`/`instead` (40+ chars each), honest `hit_count`, and **zero secret-shaped content** (the sanitizer must be a no-op on your text).
+
 ```json
 {
   "id": "scar.<slug>.v1",

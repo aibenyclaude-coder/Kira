@@ -1,0 +1,53 @@
+name: scar-intake
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  validate:
+    if: contains(github.event.issue.labels.*.name, 'scar-submission')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Validate submission
+        run: node scripts/scar-intake.mjs
+        env:
+          # The body goes through an env var, never through shell interpolation.
+          ISSUE_BODY: ${{ github.event.issue.body }}
+      - name: Comment result + label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('intake-result.md', 'utf-8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            // Replace the bot's previous verdict comment instead of stacking.
+            const marker = '<!-- kira-scar-intake -->';
+            const comments = await github.rest.issues.listComments({ owner, repo, issue_number, per_page: 100 });
+            const mine = comments.data.find(c => c.body && c.body.includes(marker) && c.user.type === 'Bot');
+            const full = marker + '\n' + body;
+            if (mine) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body: full });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body: full });
+            }
+
+            const verdict = body.startsWith('## ✅') ? 'valid-scar' : 'invalid-scar';
+            const other = verdict === 'valid-scar' ? 'invalid-scar' : 'valid-scar';
+            await github.rest.issues.addLabels({ owner, repo, issue_number, labels: [verdict] });
+            try {
+              await github.rest.issues.removeLabel({ owner, repo, issue_number, name: other });
+            } catch (e) { /* label was not present — fine */ }
