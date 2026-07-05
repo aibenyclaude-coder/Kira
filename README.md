@@ -199,6 +199,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to add Skills and Scars.
 - [Design Philosophy](./DESIGN.md)
 - [Business Plan](./PLAN.md)
 - [Usage Guide](./USAGE.md)
+- [Troubleshooting](./TROUBLESHOOTING.md)
 
 ---
 
