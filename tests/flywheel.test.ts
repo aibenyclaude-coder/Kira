@@ -48,6 +48,20 @@ describe("clusterMisses", () => {
     expect(clusters[0]!.count).toBe(2);
     expect(clusters[0]!.nearBest.get("s1")).toBe(0.4);
   });
+
+  it("assigns an entry to the MOST similar cluster, not the first past threshold", () => {
+    // Entry 3 clears the 0.5 bar for both clusters (0.5 vs cluster 1,
+    // 0.8 vs cluster 2) — best-fit must pick cluster 2.
+    const clusters = clusterMisses([
+      { keyword: "stripe webhook signature verify" },
+      { keyword: "stripe webhook retry storm" },
+      { keyword: "stripe webhook retry storm signature" },
+    ]);
+    expect(clusters.length).toBe(2);
+    const grown = clusters.find((c) => c.count === 2);
+    expect(grown).toBeDefined();
+    expect(grown!.rep).toBe("stripe webhook retry storm");
+  });
 });
 
 describe("aggregateReports + clusterNotes", () => {

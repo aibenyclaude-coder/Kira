@@ -8,9 +8,11 @@
  */
 import { readFileSync } from "node:fs";
 import { existsSync } from "node:fs";
+import { readdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadConsent } from "../consent.js";
+import { PERSONAL_SCARS_DIR } from "../personal-scars.js";
 import { REPORTS_LOG, TELEMETRY_URL } from "../telemetry.js";
 import type { Skill, Scar, ConsentState } from "../types.js";
 import type { KiraTier } from "../license.js";
@@ -18,7 +20,7 @@ import type { KiraTier } from "../license.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_JSON = join(__dirname, "..", "..", "package.json");
 
-function readVersion(): string {
+export function readVersion(): string {
   try {
     return (JSON.parse(readFileSync(PACKAGE_JSON, "utf-8")) as { version?: string })
       .version ?? "0.0.0";
@@ -55,12 +57,15 @@ export interface KiraStatusResult {
   counts: {
     skills: number;
     scars: number;
+    /** Local-only failures recorded by kira_record_failure. */
+    personal_scars: number;
     routes: number;
   };
   paths: {
     reports_log: string;
     reports_log_exists: boolean;
     consent_file: string;
+    personal_scars_dir: string;
     telemetry_url: string;
   };
 }
@@ -79,6 +84,16 @@ export async function buildStatus({
   routesCount,
 }: BuildArgs): Promise<KiraStatusResult> {
   const consent = await loadConsent();
+
+  let personalScars = 0;
+  try {
+    personalScars = (await readdir(PERSONAL_SCARS_DIR)).filter((f) =>
+      f.endsWith(".json")
+    ).length;
+  } catch {
+    // Directory absent until the first kira_record_failure.
+  }
+
   return {
     kira_version: readVersion(),
     tier,
@@ -86,6 +101,7 @@ export async function buildStatus({
     counts: {
       skills: skills.length,
       scars: scars.length,
+      personal_scars: personalScars,
       routes: routesCount,
     },
     paths: {
@@ -95,6 +111,7 @@ export async function buildStatus({
         process.env.KIRA_HOME ?? `${process.env.HOME}/.kira`,
         "consent.json"
       ),
+      personal_scars_dir: PERSONAL_SCARS_DIR,
       telemetry_url: TELEMETRY_URL,
     },
   };

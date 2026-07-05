@@ -12,12 +12,13 @@
  * disk, so a personal scar can never persist an API key, path, or email — even
  * locally.
  */
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, readdir, readFile } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { KIRA_HOME } from "./consent.js";
 import { sanitize } from "./sanitize.js";
+import { tokenize } from "./similarity.js";
 import type { ScarSeverity } from "./types.js";
 
 export const PERSONAL_SCARS_DIR = join(KIRA_HOME, "personal-scars");
@@ -93,6 +94,27 @@ function cleanList(list: string[] | undefined, maxCount: number): string[] {
   return out;
 }
 
+/**
+ * Two recordings of the "same" failure rarely share identical text, so exact
+ * id matching alone would fragment recurrences into near-duplicate files and
+ * hit_count would never grow past 1. Token-set Jaccard over title+mistake at
+ * or above this threshold treats a new recording as a recurrence of the
+ * existing scar instead. 0.45 keeps paraphrases together (~0.5+ measured)
+ * while distinct failures in the same area stay apart (~0.3).
+ */
+const DEDUP_THRESHOLD = 0.45;
+
+function scarTokens(title: string, mistake: string): Set<string> {
+  return new Set(tokenize(`${title} ${mistake}`));
+}
+
+function jaccard(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 || b.size === 0) return 0;
+  let inter = 0;
+  for (const t of a) if (b.has(t)) inter++;
+  return inter / (a.size + b.size - inter);
+}
+
 function readExisting(file: string): PersonalScar | null {
   if (!existsSync(file)) return null;
   try {
@@ -126,13 +148,50 @@ export async function recordPersonalScar(
   const keywords = cleanList(input.keywords, MAX_KEYWORDS);
   const contexts = cleanList(input.contexts, MAX_CONTEXTS);
   const severity: ScarSeverity = input.severity === "critical" ? "critical" : "warning";
-
-  const id = `scar.personal.${slugify(title)}.${shortHash(`${title}\n${mistake}`)}.v1`;
   const now = new Date().toISOString();
 
   await mkdir(PERSONAL_SCARS_DIR, { recursive: true });
+
+  // Recurrence check: fold a near-duplicate recording into the existing scar
+  // so hit_count measures how often the wall was actually hit.
+  const tokens = scarTokens(title, mistake);
+  let match: PersonalScar | null = null;
+  let best = 0;
+  for (const existing of await loadPersonalScars()) {
+    const sim = jaccard(tokens, scarTokens(existing.title, existing.mistake));
+    if (sim >= DEDUP_THRESHOLD && sim > best) {
+      best = sim;
+      match = existing;
+    }
+  }
+  if (match) {
+    const merged: PersonalScar = {
+      ...match,
+      keywords: [...new Set([...match.keywords, ...keywords])].slice(0, MAX_KEYWORDS),
+      contexts: [...new Set([...match.contexts, ...contexts])].slice(0, MAX_CONTEXTS),
+      // The newest fix reflects the latest understanding; keep the old one
+      // only when the new recording brought none.
+      instead: instead || match.instead,
+      severity:
+        severity === "critical" || match.severity === "critical"
+          ? "critical"
+          : "warning",
+      hit_count: match.hit_count + 1,
+      updated_at: now,
+    };
+    await writeFile(
+      personalScarPath(merged.id),
+      JSON.stringify(merged, null, 2) + "\n",
+      "utf-8"
+    );
+    return merged;
+  }
+
+  const id = `scar.personal.${slugify(title)}.${shortHash(`${title}\n${mistake}`)}.v1`;
   const file = personalScarPath(id);
 
+  // Exact-id collision fallback — only reachable when title+mistake tokenize
+  // to nothing (all stop words), which the Jaccard pass above cannot see.
   const prev = readExisting(file);
   const hit_count = prev ? prev.hit_count + 1 : 1;
   const created_at = prev ? prev.created_at : now;
@@ -155,4 +214,69 @@ export async function recordPersonalScar(
 
   await writeFile(file, JSON.stringify(scar, null, 2) + "\n", "utf-8");
   return scar;
+}
+
+/**
+ * Load every personal scar, normalized to the full PersonalScar shape
+ * (missing optional fields get safe defaults).
+ *
+ * This is the single shared reader behind lookup/premortem recall,
+ * kira_personal_brief and kira_status. A missing directory (no failures
+ * recorded yet) yields an empty list; corrupt files, non-JSON files and
+ * entries without the id/title/mistake core are skipped — recall must
+ * survive a dirty directory.
+ */
+export async function loadPersonalScars(
+  dir: string = PERSONAL_SCARS_DIR
+): Promise<PersonalScar[]> {
+  let names: string[];
+  try {
+    names = await readdir(dir);
+  } catch {
+    return []; // Directory absent — no failures recorded yet.
+  }
+
+  const out: PersonalScar[] = [];
+  for (const name of names) {
+    if (!name.endsWith(".json")) continue;
+    try {
+      const raw = JSON.parse(
+        await readFile(join(dir, name), "utf-8")
+      ) as Partial<PersonalScar>;
+      if (
+        typeof raw.id !== "string" ||
+        typeof raw.title !== "string" ||
+        typeof raw.mistake !== "string"
+      ) {
+        continue;
+      }
+      out.push({
+        id: raw.id,
+        keywords: stringArray(raw.keywords),
+        contexts: stringArray(raw.contexts),
+        title: raw.title,
+        summary: typeof raw.summary === "string" ? raw.summary : raw.title,
+        severity: raw.severity === "critical" ? "critical" : "warning",
+        mistake: raw.mistake,
+        instead: typeof raw.instead === "string" ? raw.instead : "",
+        hit_count:
+          typeof raw.hit_count === "number" && raw.hit_count > 0
+            ? raw.hit_count
+            : 1,
+        source: "personal",
+        version: typeof raw.version === "string" ? raw.version : "1.0.0",
+        created_at: typeof raw.created_at === "string" ? raw.created_at : "",
+        updated_at: typeof raw.updated_at === "string" ? raw.updated_at : "",
+      });
+    } catch {
+      // Corrupt or unreadable file — skip it.
+    }
+  }
+  return out;
+}
+
+function stringArray(v: unknown): string[] {
+  return Array.isArray(v)
+    ? v.filter((x): x is string => typeof x === "string")
+    : [];
 }

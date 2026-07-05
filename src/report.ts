@@ -74,7 +74,12 @@ export async function logMiss(
   const entry = {
     v: 1,
     keyword: sanitize(keyword, 200),
-    context: context.slice(0, 8).map((c) => String(c).slice(0, 40)),
+    // Context tags get the same treatment as the keyword — candidates built
+    // from this log can end up in public PRs, so nothing lands here unsanitized.
+    context: context
+      .slice(0, 8)
+      .map((c) => sanitize(String(c), 40) ?? "")
+      .filter((c) => c.length > 0),
     near: near.slice(0, 6),
     ts: new Date().toISOString(),
   };

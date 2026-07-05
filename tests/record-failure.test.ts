@@ -1,5 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { mkdtempSync, rmSync, existsSync, readFileSync, readdirSync } from "node:fs";
+import {
+  mkdtempSync,
+  rmSync,
+  existsSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+  mkdirSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -131,6 +139,103 @@ describe("recordPersonalScar", () => {
     const stdoutSpy = vi.spyOn(process.stdout, "write");
     await recordPersonalScar({ title: "t", mistake: "m" });
     expect(stdoutSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("near-duplicate recurrence folding", () => {
+  it("merges a paraphrased recurrence into the existing scar", async () => {
+    const { recordPersonalScar } = await fresh();
+    const first = await recordPersonalScar({
+      title: "build gate bypassed by pipe",
+      mistake:
+        "gated the merge on npm run build piped to tail; exit code came from tail",
+    });
+    const second = await recordPersonalScar({
+      title: "pipe swallowed build exit code",
+      mistake:
+        "npm run build piped to tail returned 0 despite tsc failure and the merge gate passed",
+      instead: "set -o pipefail or run the build bare",
+      severity: "critical",
+    });
+    expect(second.id).toBe(first.id);
+    expect(second.hit_count).toBe(2);
+    expect(second.created_at).toBe(first.created_at);
+    expect(second.severity).toBe("critical"); // escalated by the recurrence
+    expect(second.instead).toContain("pipefail"); // newest fix wins
+    expect(readdirSync(join(tmp, "personal-scars"))).toHaveLength(1);
+  });
+
+  it("keeps genuinely different failures separate", async () => {
+    const { recordPersonalScar } = await fresh();
+    await recordPersonalScar({
+      title: "vercel env missing",
+      mistake: "forgot to add the database url to vercel project settings",
+    });
+    await recordPersonalScar({
+      title: "prisma generate forgotten",
+      mistake: "deployed without running prisma generate after a schema change",
+    });
+    expect(readdirSync(join(tmp, "personal-scars"))).toHaveLength(2);
+  });
+
+  it("unions keywords across merged recordings", async () => {
+    const { recordPersonalScar } = await fresh();
+    await recordPersonalScar({
+      title: "push race",
+      mistake:
+        "two sessions pushed the same repo and the push was rejected non fast forward",
+      keywords: ["push race"],
+    });
+    const merged = await recordPersonalScar({
+      title: "push rejected non-ff",
+      mistake:
+        "parallel session pushed the same repo first; push rejected as non fast forward",
+      keywords: ["non-fast-forward"],
+    });
+    expect(merged.hit_count).toBe(2);
+    expect(merged.keywords).toEqual(
+      expect.arrayContaining(["push race", "non-fast-forward"])
+    );
+  });
+});
+
+describe("loadPersonalScars", () => {
+  it("returns [] when no scar has been recorded yet", async () => {
+    const { loadPersonalScars } = await fresh();
+    expect(await loadPersonalScars()).toEqual([]);
+  });
+
+  it("loads recorded scars with source=personal and skips junk files", async () => {
+    const { recordPersonalScar, loadPersonalScars, PERSONAL_SCARS_DIR } =
+      await fresh();
+    await recordPersonalScar({ title: "deploy failed", mistake: "missing env var" });
+    writeFileSync(join(PERSONAL_SCARS_DIR, "broken.json"), "{ nope");
+    writeFileSync(join(PERSONAL_SCARS_DIR, "notes.txt"), "not a scar");
+    writeFileSync(
+      join(PERSONAL_SCARS_DIR, "missing-core.json"),
+      JSON.stringify({ id: "scar.personal.x.v1", title: "no mistake field" })
+    );
+
+    const loaded = await loadPersonalScars();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0]!.source).toBe("personal");
+    expect(loaded[0]!.title).toContain("deploy");
+  });
+
+  it("normalizes missing optional fields to safe defaults", async () => {
+    const { loadPersonalScars, PERSONAL_SCARS_DIR } = await fresh();
+    mkdirSync(PERSONAL_SCARS_DIR, { recursive: true });
+    writeFileSync(
+      join(PERSONAL_SCARS_DIR, "bare.json"),
+      JSON.stringify({ id: "scar.personal.bare.v1", title: "bare", mistake: "m" })
+    );
+
+    const [scar] = await loadPersonalScars();
+    expect(scar!.summary).toBe("bare");
+    expect(scar!.severity).toBe("warning");
+    expect(scar!.hit_count).toBe(1);
+    expect(scar!.keywords).toEqual([]);
+    expect(scar!.instead).toBe("");
   });
 });
 

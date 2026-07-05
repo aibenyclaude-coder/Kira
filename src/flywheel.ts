@@ -96,14 +96,22 @@ function jaccard(a: Set<string>, b: Set<string>): number {
   return inter / (a.size + b.size - inter);
 }
 
-/** Greedy clustering: an entry joins the first cluster with token-Jaccard ≥ 0.5. */
+/** Greedy clustering: an entry joins the MOST similar cluster with token-Jaccard ≥ 0.5 (best-fit, so membership doesn't depend on arrival order). */
 export function clusterMisses(entries: MissEntry[]): MissCluster[] {
   const clusters: MissCluster[] = [];
   for (const e of entries) {
     const kw = (e.keyword ?? "").trim();
     const toks = new Set(tokenize(kw));
     if (toks.size === 0) continue;
-    let home = clusters.find((c) => jaccard(toks, c.tokens) >= 0.5);
+    let home: MissCluster | undefined;
+    let bestSim = 0;
+    for (const c of clusters) {
+      const sim = jaccard(toks, c.tokens);
+      if (sim >= 0.5 && sim > bestSim) {
+        bestSim = sim;
+        home = c;
+      }
+    }
     if (!home) {
       home = { rep: kw, tokens: new Set(toks), count: 0, contexts: new Set(), nearBest: new Map() };
       clusters.push(home);
@@ -150,13 +158,21 @@ export function aggregateReports(entries: ReportEntry[]): SkillStats[] {
   );
 }
 
-/** Cluster failure notes within one skill; ≥2 similar notes → scar material. */
+/** Cluster failure notes within one skill; ≥2 similar notes → scar material. Best-fit like clusterMisses. */
 export function clusterNotes(notes: string[]): Array<{ rep: string; all: string[] }> {
   const clusters: Array<{ rep: string; tokens: Set<string>; all: string[] }> = [];
   for (const note of notes) {
     const toks = new Set(tokenize(note));
     if (toks.size === 0) continue;
-    let home = clusters.find((c) => jaccard(toks, c.tokens) >= 0.4);
+    let home: { rep: string; tokens: Set<string>; all: string[] } | undefined;
+    let bestSim = 0;
+    for (const c of clusters) {
+      const sim = jaccard(toks, c.tokens);
+      if (sim >= 0.4 && sim > bestSim) {
+        bestSim = sim;
+        home = c;
+      }
+    }
     if (!home) {
       home = { rep: note, tokens: new Set(toks), all: [] };
       clusters.push(home);
@@ -367,7 +383,14 @@ export async function runFlywheel(opts: {
   llm?: string;
 }): Promise<{ digestPath: string; candidates: number; summary: string }> {
   const home = kiraHome();
-  const date = new Date().toISOString().slice(0, 10);
+  // Local calendar date — the digest belongs to the operator's day, not UTC's
+  // (a 00:30 JST run must not stamp yesterday's date).
+  const d = new Date();
+  const date = [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0"),
+  ].join("-");
   const outDir = join(home, "flywheel");
   await mkdir(outDir, { recursive: true });
 
@@ -402,10 +425,9 @@ export async function runFlywheel(opts: {
     for (const c of candidates) {
       await writeFile(join(candDir, c.file), JSON.stringify(c.body, null, 2) + "\n", "utf-8");
     }
-  } else if (!opts.emitCandidates) {
-    candidates = candidates; // Digest still lists what WOULD be emitted.
   }
 
+  // The digest lists candidates even when they were not emitted to disk.
   const digest = renderDigest(date, misses, missClusters, stats, personal, candidates);
   const digestPath = join(outDir, `${date}-digest.md`);
   await writeFile(digestPath, digest, "utf-8");

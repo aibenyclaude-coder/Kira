@@ -11,7 +11,7 @@ import { record, logMiss } from "./report.js";
 import { verifyProKey } from "./license.js";
 import { startFlusher, shutdownFlush } from "./telemetry.js";
 import { KIRA_CONSENT_TOOL, handleKiraConsent } from "./tools/kira_consent.js";
-import { KIRA_STATUS_TOOL, buildStatus } from "./tools/kira_status.js";
+import { KIRA_STATUS_TOOL, buildStatus, readVersion } from "./tools/kira_status.js";
 import { KIRA_PREMORTEM_TOOL, buildPremortem } from "./tools/premortem.js";
 import {
   KIRA_RECORD_FAILURE_TOOL,
@@ -21,6 +21,7 @@ import {
   KIRA_PERSONAL_BRIEF_TOOL,
   handlePersonalBrief,
 } from "./tools/personal-brief.js";
+import { loadPersonalScars } from "./personal-scars.js";
 import type { Skill, Scar, ReportStatus, ConsentLevel } from "./types.js";
 import type { KiraTier } from "./license.js";
 
@@ -29,7 +30,9 @@ const TOOLS = [
     name: "kira_lookup",
     description:
       "Look up skills (how to do it) AND scars (what to avoid) for a given keyword. " +
-      "Returns matching skills (community first, then vendor) and scars (critical first, then by frequency). " +
+      "Returns matching skills (community first, then vendor) and scars (critical first; " +
+      "your own recorded failures before shared ones, then by frequency). Personal scars " +
+      "recorded by kira_record_failure on this machine fire here too. " +
       "The agent MUST: " +
       "1. Read ALL returned scars first — these are past failures. Avoid repeating them. " +
       "2. Read returned skills and choose the best fit for the project context. " +
@@ -181,7 +184,7 @@ export async function startServer(): Promise<void> {
   const server = new Server(
     {
       name: "kira",
-      version: "0.4.0",
+      version: readVersion(),
     },
     {
       capabilities: {
@@ -196,6 +199,8 @@ export async function startServer(): Promise<void> {
         "4. Choose a skill, then call kira_get(skill_id) to get full instructions. " +
         "5. Follow the instructions step by step. " +
         "6. Call kira_report with the outcome (especially 'retry' with a note on what went wrong). " +
+        "7. If a task needed retries or threw, call kira_record_failure — it becomes a personal " +
+        "scar that automatically fires in future kira_lookup / kira_premortem calls on this machine. " +
         "IMPORTANT: kira_lookup and kira_route return summaries WITHOUT instructions to save tokens. " +
         "Always call kira_get to fetch the full instructions before executing. " +
         "If lookup returns 0 results, check 'near_skills' and 'near_scars' (scored closest matches) — " +
@@ -226,7 +231,11 @@ export async function startServer(): Promise<void> {
         ? (args.context as string[])
         : undefined;
 
-      const result = lookup(skills, scars, { keyword, context });
+      // Personal scars (kira_record_failure output) join the corpus on every
+      // call — re-read from disk so a failure recorded seconds ago already
+      // fires. The directory is a handful of small files; freshness wins.
+      const personal = indexItems(await loadPersonalScars());
+      const result = lookup(skills, [...scars, ...personal], { keyword, context });
 
       // Miss log = flywheel loop B input. Near info tells the maintainer
       // whether the fix is "add an alias to skill X" or "a skill is missing".
@@ -322,7 +331,15 @@ export async function startServer(): Promise<void> {
       const top_k =
         typeof args?.top_k === "number" ? (args.top_k as number) : undefined;
 
-      const result = buildPremortem(rawScars, { goal, context, top_k });
+      // The heat map covers shared AND personal scars — your own recorded
+      // failures are exactly what a pre-mortem must not miss. Shipped corpus
+      // is indexed once at startup; only the tiny personal set per call.
+      const personal = indexItems(await loadPersonalScars());
+      const result = buildPremortem([...scars, ...personal], {
+        goal,
+        context,
+        top_k,
+      });
 
       return {
         content: [
@@ -378,9 +395,16 @@ export async function startServer(): Promise<void> {
 
     if (name === "kira_get") {
       const id = String(args?.id ?? "");
+      // Personal scars are addressable by id too (they appear in lookup).
+      const personal = id.startsWith("scar.personal.")
+        ? await loadPersonalScars()
+        : [];
 
       const skill = skills.find((s) => s.id === id) ?? null;
-      const scar = scars.find((s) => s.id === id) ?? null;
+      const scar =
+        scars.find((s) => s.id === id) ??
+        personal.find((p) => p.id === id) ??
+        null;
 
       if (!skill && !scar) {
         return {
@@ -398,7 +422,9 @@ export async function startServer(): Promise<void> {
         ? rawSkills.find((s) => s.id === id) ?? null
         : null;
       const fullScar = scar
-        ? rawScars.find((s) => s.id === id) ?? null
+        ? rawScars.find((s) => s.id === id) ??
+          personal.find((p) => p.id === id) ??
+          null
         : null;
 
       return {
