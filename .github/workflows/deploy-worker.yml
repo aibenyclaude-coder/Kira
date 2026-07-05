@@ -1,0 +1,48 @@
+name: deploy-worker
+
+# Autonomous deploy rail for the telemetry/corpus worker.
+#
+# Gated by the repo variable CF_DEPLOY_ENABLED=true so main stays green
+# until the one-time setup is done:
+#   1. Cloudflare dashboard → API token (Workers Scripts: Edit)
+#   2. gh secret set CLOUDFLARE_API_TOKEN
+#      gh secret set CLOUDFLARE_ACCOUNT_ID
+#   3. gh variable set CF_DEPLOY_ENABLED --body true
+# After that, any merge touching worker/ deploys automatically, and
+# workflow_dispatch allows a manual (or agent-triggered) deploy anytime.
+
+on:
+  push:
+    branches: [main]
+    paths: ["worker/**"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: vars.CF_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci
+      - run: npx vitest run
+      - name: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy
+      - name: smoke the live corpus route
+        run: |
+          sleep 5
+          curl -fsS "https://kira-telemetry.workers.dev/v1/corpus" | head -c 400
