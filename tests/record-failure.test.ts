@@ -142,6 +142,63 @@ describe("recordPersonalScar", () => {
   });
 });
 
+describe("near-duplicate recurrence folding", () => {
+  it("merges a paraphrased recurrence into the existing scar", async () => {
+    const { recordPersonalScar } = await fresh();
+    const first = await recordPersonalScar({
+      title: "build gate bypassed by pipe",
+      mistake:
+        "gated the merge on npm run build piped to tail; exit code came from tail",
+    });
+    const second = await recordPersonalScar({
+      title: "pipe swallowed build exit code",
+      mistake:
+        "npm run build piped to tail returned 0 despite tsc failure and the merge gate passed",
+      instead: "set -o pipefail or run the build bare",
+      severity: "critical",
+    });
+    expect(second.id).toBe(first.id);
+    expect(second.hit_count).toBe(2);
+    expect(second.created_at).toBe(first.created_at);
+    expect(second.severity).toBe("critical"); // escalated by the recurrence
+    expect(second.instead).toContain("pipefail"); // newest fix wins
+    expect(readdirSync(join(tmp, "personal-scars"))).toHaveLength(1);
+  });
+
+  it("keeps genuinely different failures separate", async () => {
+    const { recordPersonalScar } = await fresh();
+    await recordPersonalScar({
+      title: "vercel env missing",
+      mistake: "forgot to add the database url to vercel project settings",
+    });
+    await recordPersonalScar({
+      title: "prisma generate forgotten",
+      mistake: "deployed without running prisma generate after a schema change",
+    });
+    expect(readdirSync(join(tmp, "personal-scars"))).toHaveLength(2);
+  });
+
+  it("unions keywords across merged recordings", async () => {
+    const { recordPersonalScar } = await fresh();
+    await recordPersonalScar({
+      title: "push race",
+      mistake:
+        "two sessions pushed the same repo and the push was rejected non fast forward",
+      keywords: ["push race"],
+    });
+    const merged = await recordPersonalScar({
+      title: "push rejected non-ff",
+      mistake:
+        "parallel session pushed the same repo first; push rejected as non fast forward",
+      keywords: ["non-fast-forward"],
+    });
+    expect(merged.hit_count).toBe(2);
+    expect(merged.keywords).toEqual(
+      expect.arrayContaining(["push race", "non-fast-forward"])
+    );
+  });
+});
+
 describe("loadPersonalScars", () => {
   it("returns [] when no scar has been recorded yet", async () => {
     const { loadPersonalScars } = await fresh();
