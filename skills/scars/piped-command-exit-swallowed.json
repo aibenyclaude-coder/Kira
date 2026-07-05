@@ -1,0 +1,24 @@
+{
+  "id": "scar.piped-command-exit-swallowed.v1",
+  "keywords": [
+    "build gate",
+    "pipe exit code",
+    "pipefail",
+    "ci gate",
+    "merge gate",
+    "shell pipeline exit"
+  ],
+  "contexts": [
+    "shell",
+    "ci",
+    "git"
+  ],
+  "title": "Quality gate passed on a piped command — exit code came from the pipe tail, not the build",
+  "summary": "A merge was gated on `npm run build 2>&1 | tail -1` inside a && chain. The pipeline's exit status came from `tail` (0), not the compiler — a failing build passed the gate and broken code reached main.",
+  "severity": "critical",
+  "mistake": "Gating a decision (merge, deploy, commit) on a piped command like `build | tail` or `test | grep`. Without pipefail the pipeline exit code is the LAST command's, so the formatter's success masks the real failure. The agent saw the chain continue, reported the gate as passed, and merged a file that did not compile.",
+  "instead": "Never gate on a piped command. Run the gating command bare and format its output afterwards, or `set -o pipefail` first, or capture to a variable and test `$?` explicitly. Pattern: `npm run build; rc=$?; tail -n 20 build.log; [ $rc -eq 0 ] || abort`. If you inherited a piped gate, re-run the bare command before trusting any green result.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-06T00:00:00Z"
+}

@@ -1,0 +1,24 @@
+{
+  "id": "community.cut-a-release.v1",
+  "keywords": [
+    "cut a release",
+    "release version",
+    "tag release",
+    "publish release",
+    "version bump",
+    "ship a release"
+  ],
+  "contexts": [
+    "git",
+    "github",
+    "npm"
+  ],
+  "title": "Cut a release: version consistency, changelog truth, bare gates, tag, publish",
+  "summary": "Checklist-driven release flow that catches the usual silent failures: version strings that disagree across manifests, changelogs written from memory instead of the diff, gates that pass because of a pipe, and races with concurrent writers.",
+  "source": "community",
+  "declaration": "I will follow the release checklist: sync with the remote, make every version string agree, verify the changelog against the actual diff since the last tag, run the verification suite bare (no piped gates), then tag, publish, and confirm CI is green.",
+  "instructions": "## Cut a release\n\n### 1. Sync and scope\n- `git fetch` first, and again immediately before any push (another writer may be active).\n- Establish what is being released: `git log <last-tag>..origin/<default-branch> --oneline`. The release contains exactly this — nothing you remember, everything you forgot.\n\n### 2. Version consistency (grep, don't recall)\n- Grep the OLD version string across the whole repo: manifests, lockfiles, server metadata, docs, embedded constants. Every hit either gets bumped or gets a reason.\n- Lockfiles carry their own version fields — regenerate (`npm install --package-lock-only`) rather than hand-editing.\n- If any component reports its version at runtime, make it read the manifest instead of a hardcoded string.\n\n### 3. Changelog = the diff, not memory\n- Write the release section from the commit list in step 1. Cross off every commit as it lands in a bullet; leftovers are either missing entries or deliberate omissions you can name.\n- Set the section date to the ACTUAL release date. Update comparison links (`[Unreleased]`, the new tag).\n\n### 4. Verification gates — bare, never piped\n- Run each gate as a bare command and check its exit code: build, full test suite, smoke/demo, benchmarks if present.\n- Never gate on `cmd | tail` / `cmd | grep` without pipefail — the pipe's exit code is the formatter's, not the gate's.\n- Run at least one end-to-end check of the release artifact itself (the built dist / package), not just the source tree.\n\n### 5. Tag and release\n- Annotated tag on the exact verified commit. Extract release notes from the changelog section (one source of truth) rather than rewriting them.\n- After pushing, confirm CI is green on the released commit before announcing.\n\n### 6. Publish (registry)\n- Auth first: `npm whoami` (or the registry equivalent). A publish-time 404/403 usually means a dead token, not a missing package — registries hide package existence from unauthorized callers.\n- Publish, then verify from the outside: `npm view <pkg> version` must show the new version.\n\n## Common Errors\n- Version bumped in the main manifest but not the lockfile or secondary manifests (server metadata, docs badges) — grep the old string, always.\n- Changelog describes what you INTENDED to ship; commits since the last tag tell what you actually shipped.\n- A piped verification gate that passes while the underlying command fails.\n- Tagging while a concurrent session/CI job is still pushing — fetch immediately before tag/push; on a rejected push merge, never force.\n- Announcing on 'tests passed locally' before CI confirms the released commit.\n\n## What NOT to do\n- Do NOT move or reuse a tag that has been pushed; cut a new patch release instead.\n- Do NOT publish to a registry before the tag's CI is green.\n- Do NOT hand-edit generated lockfiles.\n- Do NOT skip the outside-in verification (`npm view`, fresh install) after publishing.",
+  "version": "1.0.0",
+  "updated_at": "2026-07-06T00:00:00Z",
+  "category": "process"
+}
