@@ -7,7 +7,7 @@ import {
 import { loadAllSkills, loadAllScars } from "./index-loader.js";
 import { loadRoutes, resolveRoute } from "./route.js";
 import { lookup, indexItems } from "./lookup.js";
-import { record, logMissingKeyword } from "./report.js";
+import { record, logMiss } from "./report.js";
 import { verifyProKey } from "./license.js";
 import { startFlusher, shutdownFlush } from "./telemetry.js";
 import { KIRA_CONSENT_TOOL, handleKiraConsent } from "./tools/kira_consent.js";
@@ -186,7 +186,9 @@ export async function startServer(): Promise<void> {
         "6. Call kira_report with the outcome (especially 'retry' with a note on what went wrong). " +
         "IMPORTANT: kira_lookup and kira_route return summaries WITHOUT instructions to save tokens. " +
         "Always call kira_get to fetch the full instructions before executing. " +
-        "If lookup returns 0 results, check 'suggestions' for alternatives. " +
+        "If lookup returns 0 results, check 'near_skills' and 'near_scars' (scored closest matches) — " +
+        "a near scar is still worth reading before you proceed. Every miss is recorded locally " +
+        "so the catalog learns what was asked for. " +
         "Kira is community-vetted and designed for zero-retry execution.",
     }
   );
@@ -214,9 +216,13 @@ export async function startServer(): Promise<void> {
 
       const result = lookup(skills, scars, { keyword, context });
 
-      // Log missing keywords for patrol jobs to pick up.
+      // Miss log = flywheel loop B input. Near info tells the maintainer
+      // whether the fix is "add an alias to skill X" or "a skill is missing".
       if (result.skill_count === 0 && result.scar_count === 0) {
-        logMissingKeyword(keyword, context ?? []).catch(() => {});
+        const near = [...(result.near_skills ?? []), ...(result.near_scars ?? [])].map(
+          (n) => ({ id: n.id, score: n.score })
+        );
+        logMiss(keyword, context ?? [], near).catch(() => {});
       }
 
       return {
