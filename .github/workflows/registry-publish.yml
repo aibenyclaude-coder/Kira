@@ -1,0 +1,61 @@
+name: registry-publish
+
+# Publish server.json to the official MCP Server Registry
+# (registry.modelcontextprotocol.io). Auth is GitHub Actions OIDC — the
+# io.github.aibenyclaude-coder/* namespace is proven by this repo's identity,
+# so no token or device flow exists anywhere.
+#
+# Fires on every v* release tag (after the npm rail) and on manual dispatch.
+# Downstream aggregators (PulseMCP, Smithery) ingest the registry
+# automatically.
+#
+# Credential-job gates (scar.credential-ci-jobs-need-three-gates.v1):
+#   ref gate — dispatch runs only from main; tag runs verify ancestry to main
+#   pinned toolchain — mcp-publisher pinned by version, not 'latest'
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+env:
+  MCP_PUBLISHER_VERSION: v1.7.9
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write # OIDC — the whole credential
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: tag must be an ancestor of main
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::tag $GITHUB_REF_NAME is not on main"
+            exit 1
+          fi
+      - name: install mcp-publisher (pinned)
+        run: |
+          curl -sL "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz" \
+            | tar xz mcp-publisher
+          ./mcp-publisher --version
+      - name: publish to the MCP registry
+        run: |
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish
+      - name: verify from the outside
+        run: |
+          sleep 10
+          curl -fsS "https://registry.modelcontextprotocol.io/v0.1/servers?search=kira" \
+            | tee /tmp/registry.json | grep -q "io.github.aibenyclaude-coder/kira" \
+            && echo "registry now lists io.github.aibenyclaude-coder/kira"
