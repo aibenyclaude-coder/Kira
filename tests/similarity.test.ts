@@ -70,3 +70,34 @@ describe("nearMatches", () => {
     expect(nearMatches(items, "the to my")).toEqual([]);
   });
 });
+
+describe("tokenize — CJK (日本語)", () => {
+  it("splits CJK runs into character bigrams", () => {
+    const t = tokenize("仕訳の自動化");
+    expect(t).toEqual(expect.arrayContaining(["仕訳", "自動", "動化"]));
+  });
+
+  it("keeps short CJK runs whole", () => {
+    expect(tokenize("仕訳")).toEqual(["仕訳"]);
+  });
+
+  it("handles mixed Japanese + Latin", () => {
+    const t = tokenize("vercel デプロイ失敗");
+    expect(t).toEqual(expect.arrayContaining(["vercel", "デプ", "プロ", "ロイ", "失敗"]));
+  });
+
+  it("matches Japanese query against Japanese-keyword items", () => {
+    const jp = {
+      title: "記帳・仕訳の自動化",
+      _kwTokens: new Set(tokenize("仕訳 自動化")),
+      _simTokens: new Set(tokenize("記帳・仕訳の自動化 会計 accounting")),
+    };
+    const res = nearMatches([jp], "仕訳を自動化したい");
+    expect(res.length).toBe(1);
+    expect(res[0]!.score).toBeGreaterThan(0.3);
+  });
+
+  it("query/item 両側が同じパイプラインを通るので一貫する", () => {
+    expect(tokenize("デプロイ失敗")).toEqual(tokenize("デプロイ失敗"));
+  });
+});
