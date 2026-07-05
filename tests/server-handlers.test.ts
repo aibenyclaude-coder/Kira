@@ -60,6 +60,7 @@ const EXPECTED_TOOLS = [
   "kira_status",
   "kira_record_failure",
   "kira_premortem",
+  "kira_personal_brief",
 ];
 
 let tmp: string;
