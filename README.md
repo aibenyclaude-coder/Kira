@@ -133,6 +133,17 @@ Skills are natural language Markdown — no executable code, no injection risk.
 | Updates | Manual | Automatic (flywheel) |
 | Works across AI tools | Tool-specific | Any MCP client |
 
+## Not another "memory MCP"?
+
+There are excellent memory servers (knowledge graphs, session recall, context handoff). Kira is deliberately narrower:
+
+- **Failure-first, not everything-first.** General memory stores what happened; Kira stores *what must never happen again*, in a shape built for avoidance: `mistake` → `instead`, severity, recurrence count. A pre-task heat-map (`kira_premortem`) exists only because the data is failures.
+- **Recurrence is measured, not assumed.** Re-recording a similar failure folds into the same scar and bumps `hit_count` — the corpus learns which walls actually get hit, and honest counts are enforced by review.
+- **The commons compounds.** Your scar, sanitized and human-reviewed, ships to every install — and earns you the fresh feed ([RECIPROCITY.md](./RECIPROCITY.md)). Memory servers make one agent smarter; a scar corpus makes *every* agent immune.
+- **Trust is engineered, not implied.** Corpus text is injected into agents' contexts, so every entry passes a sanitizer-stability gate in CI, natural-language-only rules, and human review ([SECURITY.md](./SECURITY.md)).
+
+If you need general episodic memory, run one of those servers *alongside* Kira — they don't compete for the same job.
+
 ---
 
 ## Telemetry
