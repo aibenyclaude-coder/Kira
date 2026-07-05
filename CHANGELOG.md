@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `kira_record_failure` (F1) — capture a retry/exception as a **personal scar**: private, local-only failure memory under `~/.kira/personal-scars/` (#138).
+- `kira_premortem` (F3) — failure heat-map for a goal before the agent starts, ranked by past scar hits (#139).
+- `npm run bench` — lookup/route micro-benchmarks with a regression budget (#143).
+- CJK bigram tokenization in `similarity.ts` — Japanese queries now reach near-match scoring and miss clustering (#144).
+
+### Changed
+- README repositioned around the personal-scar loop ("your agent stops repeating its own mistakes"); demo tape rewritten with the real first-scar story.
+
 ## [0.6.0] - 2026-07-06
 
 ### Added

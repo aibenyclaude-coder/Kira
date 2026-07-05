@@ -5,12 +5,11 @@
 [![npm downloads](https://img.shields.io/npm/dw/kira-mcp.svg)](https://www.npmjs.com/package/kira-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-### One MCP. Your agent becomes a genius.
+### Your agent stops repeating its own mistakes.
 
-Stop managing CLAUDE.md files, .cursorrules, and skill folders across projects.
-Install Kira once — your AI agent automatically finds the right instructions, avoids known mistakes, and executes flawlessly.
+Every failed retry, every exception, every *"wait — we hit this exact wall last week"* is knowledge your agent throws away when the session ends. Kira keeps it. One MCP install and your agent **records what burned it** (a *scar*), **sees its scars before it works again**, and stops paying for the same mistake twice.
 
-> **Privacy by design.** Kira learns from agent outcomes via opt-in telemetry that **redacts secrets, paths, and identifiers locally before write AND server-side before storage**. Run `npm run demo:privacy` to see exactly what leaves your machine. Full wire format and opt-out in [PRIVACY.md](./PRIVACY.md).
+> **Privacy by design.** Personal scars and the lookup-miss log are **local-only — never uploaded, on any tier**. Community telemetry is opt-in and **redacts secrets, paths, and identifiers locally before write AND server-side before storage**. Run `npm run demo:privacy` to see exactly what leaves your machine. Full wire format and opt-out in [PRIVACY.md](./PRIVACY.md).
 
 ---
 
@@ -50,124 +49,90 @@ The snippet above works as-is in every one of them — just paste it under `mcpS
 
 ---
 
-## Demo
+## The loop, in 30 seconds
+
+```text
+Monday    agent gates a merge on:  npm run build 2>&1 | tail -1
+          exit code comes from tail, not the compiler → broken code reaches main
+          └─ kira_record_failure(
+               title:   "build gate bypassed: exit code swallowed by pipe to tail",
+               instead: "never gate on a piped command without pipefail")
+
+Tuesday   new session, same machine
+          └─ session brief: "⚠ You have been burned by this before:
+             never gate on a piped command without set -o pipefail"
+          agent writes the gate correctly. Zero repeats. Zero wasted tokens.
+```
+
+Not a hypothetical — this is the **actual first scar in the database**, recorded by the agent that built this feature, about a mistake it made *while building it*. The next three scars came the same day. The loop works on day one, for a single user, with zero network effects required. [FLYWHEEL.md](./FLYWHEEL.md) documents the full improvement loop.
+
+---
+
+## Tools (8)
+
+| | Tool | What it does |
+|---|------|-------------|
+| **Personal memory** | `kira_record_failure` | Capture a retry/exception as a personal scar (local-only) |
+| | `kira_premortem` | Failure heat-map for a goal *before* starting — "here's where this kind of task has burned you" |
+| **Catalog** | `kira_lookup` | Keyword → proven instructions + failure warnings. On a miss, returns scored `near_skills` / `near_scars` instead of a shrug |
+| | `kira_get` | Fetch full step-by-step instructions by ID |
+| | `kira_route` | Goal → ordered plan with a skill per step |
+| **Feedback** | `kira_report` | Report success/retry/failure → feeds the quality loop |
+| | `kira_consent` / `kira_status` | Telemetry consent + one-call introspection |
+
+**Auto-firing:** you don't call Kira — Kira's MCP instructions tell your agent when to. Japanese queries are first-class (CJK bigram matching).
+
+### When nothing matches
+
+A lookup miss is not a dead end — it's demand data. Kira returns the closest scored matches, records the miss locally (with *what almost matched*), and the weekly flywheel digest turns repeated misses into alias fixes and new-skill candidates. The catalog learns what people actually ask for.
+
+---
+
+## The catalog layer (community skills & scars)
 
 ![Kira Demo](./demo.gif)
 
----
+34 community skills across deploy / database / auth / payments / UI / testing / CI / infra / mobile / CMS, and 12 community scars — real failure patterns like *"Vercel deploy succeeds but the app crashes: missing env vars"* or *"Auth.js v5 signIn imported from the wrong side"*. `kira_route` turns a goal ("build a web app") into an ordered plan with the right skill and scars per step.
 
-## What happens
-
-**Before Kira:** Agent deploys to Vercel, forgets env vars, app crashes. Retries 3 times. Burns tokens.
-
-**After Kira:** Agent automatically calls `kira_lookup("deploy vercel")` before acting. Gets step-by-step instructions + a Scar warning: *"847 agents forgot env vars — run `vercel env ls` first."* Deploys correctly on the first try.
-
-### Three tools, zero config
-
-| Tool | What it does |
-|------|-------------|
-| `kira_lookup` | Give it a keyword ("stripe", "deploy", "auth") → get proven instructions + past failure warnings |
-| `kira_route` | Give it a goal ("build a web app") → get an ordered plan with skills for each step |
-| `kira_report` | Agent reports success/retry after each task → feeds the quality system |
-
-### Auto-firing
-
-You don't call Kira. **Kira tells your agent to call it.** Via MCP instructions, the agent automatically looks up skills before starting any task. You literally do nothing.
-
----
-
-## What's inside
-
-### 31 Skills (and growing daily)
-
-| Category | Skills |
-|----------|--------|
-| **Deploy** | Vercel, Cloudflare Pages |
-| **Database** | Prisma, Drizzle, Supabase |
-| **Auth** | Clerk, Auth.js v5 |
-| **Payments** | Stripe Checkout |
-| **UI** | Tailwind CSS v4, shadcn/ui |
-| **Testing** | Vitest, Playwright E2E |
-| **CI/CD** | GitHub Actions |
-| **Infra** | Docker, ESLint flat config |
-| **Services** | Resend email, React Email, Sentry, tRPC, S3/R2 upload, Upstash Redis |
-| **Background** | Inngest |
-| **State** | Zustand, Zod validation |
-| **Upload** | UploadThing, S3/R2 |
-| **Observability** | PostHog analytics, Sentry |
-| **Mobile** | Expo / React Native |
-| **i18n** | next-intl |
-| **CMS** | Payload CMS |
-| **Monorepo** | Turborepo |
-
-### 12 Scars (past failure patterns)
-
-Scars warn your agent about mistakes other agents already made:
-- Next.js "use client" directive missing — client hooks in server components
-- Vercel deploy succeeds but app crashes — missing env vars
-- Stripe webhook signature fails — body already parsed
-- Auth.js signIn/signOut wrong import — server/client mixup
-- Prisma types are stale — forgot `generate`
-- Clerk middleware in wrong directory — auth silently broken
-- Supabase RLS not enabled — data publicly exposed
-- Tailwind v4 PostCSS config wrong — v3 plugin breaks v4
-- Vitest path alias mismatch — tsconfig vs vitest.config desync
-- And more — hit counts updated from real agent data
-
-### 7 Routes (goal-to-plan)
-
-Ask "build a web app" → Kira returns 8 ordered steps, each with its skill and scars:
-
-```
-1. Tailwind CSS v4
-2. shadcn/ui
-3. ESLint
-4. Prisma + Scar: "don't forget prisma generate"
-5. Clerk Auth + Scar: "middleware goes in root, not app/"
-6. Vitest
-7. GitHub Actions CI
-8. Vercel Deploy + Scar: "check env vars before --prod"
-```
+Community scars are where personal scars graduate to: a promotion flow (opt-in, sanitized, human-reviewed) is on the roadmap — see [FLYWHEEL.md](./FLYWHEEL.md) for what ships when.
 
 ---
 
 ## How it works
 
 ```
-Your agent gets a task
-    ↓
-Kira auto-fires (MCP instructions)
-    ↓
-kira_lookup("deploy vercel", context: ["nextjs"])
-    ↓
-Returns: Skill (step-by-step) + Scars (what to avoid)
-    ↓
-Agent announces choice → follows instructions → reports result
-    ↓
-kira_report("community.deploy-vercel-nextjs.v1", "success")
+Your agent hits a wall            Your agent gets a task
+    ↓                                 ↓
+kira_record_failure()             kira_premortem(goal) / kira_lookup(keyword)
+    ↓                                 ↓
+~/.kira/personal-scars/           scars first, then instructions
+    ↓                                 ↓
+next session: brief surfaces      agent announces → executes → kira_report()
+your scars before work starts         ↓
+    ↓                             misses + failure notes feed the flywheel
+never the same mistake twice      → digest → catalog improvements
 ```
 
 Skills are natural language Markdown — no executable code, no injection risk.
 
 ---
 
-## Why not just use CLAUDE.md?
+## Why not just CLAUDE.md?
 
 | | CLAUDE.md / .cursorrules | Kira |
 |---|---|---|
 | Setup | Copy per project | Install once |
-| Updates | Manual | Automatic |
-| Selection | You choose | Agent chooses |
-| Failure avoidance | None | Scars (past failures) |
-| Multi-step planning | None | Routes |
-| Quality tracking | None | success/retry scoring |
+| Failure memory | You write it by hand, if you remember | `kira_record_failure` — captured at the moment it happens |
+| Recall | You re-read it, if you remember | Surfaced automatically at session start / task start |
+| Selection | You choose | Agent chooses, scored |
+| Updates | Manual | Automatic (flywheel) |
 | Works across AI tools | Tool-specific | Any MCP client |
 
 ---
 
 ## Telemetry
 
-Kira sends anonymous outcome data to a central Worker so the community can improve Skills and surface new Scars.
+Personal scars (`~/.kira/personal-scars/`) and the miss log (`~/.kira/misses.log`) are **local-only and never uploaded**. Community telemetry is separate and consent-gated:
 
 | Mode (`KIRA_TELEMETRY` env, or `kira_consent` MCP tool) | What leaves your machine |
 |---|---|
@@ -181,7 +146,7 @@ Full schema, redaction rules, retention, and opt-out instructions: **[PRIVACY.md
 |---|---|---|
 | `KIRA_TELEMETRY` | (unset → `basic`) | Override consent level for this process: `off`, `basic`, `full`. |
 | `KIRA_TELEMETRY_URL` | `https://kira-telemetry.workers.dev/v1/reports` | Endpoint for batch upload. |
-| `KIRA_HOME` | `~/.kira` | Where consent state and the local log live. |
+| `KIRA_HOME` | `~/.kira` | Where consent state, personal scars, miss log, and flywheel output live. |
 
 ---
 
@@ -196,6 +161,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to add Skills and Scars.
 ## Links
 
 - [npm](https://www.npmjs.com/package/kira-mcp)
+- [The Flywheel](./FLYWHEEL.md) — how the improvement loop runs
 - [Design Philosophy](./DESIGN.md)
 - [Business Plan](./PLAN.md)
 - [Usage Guide](./USAGE.md)
@@ -203,6 +169,6 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to add Skills and Scars.
 
 ---
 
-**Where agents shine.**
+**Where agents shine — by remembering where they got burned.**
 
 *A [B Button Corporation](https://github.com/aibenyclaude-coder) project.*
