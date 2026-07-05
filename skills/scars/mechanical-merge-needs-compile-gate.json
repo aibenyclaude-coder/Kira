@@ -1,0 +1,22 @@
+{
+  "id": "scar.mechanical-merge-needs-compile-gate.v1",
+  "keywords": [
+    "merge conflict resolution",
+    "auto merge broke build",
+    "conflict resolved syntax error",
+    "diff3 regex",
+    "parallel merges"
+  ],
+  "contexts": [
+    "git",
+    "ci"
+  ],
+  "title": "Mechanical conflict resolution silently dropped a code block — merged code did not parse",
+  "summary": "Conflicts from two parallel branches touching the same file were resolved mechanically (regex over diff3 markers). The lazy match swallowed part of one side's handler, leaving an unclosed block; git merged 'successfully' and main stopped compiling.",
+  "severity": "warning",
+  "mistake": "Trusting any mechanical or textual conflict resolution — regex over conflict markers, 'take both sides' concatenation, or git's own clean-looking auto-merge of adjacent hunks — without a compile/parse step before committing. Textual success is not syntactic success: git only guarantees the merge had no overlapping hunks, not that the result is a program.",
+  "instead": "After ANY conflict resolution (manual, mechanical, or auto), run the compiler/parser as a hard gate before commit: tsc/eslint/py_compile/cargo check — bare, not piped. For 3-way append conflicts prefer `git checkout --conflict=diff3` plus manual keep-both editing over regex surgery. In CI, treat a red build immediately after a merge train as 'inspect the merge commit first'.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-06T00:00:00Z"
+}

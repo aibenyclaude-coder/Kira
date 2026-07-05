@@ -1,0 +1,20 @@
+{
+  "id": "scar.write-path-without-read-path.v1",
+  "keywords": [
+    "feature not used",
+    "data recorded never read",
+    "close the loop",
+    "write only feature",
+    "recall path",
+    "dead data"
+  ],
+  "contexts": [],
+  "title": "Shipped the write path, never wired the read path — the feature recorded data nobody ever read back",
+  "summary": "A failure-memory feature stored records perfectly, but no query path ever loaded them: lookups and reports ran only against the built-in corpus. The product's core loop was silently open for a full release cycle while all write-side tests were green.",
+  "severity": "critical",
+  "mistake": "Verifying a data feature by testing only the write side (record succeeds, file exists, schema valid) and declaring it done. Nothing asserted that a consumer actually loads what was written, so the recall half was never wired: recorded data was invisible to every read endpoint, and the gap survived reviews because each half looked complete on its own.",
+  "instead": "For every write path, name the read path in the same change and prove the loop with one end-to-end test: write through the public API, then assert the written record is visible through each consumer that should see it (query, report, recall). Audit question that catches this class in review: 'who reads this, and where is the test that reads it?' Also verify the loop in the PRODUCTION wiring (the binary/config actually deployed), not just in unit scope.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-06T00:00:00Z"
+}

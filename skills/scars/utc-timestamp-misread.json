@@ -1,0 +1,22 @@
+{
+  "id": "scar.utc-timestamp-misread.v1",
+  "keywords": [
+    "utc timestamp",
+    "timezone confusion",
+    "ci timestamp",
+    "gh run list time",
+    "when did this run"
+  ],
+  "contexts": [
+    "ci",
+    "git"
+  ],
+  "title": "CI/API timestamps are UTC — read as local time, events were misdated by a day",
+  "summary": "gh/CI output printed 15:2x UTC; the local clock said 00:2x next day. The agent concluded a merge was 'yesterday' when it happened minutes earlier, and nearly misdiagnosed live concurrent activity as history.",
+  "severity": "warning",
+  "mistake": "Reasoning about recency ('this ran yesterday', 'nothing is active now') directly from raw timestamps in gh run list, API responses, or CI logs. Those are UTC; for a UTC+9 operator every evening event lands on the previous calendar date, so causality and concurrency judgments come out wrong.",
+  "instead": "Convert to local time before any recency or ordering claim (UTC+offset; JST = UTC+9). Heuristic: if timeline conclusions look about 9 hours or one day off from expectations, check the timezone first. Prefer sources that render locally: `git log --date=iso-local`, `date -d '<ts>'`. State timestamps with their zone in reports.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-06T00:00:00Z"
+}

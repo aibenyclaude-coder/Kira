@@ -1,0 +1,22 @@
+{
+  "id": "scar.parallel-agents-push-race.v1",
+  "keywords": [
+    "push rejected",
+    "non-fast-forward",
+    "parallel agents git",
+    "push race",
+    "concurrent sessions repo",
+    "multi agent git"
+  ],
+  "contexts": [
+    "git"
+  ],
+  "title": "Two agent sessions pushed the same repo concurrently — non-fast-forward rejects and phantom state",
+  "summary": "One session was publishing a release while another merged a PR queue into the same repository. Pushes raced (rejected non-fast-forward), local refs moved between commands, and diffs computed seconds earlier were silently stale.",
+  "severity": "critical",
+  "mistake": "Treating a repository as single-writer while multiple agents (or a human plus an agent) were pushing. The losing session saw rejected pushes, 'already up to date' answers that were false a second later, and comparisons against refs that had just moved. Worse, working directly in the same checkout meant the other session's checkouts/resets mutated the working tree mid-edit.",
+  "instead": "Serialize writers or isolate. (1) Claim a branch per session and work in an own `git worktree add <dir> <branch>` — shared refs still update but the working tree is yours. (2) `git fetch` immediately before any push or ref comparison, not minutes before. (3) On a rejected push never force: merge the moved remote branch into yours and push again. (4) If evidence looks impossible (stale diffs, time-traveling refs), suspect a concurrent writer before suspecting the tool.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-06T00:00:00Z"
+}
