@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-07-06
+
 ### Added
 - `kira_share_scar` (F4 v1, 10th tool) — promote a personal scar into a community submission: re-sanitizes, generalizes to the community shape, and returns a prefilled GitHub issue URL + `gh` fallback. The tool uploads NOTHING; submitting stays an explicit human act.
 - Scar submission intake: issue form (`scar-submission.yml`), an intake bot that validates submissions with the exact rules the shipped corpus passes (`scripts/validate-entry.mjs` + sanitizer no-op gate), and auto-labeling (`valid-scar` / `invalid-scar`).
@@ -88,7 +90,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2026-04-XX
 - Initial public release with 31 skills, 12 scars, 7 routes, and three core MCP tools (`kira_lookup`, `kira_route`, `kira_report`).
 
-[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.8.0
 [0.7.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.7.0
 [0.6.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.6.0
 [0.5.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.5.0
