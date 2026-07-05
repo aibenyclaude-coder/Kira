@@ -23,7 +23,7 @@ Add this snippet to your MCP host config:
   "mcpServers": {
     "kira": {
       "command": "npx",
-      "args": ["kira-mcp"]
+      "args": ["-y", "kira-mcp@latest"]
     }
   }
 }
