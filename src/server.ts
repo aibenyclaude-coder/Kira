@@ -319,6 +319,16 @@ export async function startServer(): Promise<void> {
 
       const result = buildPremortem(rawScars, { goal, context, top_k });
 
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
+      };
+    }
+
     if (name === "kira_record_failure") {
       const result = await handleRecordFailure(args);
       return {
