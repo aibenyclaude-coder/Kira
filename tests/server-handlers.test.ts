@@ -58,6 +58,8 @@ const EXPECTED_TOOLS = [
   "kira_get",
   "kira_consent",
   "kira_status",
+  "kira_record_failure",
+  "kira_premortem",
 ];
 
 let tmp: string;
@@ -114,7 +116,7 @@ describe("server transport", () => {
 });
 
 describe("ListTools handler", () => {
-  it("advertises exactly the six registered tools", async () => {
+  it("advertises exactly the registered tools", async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
     expect(names).toEqual([...EXPECTED_TOOLS].sort());
