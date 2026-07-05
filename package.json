@@ -24,12 +24,19 @@
   ],
   "keywords": [
     "mcp",
+    "mcp-server",
     "ai",
     "agent",
+    "agent-memory",
+    "memory",
     "skills",
+    "scars",
+    "failure-learning",
     "claude",
+    "claude-code",
     "cursor",
     "cline",
+    "windsurf",
     "model-context-protocol"
   ],
   "repository": {

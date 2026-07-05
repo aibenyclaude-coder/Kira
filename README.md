@@ -69,7 +69,7 @@ Not a hypothetical — this is the **actual first scar in the database**, record
 
 ---
 
-## Tools (9)
+## Tools (10)
 
 | | Tool | What it does |
 |---|------|-------------|
@@ -79,6 +79,7 @@ Not a hypothetical — this is the **actual first scar in the database**, record
 | **Catalog** | `kira_lookup` | Keyword → proven instructions + failure warnings. On a miss, returns scored `near_skills` / `near_scars` instead of a shrug |
 | | `kira_get` | Fetch full step-by-step instructions by ID |
 | | `kira_route` | Goal → ordered plan with a skill per step |
+| **Community** | `kira_share_scar` | Promote a personal scar into a community submission (sanitized; nothing uploads without your click) — earns contributor status |
 | **Feedback** | `kira_report` | Report success/retry/failure → feeds the quality loop |
 | | `kira_consent` / `kira_status` | Telemetry consent + one-call introspection |
 
