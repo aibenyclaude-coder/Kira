@@ -1,0 +1,22 @@
+{
+  "id": "scar.parallel-rails-same-trigger-race.v1",
+  "keywords": [
+    "workflows race same tag",
+    "registry validation 404",
+    "pipeline ordering",
+    "downstream validates upstream",
+    "parallel release workflows"
+  ],
+  "contexts": [
+    "ci",
+    "github-actions"
+  ],
+  "title": "Two release rails fired on one tag — the downstream validator raced the upstream publisher",
+  "summary": "An npm-publish workflow and a registry-listing workflow both triggered on the same v* tag. The registry validates that the npm package version exists; it ran faster than the npm publish and failed with 'package not found'.",
+  "severity": "warning",
+  "mistake": "Wiring two workflows to the same trigger when one of them validates the artifact the other produces. GitHub Actions gives no cross-workflow ordering — the lighter job wins the race, reads the world before the heavier job has changed it, and fails with a misleading 404/not-found that looks like a metadata bug.",
+  "instead": "Make the dependency explicit: either poll for the upstream artifact before proceeding (loop on `npm view <pkg> version` until it equals the tag, with a hard timeout), or chain via `workflow_run` on the upstream workflow's completion, or merge both into one workflow with `needs:`. When a downstream validator reports 'not found' right after a release, suspect the race before suspecting the metadata.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-06T00:00:00Z"
+}

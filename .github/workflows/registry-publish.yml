@@ -54,6 +54,18 @@ jobs:
           echo "${MCP_PUBLISHER_SHA256}  mcp-publisher.tar.gz" | sha256sum -c -
           tar xzf mcp-publisher.tar.gz mcp-publisher
           ./mcp-publisher --version
+      - name: wait until npm serves this version (both rails fire on the same tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          WANT="${GITHUB_REF_NAME#v}"
+          for i in $(seq 1 30); do
+            GOT="$(npm view kira-mcp version 2>/dev/null || true)"
+            if [ "$GOT" = "$WANT" ]; then echo "npm serves $GOT"; exit 0; fi
+            echo "[$i] npm serves '$GOT', want $WANT — waiting 10s"
+            sleep 10
+          done
+          echo "::error::npm never served $WANT (registry validates against npm)"
+          exit 1
       - name: publish to the MCP registry
         run: |
           ./mcp-publisher login github-oidc
