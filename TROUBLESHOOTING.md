@@ -229,3 +229,7 @@ Or call the `kira_consent` tool with `{"level":"off"}` to persist it to `~/.kira
 ---
 
 **Still stuck?** Run the smoke test at the top, capture the stderr output, and file an issue at <https://github.com/aibenyclaude-coder/Kira/issues>.
+
+## Kira seems outdated (old tool list, missing features)
+
+`npx kira-mcp` without a version can serve a **stale cached copy** indefinitely — one real machine ran 0.5.0 for weeks after 0.7.0+ shipped. Fix: use `"args": ["-y", "kira-mcp@latest"]` in your MCP config (the README snippet does this), or clear the cache: `npm cache clean --force && npx -y kira-mcp@latest --version`. Verify with the `kira_status` tool — `kira_version` should match `npm view kira-mcp version`.
