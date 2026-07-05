@@ -20,7 +20,7 @@ import type { KiraTier } from "../license.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_JSON = join(__dirname, "..", "..", "package.json");
 
-function readVersion(): string {
+export function readVersion(): string {
   try {
     return (JSON.parse(readFileSync(PACKAGE_JSON, "utf-8")) as { version?: string })
       .version ?? "0.0.0";

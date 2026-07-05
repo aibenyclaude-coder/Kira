@@ -7,14 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-06
+
 ### Added
 - `kira_record_failure` (F1) — capture a retry/exception as a **personal scar**: private, local-only failure memory under `~/.kira/personal-scars/` (#138).
 - `kira_premortem` (F3) — failure heat-map for a goal before the agent starts, ranked by past scar hits (#139).
+- `kira_personal_brief` (F2) — SessionStart "magic moment": your most recent personal scars by recency, with a ready-to-print headline (#146).
+- **Personal scar recall — the loop is closed.** Scars recorded by `kira_record_failure` now fire everywhere: `kira_lookup` (before shared scars at equal severity), `kira_premortem` heat maps, `kira_get` by id, and `kira_status` counts (`counts.personal_scars`). Recording was write-only before this release.
+- `kira_premortem` returns scored `near_scars` when nothing matches strictly — vocabulary mismatch no longer yields a bare "proceed".
 - `npm run bench` — lookup/route micro-benchmarks with a regression budget (#143).
 - CJK bigram tokenization in `similarity.ts` — Japanese queries now reach near-match scoring and miss clustering (#144).
 
 ### Changed
 - README repositioned around the personal-scar loop ("your agent stops repeating its own mistakes"); demo tape rewritten with the real first-scar story.
+- Re-recording a near-duplicate failure (token-Jaccard ≥ 0.45 over title+mistake) folds into the existing personal scar: `hit_count` counts real recurrences, keywords/contexts union, the newest fix wins, severity escalates to critical. Previously a reworded recurrence created a fresh file and `hit_count` never grew.
+- Honest premortem framing: `hit_count` is described as *recorded* (curated seed counts for the shipped corpus, actual local recurrences for personal scars) — renamed `total_historical_failures` → `total_recorded_failures` and `network_minutes_saved` → `recorded_minutes_saved`.
+- Flywheel clustering assigns entries to the *most* similar cluster (best-fit) instead of the first past the threshold; the digest is stamped with the local calendar date instead of UTC.
+
+### Fixed
+- `logMiss` sanitizes context tags like the keyword — miss-log content can flow into public PR candidates.
+- MCP server metadata no longer reports a hardcoded version 0.4.0; it reads package.json.
 
 ## [0.6.0] - 2026-07-06
 
@@ -64,7 +76,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2026-04-XX
 - Initial public release with 31 skills, 12 scars, 7 routes, and three core MCP tools (`kira_lookup`, `kira_route`, `kira_report`).
 
-[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.7.0
 [0.6.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.6.0
 [0.5.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.5.0
 [0.4.1]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.4.1

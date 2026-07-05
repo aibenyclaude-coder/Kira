@@ -11,7 +11,7 @@ import { record, logMiss } from "./report.js";
 import { verifyProKey } from "./license.js";
 import { startFlusher, shutdownFlush } from "./telemetry.js";
 import { KIRA_CONSENT_TOOL, handleKiraConsent } from "./tools/kira_consent.js";
-import { KIRA_STATUS_TOOL, buildStatus } from "./tools/kira_status.js";
+import { KIRA_STATUS_TOOL, buildStatus, readVersion } from "./tools/kira_status.js";
 import { KIRA_PREMORTEM_TOOL, buildPremortem } from "./tools/premortem.js";
 import {
   KIRA_RECORD_FAILURE_TOOL,
@@ -184,7 +184,7 @@ export async function startServer(): Promise<void> {
   const server = new Server(
     {
       name: "kira",
-      version: "0.4.0",
+      version: readVersion(),
     },
     {
       capabilities: {
