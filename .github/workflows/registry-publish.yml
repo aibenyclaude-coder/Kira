@@ -23,6 +23,9 @@ permissions:
 
 env:
   MCP_PUBLISHER_VERSION: v1.7.9
+  # sha256 of mcp-publisher_linux_amd64.tar.gz for the pinned version —
+  # recompute deliberately on every version bump.
+  MCP_PUBLISHER_SHA256: ab128162b0616090b47cf245afe0a23f3ef08936fdce19074f5ba0a4469281ac
 
 jobs:
   publish:
@@ -44,10 +47,12 @@ jobs:
             echo "::error::tag $GITHUB_REF_NAME is not on main"
             exit 1
           fi
-      - name: install mcp-publisher (pinned)
+      - name: install mcp-publisher (pinned + checksum-verified)
         run: |
-          curl -sL "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz" \
-            | tar xz mcp-publisher
+          curl -fsSL -o mcp-publisher.tar.gz \
+            "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz"
+          echo "${MCP_PUBLISHER_SHA256}  mcp-publisher.tar.gz" | sha256sum -c -
+          tar xzf mcp-publisher.tar.gz mcp-publisher
           ./mcp-publisher --version
       - name: publish to the MCP registry
         run: |
