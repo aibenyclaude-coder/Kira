@@ -1,0 +1,50 @@
+name: "Scar submission"
+description: "Share a failure pattern so no agent hits that wall again. Fastest path: run kira_share_scar in your agent — it prefills this for you."
+title: "[scar] <what went wrong, one line>"
+labels: ["scar-submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Thank you — this is exactly how the corpus grows.**
+        A scar = a failure pattern + how to avoid it. Accepted scars ship to every Kira user, and earn you **contributor status** (fresh-feed access that non-contributors subscribe for).
+        The intake bot validates your JSON automatically and comments the result.
+  - type: textarea
+    id: scar-json
+    attributes:
+      label: "Scar JSON"
+      description: "Paste the JSON from kira_share_scar, or fill the shape by hand (see any file under skills/scars/ for reference)."
+      render: json
+      placeholder: |
+        {
+          "id": "scar.your-slug-here.v1",
+          "keywords": ["three or more", "search variants", "an agent would use"],
+          "contexts": [],
+          "title": "What went wrong, one line",
+          "summary": "One-line summary.",
+          "severity": "warning",
+          "mistake": "What the agent did wrong — concrete, recognizable as a pattern (40+ chars).",
+          "instead": "What to do instead — executable advice (40+ chars).",
+          "hit_count": 1,
+          "version": "1.0.0",
+          "updated_at": "2026-07-06T00:00:00Z"
+        }
+    validations:
+      required: true
+  - type: checkboxes
+    id: submission-checks
+    attributes:
+      label: "Submission checklist"
+      options:
+        - label: "No secrets, private paths, emails, or identifiers anywhere in the text (the bot double-checks)"
+          required: true
+        - label: "I license this contribution under the repository's MIT license"
+          required: true
+        - label: "hit_count is the honest number of times this actually happened"
+          required: true
+  - type: input
+    id: provenance
+    attributes:
+      label: "Provenance (optional)"
+      description: "Where did this bite you? (tool/stack + rough date — helps reviewers judge freshness)"
+      placeholder: "Claude Code + git, 2026-07"
