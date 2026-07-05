@@ -61,6 +61,7 @@ const EXPECTED_TOOLS = [
   "kira_record_failure",
   "kira_premortem",
   "kira_personal_brief",
+  "kira_share_scar",
 ];
 
 let tmp: string;
@@ -356,6 +357,30 @@ describe("personal scar recall (record_failure output feeds lookup/premortem)", 
     const res = await callJson("kira_status", {});
     expect(res.counts.personal_scars).toBeGreaterThanOrEqual(1);
     expect(res.paths.personal_scars_dir).toContain(tmp);
+  });
+});
+
+describe("kira_share_scar handler (F4: promote personal → community)", () => {
+  it("prepares a submission bundle for a recorded personal scar", async () => {
+    const rec = await callJson("kira_record_failure", {
+      title: "flaky retry on deploy hook",
+      mistake: "assumed the deploy webhook fires exactly once; it retried and the handler was not idempotent",
+      instead: "make webhook handlers idempotent before wiring them to deploys",
+      keywords: ["webhook retry", "idempotent handler", "deploy hook"],
+    });
+    const res = await callJson("kira_share_scar", { scar_id: rec.scar.id });
+    expect(res.shared).toContain("nothing");
+    expect(res.candidate.id).toMatch(/^scar\.[a-z0-9-]+\.v1$/);
+    expect(res.issue_body).toContain("scar-submission");
+  });
+
+  it("rejects sharing a community scar id", async () => {
+    await expect(
+      client.callTool({
+        name: "kira_share_scar",
+        arguments: { scar_id: "scar.vercel-env-vars-missing.v1" },
+      })
+    ).rejects.toThrow(/Only PERSONAL scars/);
   });
 });
 
