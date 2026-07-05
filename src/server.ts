@@ -12,6 +12,10 @@ import { verifyProKey } from "./license.js";
 import { startFlusher, shutdownFlush } from "./telemetry.js";
 import { KIRA_CONSENT_TOOL, handleKiraConsent } from "./tools/kira_consent.js";
 import { KIRA_STATUS_TOOL, buildStatus } from "./tools/kira_status.js";
+import {
+  KIRA_RECORD_FAILURE_TOOL,
+  handleRecordFailure,
+} from "./tools/record-failure.js";
 import type { Skill, Scar, ReportStatus, ConsentLevel } from "./types.js";
 import type { KiraTier } from "./license.js";
 
@@ -157,6 +161,7 @@ const TOOLS = [
   },
   KIRA_CONSENT_TOOL,
   KIRA_STATUS_TOOL,
+  KIRA_RECORD_FAILURE_TOOL,
 ];
 
 export async function startServer(): Promise<void> {
@@ -286,6 +291,18 @@ export async function startServer(): Promise<void> {
         scars: rawScars,
         routesCount: routes.length,
       });
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
+      };
+    }
+
+    if (name === "kira_record_failure") {
+      const result = await handleRecordFailure(args);
       return {
         content: [
           {
