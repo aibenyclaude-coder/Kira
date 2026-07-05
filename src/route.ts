@@ -8,10 +8,7 @@ import type {
   RouteRequest,
   RouteResponse,
 } from "./types.js";
-import { lookup, type indexItems } from "./lookup.js";
-
-// Re-export the Indexed type from lookup for function signatures
-type Indexed = { _keywordsLower: string[]; _contextsLower: string[] };
+import { lookup, type Indexed } from "./lookup.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROUTES_DIR = join(__dirname, "..", "routes");

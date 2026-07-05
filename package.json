@@ -8,6 +8,12 @@
   "bin": {
     "kira-mcp": "./dist/index.js"
   },
+  "exports": {
+    "./types": {
+      "types": "./dist/types-public.d.ts",
+      "import": "./dist/types-public.js"
+    }
+  },
   "files": [
     "dist/",
     "skills/",
@@ -31,11 +37,12 @@
     "url": "https://github.com/aibenyclaude-coder/Kira"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --declaration",
     "start": "node dist/index.js",
     "demo": "tsc && node dist/demo.js",
     "demo:privacy": "tsc && node dist/demo-redaction.js",
     "aggregate": "tsc && node dist/aggregate.js",
+    "stats": "vite-node scripts/stats.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "worker:dev": "cd worker && wrangler dev --port 8787",
@@ -50,6 +57,7 @@
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@vitest/coverage-v8": "^2.1.0",
+    "fast-check": "^4.8.0",
     "typescript": "^5.4.0",
     "vitest": "^2.1.0"
   },

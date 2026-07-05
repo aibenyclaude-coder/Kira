@@ -4,7 +4,9 @@ import type {
   SkillSummary,
   LookupRequest,
   LookupResponse,
+  NearMatch,
 } from "./types.js";
+import { tokenize, nearMatches, type SimIndexed } from "./similarity.js";
 
 // Module-level constants — allocated once, not per-lookup.
 const FILLER = new Set([
@@ -15,27 +17,40 @@ const MIN_WORD_OVERLAP = 2;
 
 /** Strip instructions from a skill to produce a lightweight summary. */
 function toSkillSummary(skill: Skill & Indexed): SkillSummary {
-  const { instructions: _, _keywordsLower: _k, _contextsLower: _c, ...summary } = skill;
+  const {
+    instructions: _,
+    _keywordsLower: _k,
+    _contextsLower: _c,
+    _kwTokens: _t,
+    _simTokens: _s,
+    ...summary
+  } = skill;
   return summary;
 }
 
-/** Pre-computed lowercase keywords for a skill/scar item. */
-interface Indexed {
+/** Pre-computed lowercase keywords + similarity token sets for a skill/scar item. */
+export interface Indexed extends SimIndexed {
   _keywordsLower: string[];
   _contextsLower: string[];
 }
 
 /**
- * One-time indexing: lowercase keywords and contexts at load time
- * so we don't repeat it on every lookup call.
+ * One-time indexing: lowercase keywords/contexts + similarity token sets at
+ * load time so we don't repeat it on every lookup call.
  */
-export function indexItems<T extends { keywords: string[]; contexts: string[] }>(
-  items: T[]
-): (T & Indexed)[] {
+export function indexItems<
+  T extends { keywords: string[]; contexts: string[]; title: string; summary: string }
+>(items: T[]): (T & Indexed)[] {
   return items.map((item) => ({
     ...item,
     _keywordsLower: item.keywords.map((k) => k.toLowerCase()),
     _contextsLower: item.contexts.map((c) => c.toLowerCase()),
+    _kwTokens: new Set(item.keywords.flatMap((k) => tokenize(k))),
+    _simTokens: new Set(
+      [item.title, item.summary, ...item.keywords, ...item.contexts].flatMap((t) =>
+        tokenize(t)
+      )
+    ),
   }));
 }
 
@@ -141,21 +156,25 @@ export function lookup(
     return b.hit_count - a.hit_count;
   });
 
-  // When 0 results, suggest closest available skills by single-word overlap
+  // When 0 results, fall back to scored near-matching (token-level, with
+  // title/summary/alias coverage — see similarity.ts). Near results are a
+  // recovery path, so the context filter is intentionally NOT applied here.
   let suggestions: string[] | undefined;
+  let nearSkills: NearMatch[] | undefined;
+  let nearScars: NearMatch[] | undefined;
   if (sortedSkills.length === 0 && sortedScars.length === 0) {
-    const queryWords = keyword.toLowerCase().split(/\s+/);
-    const scored = allSkills.map((s) => {
-      const overlap = queryWords.filter((q) =>
-        s._keywordsLower.some((k) => k.split(/\s+/).includes(q))
-      ).length;
-      return { title: s.title, overlap };
+    const toNear = (n: { item: { id: string; title: string }; score: number; matched_tokens: string[] }): NearMatch => ({
+      id: n.item.id,
+      title: n.item.title,
+      score: n.score,
+      matched_tokens: n.matched_tokens,
     });
-    suggestions = scored
-      .filter((s) => s.overlap > 0)
-      .sort((a, b) => b.overlap - a.overlap)
-      .slice(0, 3)
-      .map((s) => s.title);
+    nearSkills = nearMatches(allSkills, keyword).map(toNear);
+    nearScars = nearMatches(allScars, keyword).map(toNear);
+    if (nearSkills.length === 0) nearSkills = undefined;
+    if (nearScars.length === 0) nearScars = undefined;
+
+    suggestions = (nearSkills ?? []).map((n) => n.title);
     if (suggestions.length === 0) {
       suggestions = ["No matching skills found. Try broader keywords like 'deploy', 'auth', 'database', 'testing'."];
     }
@@ -167,5 +186,7 @@ export function lookup(
     skill_count: sortedSkills.length,
     scar_count: sortedScars.length,
     ...(suggestions ? { suggestions } : {}),
+    ...(nearSkills ? { near_skills: nearSkills } : {}),
+    ...(nearScars ? { near_scars: nearScars } : {}),
   };
 }
