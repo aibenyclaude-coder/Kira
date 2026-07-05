@@ -951,6 +951,28 @@
       "updated_at": "2026-04-11T00:00:00Z"
     },
     {
+      "id": "scar.credential-ci-jobs-need-three-gates.v1",
+      "keywords": [
+        "workflow secrets hardening",
+        "workflow_dispatch secrets",
+        "tag publish ancestry",
+        "oidc job security",
+        "github actions deploy secrets"
+      ],
+      "contexts": [
+        "ci",
+        "github-actions"
+      ],
+      "title": "Credential-holding CI jobs shipped without ref gate, tag-ancestry check, or pinned toolchain",
+      "summary": "A deploy job with cloud secrets and a tag-triggered npm publish job with OIDC went to main missing three standard gates. An automated security review caught it post-merge; each gap was a one-line fix.",
+      "severity": "critical",
+      "mistake": "Wrote a workflow_dispatch deploy job and a tag-triggered publish job that hold secrets/id-token, forgetting that (1) workflow_dispatch executes the workflow definition from WHATEVER ref is chosen — a modified copy on any branch can print the secrets; (2) any v-tag, even on an unreviewed commit, would publish to the registry; (3) `npm install -g npm@latest` inside the credential-holding job is an unpinned supply-chain edge.",
+      "instead": "Before merging any workflow whose job holds a secret or id-token, check three gates: (1) the job carries `if: github.ref == 'refs/heads/main'`; (2) tag-triggered publishes verify `git merge-base --is-ancestor $GITHUB_SHA origin/main` (full-history checkout); (3) every toolchain install in that job is pinned to an exact version. Review these BEFORE merge — security review after merge means the window was open.",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-06T00:00:00Z"
+    },
+    {
       "id": "scar.docker-no-multistage-build.v1",
       "keywords": [
         "docker",
@@ -1045,6 +1067,27 @@
       "updated_at": "2026-07-06T00:00:00Z"
     },
     {
+      "id": "scar.nested-package-needs-own-install.v1",
+      "keywords": [
+        "nested package.json",
+        "monorepo install",
+        "ERR_MODULE_NOT_FOUND tests",
+        "worker npm ci",
+        "subproject dependencies missing"
+      ],
+      "contexts": [
+        "nodejs"
+      ],
+      "title": "Sub-package tests failed with ERR_MODULE_NOT_FOUND — root npm ci doesn't install nested projects",
+      "summary": "A repo carried an independent npm project in a subdirectory (worker/). After a fresh clone/worktree plus a root `npm ci`, the subproject's test runner crashed with ERR_MODULE_NOT_FOUND because its own node_modules never existed.",
+      "mistake": "Running `npm ci` at the repository root and assuming every test suite in the tree was now runnable. Without npm workspaces, a nested package.json (worker/, apps/*, functions/) is a separate installation unit — its devDependencies (test pool, CLI tools) are simply absent until installed in place.",
+      "instead": "After cloning or creating a worktree, list nested manifests first: `find . -name package.json -not -path '*/node_modules/*'`. Run `npm ci` inside each nested project before invoking its scripts. In CI, give each nested project its own install step (and its own cache key / cache-dependency-path).",
+      "severity": "warning",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-06T00:00:00Z"
+    },
+    {
       "id": "scar.nextjs-use-client-missing.v1",
       "keywords": [
         "nextjs",
@@ -1067,6 +1110,28 @@
       "hit_count": 1,
       "version": "1.0.0",
       "updated_at": "2026-04-11T00:00:00Z"
+    },
+    {
+      "id": "scar.npm-publish-404-means-auth.v1",
+      "keywords": [
+        "npm publish 404",
+        "npm publish fails",
+        "npm token expired",
+        "not found put registry",
+        "npm whoami 401"
+      ],
+      "contexts": [
+        "npm",
+        "ci"
+      ],
+      "title": "npm publish said 404 'not in this registry' — the real problem was dead auth",
+      "summary": "A publish failed with '404 Not Found - PUT … could not be found or you do not have permission'. It reads like a registry or package-name problem; the actual cause was an expired token (and later, an unregistered trusted publisher).",
+      "severity": "warning",
+      "mistake": "Debugging the package name, registry URL, and scope after `npm publish` returned E404. npm deliberately answers unauthorized publishes with 404 instead of 401/403 so package existence is not leaked — the agent burned time on the wrong layer twice: once with a revoked automation token, once with a not-yet-registered OIDC trusted publisher.",
+      "instead": "On any npm publish 404/403, check auth FIRST: `npm whoami` (401 = dead token → reissue) and, for OIDC/trusted publishing, confirm the publisher is registered on the package's Settings page (org/user, repo, workflow filename, environment must match EXACTLY; the form is not validated at save time). Only debug names and registries after auth is proven.",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-06T00:00:00Z"
     },
     {
       "id": "scar.parallel-agents-push-race.v1",
