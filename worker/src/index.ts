@@ -11,6 +11,7 @@
 import { z } from "zod";
 import { sanitize } from "./sanitize.js";
 import { SERVER_CARD } from "./server-card.js";
+import { corpus, type CorpusEnv } from "./corpus.js";
 
 const NOTE_MAX = 500;
 const CONTEXT_MAX = 2000;
@@ -31,7 +32,7 @@ const PayloadSchema = z.object({
   env: z.object({
     os: z.enum(["linux", "darwin", "win32", "other"]),
     node_major: z.number().int().min(0).max(99),
-    tier: z.enum(["free", "pro"]),
+    tier: z.enum(["free", "contributor", "pro"]),
   }),
   detail: z
     .object({
@@ -46,7 +47,7 @@ const BatchSchema = z.object({
   batch: z.array(PayloadSchema).min(1).max(MAX_BATCH),
 });
 
-export interface Env {
+export interface Env extends CorpusEnv {
   DB: D1Database;
   DAILY_SALT: string;
 }
@@ -177,6 +178,13 @@ export default {
     }
     if (req.method === "GET" && url.pathname === "/v1/health") {
       return jsonResponse({ ok: true }, 200);
+    }
+    if (req.method === "GET" && url.pathname.startsWith("/v1/corpus")) {
+      const sub = url.pathname.slice("/v1/corpus".length).replace(/^\//, "");
+      if (sub === "" || sub === "skills.json" || sub === "scars.json") {
+        return corpus(req, env, sub);
+      }
+      return errorResponse("not_found", `No corpus route ${sub}`, 404);
     }
     if (
       req.method === "GET" &&

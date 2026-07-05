@@ -151,12 +151,28 @@ Full schema, redaction rules, retention, and opt-out instructions: **[PRIVACY.md
 | `KIRA_TELEMETRY` | (unset → `basic`) | Override consent level for this process: `off`, `basic`, `full`. |
 | `KIRA_TELEMETRY_URL` | `https://kira-telemetry.workers.dev/v1/reports` | Endpoint for batch upload. |
 | `KIRA_HOME` | `~/.kira` | Where consent state, personal scars, miss log, and flywheel output live. |
+| `KIRA_KEY` | (unset → free tier) | Contributor / supporter key — unlocks the fresh community feed. |
+| `KIRA_REMOTE_URL` | (unset → no network) | Opt-in corpus feed URL for the free tier (90-day-delayed commons). |
+
+---
+
+## Share a scar, or subscribe, or wait
+
+The corpus is MIT and everything in it eventually becomes free. **Freshness is the only premium** — failure knowledge decays as models retrain, so the newest scars carry the value:
+
+| | Fresh community feed | How |
+|---|---|---|
+| **Contributor** | ✅ free | One accepted scar = 12 months (`kira_share_scar` → merge → key). **First 1,000 contributors: permanent.** |
+| **Supporter** | ✅ paid | Sponsor the project → supporter key. Funds human review of every submission. |
+| **Free** | 90 days later | Base corpus ships with npm; delayed commons feed available opt-in. Local features + privacy guarantees are free forever, on every tier. |
+
+Currently in **grace mode**: the fresh feed is open to everyone until the corpus reaches 100 community scars. Full policy: [RECIPROCITY.md](./RECIPROCITY.md).
 
 ---
 
 ## Contributing
 
-The first **1,000 contributors** get permanent free access to all Kira features (including future Pro tier).
+The first **1,000 contributors** get permanent free access to all Kira features (fresh feed included) — see the reciprocity table above.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to add Skills and Scars.
 

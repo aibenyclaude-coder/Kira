@@ -35,6 +35,9 @@ jobs:
       - name: stats.json freshness (badge must not lie)
         run: node scripts/gen-stats.mjs --check
 
+      - name: corpus.json freshness (feed must match the repo)
+        run: node scripts/gen-corpus.mjs --check
+
       - name: Validate skill / scar JSON
         run: |
           python3 - <<'PY'

@@ -4,6 +4,7 @@ import type { ReportRequest, ReportResponse } from "./types.js";
 import { enqueue } from "./telemetry.js";
 import { hasSeenPrompt, markPromptSeen, loadConsent, KIRA_HOME } from "./consent.js";
 import { sanitize } from "./sanitize.js";
+import type { KiraTier } from "./license.js";
 
 const MISSES_LOG = join(KIRA_HOME, "misses.log");
 /** Rotate misses.log once past this size (keeps one .1 generation). */
@@ -29,7 +30,7 @@ const CONSENT_PROMPT =
  */
 export async function record(
   request: ReportRequest,
-  tier: "free" | "pro" = "free"
+  tier: KiraTier = "free"
 ): Promise<ReportResponse> {
   const seen = await hasSeenPrompt();
   await enqueue(request, tier);

@@ -2,7 +2,7 @@ import { readFile, readdir, writeFile, mkdir, stat } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Skill, Scar } from "./types.js";
-import type { KiraTier } from "./license.js";
+import { resolveKiraKey, type KiraTier } from "./license.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dirname, "..");
@@ -12,12 +12,19 @@ const CACHE_SKILLS = join(CACHE_DIR, "remote-skills.json");
 const CACHE_SCARS = join(CACHE_DIR, "remote-scars.json");
 
 const CACHE_TTL_MS = Number(process.env.KIRA_CACHE_TTL_MS) || 3_600_000;
-const PRO_CDN_URL = "https://cdn.kira.sh/v1";
+/** Reciprocity-gated corpus endpoint (worker/src/corpus.ts). */
+const DEFAULT_CORPUS_URL = "https://kira-telemetry.workers.dev/v1/corpus";
 
-function getRemoteUrl(tier: KiraTier): string {
+/**
+ * Contributor and pro keys unlock the sanctioned fresh feed by default.
+ * Free tier stays zero-phone-home: no remote call unless the user opts in
+ * via KIRA_REMOTE_URL (which serves the 90-day-delayed commons keylessly).
+ * Exported for tests.
+ */
+export function getRemoteUrl(tier: KiraTier): string {
   const explicit = process.env.KIRA_REMOTE_URL;
   if (explicit) return explicit;
-  return tier === "pro" ? PRO_CDN_URL : "";
+  return tier === "pro" || tier === "contributor" ? DEFAULT_CORPUS_URL : "";
 }
 
 // ── Local loader ───────────────────────────────────────────────────────
@@ -72,8 +79,14 @@ async function fetchRemote<T>(endpoint: string, cachePath: string, remoteUrl: st
   }
 
   try {
+    const key = resolveKiraKey();
     const res = await fetch(url, {
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        // The corpus endpoint reads the tier from this key; keyless requests
+        // get the delayed commons (see RECIPROCITY.md).
+        ...(key ? { Authorization: `Bearer ${key}` } : {}),
+      },
       signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) {
