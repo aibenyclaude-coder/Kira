@@ -18,7 +18,7 @@ Before debugging your client, confirm Kira starts on its own. This talks to the 
   sleep 0.5) | npx kira-mcp
 ```
 
-You should see JSON-RPC responses for `initialize` and `tools/list`, and the tool list should include all six tools: `kira_lookup`, `kira_route`, `kira_report`, `kira_get`, `kira_consent`, `kira_status`.
+You should see JSON-RPC responses for `initialize` and `tools/list`, and the tool list should include all ten tools (as of v0.8.0): `kira_lookup`, `kira_route`, `kira_get`, `kira_report`, `kira_consent`, `kira_status`, `kira_record_failure`, `kira_premortem`, `kira_personal_brief`, `kira_share_scar`.
 
 - **Responses appear** → the server is fine; the problem is client config (issues 3–5, 12).
 - **Nothing / an error appears** → the problem is the runtime or the download (issues 1, 2, 6, 7, 10).
