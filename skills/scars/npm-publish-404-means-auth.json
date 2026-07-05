@@ -1,0 +1,22 @@
+{
+  "id": "scar.npm-publish-404-means-auth.v1",
+  "keywords": [
+    "npm publish 404",
+    "npm publish fails",
+    "npm token expired",
+    "not found put registry",
+    "npm whoami 401"
+  ],
+  "contexts": [
+    "npm",
+    "ci"
+  ],
+  "title": "npm publish said 404 'not in this registry' — the real problem was dead auth",
+  "summary": "A publish failed with '404 Not Found - PUT … could not be found or you do not have permission'. It reads like a registry or package-name problem; the actual cause was an expired token (and later, an unregistered trusted publisher).",
+  "severity": "warning",
+  "mistake": "Debugging the package name, registry URL, and scope after `npm publish` returned E404. npm deliberately answers unauthorized publishes with 404 instead of 401/403 so package existence is not leaked — the agent burned time on the wrong layer twice: once with a revoked automation token, once with a not-yet-registered OIDC trusted publisher.",
+  "instead": "On any npm publish 404/403, check auth FIRST: `npm whoami` (401 = dead token → reissue) and, for OIDC/trusted publishing, confirm the publisher is registered on the package's Settings page (org/user, repo, workflow filename, environment must match EXACTLY; the form is not validated at save time). Only debug names and registries after auth is proven.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-06T00:00:00Z"
+}

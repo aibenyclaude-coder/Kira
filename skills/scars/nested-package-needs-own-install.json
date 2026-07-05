@@ -1,0 +1,21 @@
+{
+  "id": "scar.nested-package-needs-own-install.v1",
+  "keywords": [
+    "nested package.json",
+    "monorepo install",
+    "ERR_MODULE_NOT_FOUND tests",
+    "worker npm ci",
+    "subproject dependencies missing"
+  ],
+  "contexts": [
+    "nodejs"
+  ],
+  "title": "Sub-package tests failed with ERR_MODULE_NOT_FOUND — root npm ci doesn't install nested projects",
+  "summary": "A repo carried an independent npm project in a subdirectory (worker/). After a fresh clone/worktree plus a root `npm ci`, the subproject's test runner crashed with ERR_MODULE_NOT_FOUND because its own node_modules never existed.",
+  "mistake": "Running `npm ci` at the repository root and assuming every test suite in the tree was now runnable. Without npm workspaces, a nested package.json (worker/, apps/*, functions/) is a separate installation unit — its devDependencies (test pool, CLI tools) are simply absent until installed in place.",
+  "instead": "After cloning or creating a worktree, list nested manifests first: `find . -name package.json -not -path '*/node_modules/*'`. Run `npm ci` inside each nested project before invoking its scripts. In CI, give each nested project its own install step (and its own cache key / cache-dependency-path).",
+  "severity": "warning",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-06T00:00:00Z"
+}
