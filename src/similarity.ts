@@ -49,13 +49,35 @@ function expand(w: string): string[] {
   return ALIASES[w] ?? [w];
 }
 
+/** CJK (かな/カナ/漢字/半角カナ) の連続 run にマッチ。 */
+const CJK_RUN = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uff66-\uff9f]+/g;
+
+/**
+ * CJK run は文字 bigram に割る (分かち書きが無いため)。
+ * 1 文字 run はそのまま 1 トークン。両側 (query/item) が同じ処理を通るので
+ * 助詞由来のノイズ bigram は互いに弱い一致にしかならない。
+ */
+function cjkBigrams(run: string): string[] {
+  if (run.length <= 2) return [run];
+  const out: string[] = [];
+  for (let i = 0; i < run.length - 1; i++) out.push(run.slice(i, i + 2));
+  return out;
+}
+
 /**
  * Normalize free text into matching tokens.
- * lowercase → split on non-alphanumerics → alias → stem → alias → stop/len filter → dedupe.
+ * Latin/数字: lowercase → alias → stem → alias → stop/len filter。
+ * CJK: run ごとに文字 bigram (STOP/stem/alias は適用しない)。
  */
 export function tokenize(text: string): string[] {
   const out = new Set<string>();
-  const rough = text.toLowerCase().replace(/[^a-z0-9]+/g, " ").split(/\s+/);
+  const lower = text.toLowerCase();
+
+  for (const run of lower.match(CJK_RUN) ?? []) {
+    for (const bg of cjkBigrams(run)) out.add(bg);
+  }
+
+  const rough = lower.replace(CJK_RUN, " ").replace(/[^a-z0-9]+/g, " ").split(/\s+/);
   for (const raw of rough) {
     if (!raw) continue;
     for (const a of expand(raw)) {
