@@ -1,0 +1,23 @@
+{
+  "id": "community.mcp-registry-publish.v1",
+  "keywords": [
+    "mcp registry publish",
+    "list mcp server",
+    "mcp server registry",
+    "mcp-publisher",
+    "submit mcp server"
+  ],
+  "contexts": [
+    "mcp",
+    "ci",
+    "github-actions"
+  ],
+  "title": "List an MCP server in the official MCP Registry (OIDC from CI, no device flow)",
+  "summary": "Get an MCP server into registry.modelcontextprotocol.io — which PulseMCP, Smithery and other aggregators auto-ingest — as a repeatable CI job instead of a one-off manual ritual. Verified on a real listing, including the schema traps.",
+  "source": "community",
+  "declaration": "I will publish this MCP server to the official registry via a CI job using GitHub Actions OIDC (io.github.<owner> namespace), with the server.json validated against the live schema, and verify the listing from the outside afterwards.",
+  "instructions": "## Publish to the MCP Server Registry\n\n### 0. Know the landscape\nThe old `modelcontextprotocol/servers` repo no longer accepts third-party PRs. The canonical path is the **MCP Server Registry** (`registry.modelcontextprotocol.io`), and aggregators (PulseMCP, Smithery) ingest it automatically — one listing propagates.\n\n### 1. Prepare the metadata\n- `package.json`: add `\"mcpName\": \"io.github.<owner>/<name>\"`.\n- `server.json` at the repo root against the registry schema: identity, packages (npm descriptor with the CURRENT version), tools surface.\n- **description must be <= 100 characters** — the live schema rejects longer with a 422 at publish time, not at authoring time.\n- Keep `server.json` version fields in lockstep with `package.json` on every release (script it or grep the old version repo-wide).\n\n### 2. Publish from CI with OIDC (the repeatable way)\nA workflow with `permissions: { id-token: write }` can authenticate as the repo itself — `mcp-publisher login github-oidc` proves the `io.github.<owner>/*` namespace with no token and no device flow. Steps:\n- Download a PINNED `mcp-publisher` release binary and verify its sha256 (`echo \"$SHA256  file.tar.gz\" | sha256sum -c -`) before executing — this job holds a credential.\n- `./mcp-publisher login github-oidc && ./mcp-publisher publish`.\n- Verify from the outside: `curl -fsS 'https://registry.modelcontextprotocol.io/v0.1/servers?search=<name>'` must contain your id.\n- Trigger on release tags (with a `git merge-base --is-ancestor` gate) plus `workflow_dispatch` for the first listing.\n\n### 3. If you must publish from a laptop instead\n`mcp-publisher login github` runs a browser device flow (needs the human). Anonymous auth (`login none`) no longer exists on the live registry — don't plan around it.\n\n## Common Errors\n- `description` longer than 100 chars → 422 `expected length <= 100` only at publish time; the file authors fine locally.\n- Expecting `mcp-publisher publish --dry-run` to work unauthenticated — the anonymous token endpoint is gone (404); validation effectively happens on the authenticated publish.\n- Submitting a PR to `modelcontextprotocol/servers` — closed to third parties; you'll wait forever.\n- `server.json` version drifting from the released npm version because only `package.json` was bumped.\n- Downloading `mcp-publisher` from `releases/latest` in CI — unpinned binary in a credential-holding job; pin the version AND the checksum.\n\n## What NOT to do\n- Do NOT run the interactive device-flow login in CI — use `github-oidc`, that's what it exists for.\n- Do NOT list a server whose npm package isn't actually installable at the declared version — aggregators will surface a broken install as the first impression.\n- Do NOT skip the outside-in search check after publishing; a green CI job is not a listing.",
+  "version": "1.0.0",
+  "updated_at": "2026-07-06T00:00:00Z",
+  "category": "process"
+}
