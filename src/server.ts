@@ -17,6 +17,10 @@ import {
   KIRA_RECORD_FAILURE_TOOL,
   handleRecordFailure,
 } from "./tools/record-failure.js";
+import {
+  KIRA_PERSONAL_BRIEF_TOOL,
+  handlePersonalBrief,
+} from "./tools/personal-brief.js";
 import type { Skill, Scar, ReportStatus, ConsentLevel } from "./types.js";
 import type { KiraTier } from "./license.js";
 
@@ -164,6 +168,7 @@ const TOOLS = [
   KIRA_STATUS_TOOL,
   KIRA_PREMORTEM_TOOL,
   KIRA_RECORD_FAILURE_TOOL,
+  KIRA_PERSONAL_BRIEF_TOOL,
 ];
 
 export async function startServer(): Promise<void> {
@@ -331,6 +336,18 @@ export async function startServer(): Promise<void> {
 
     if (name === "kira_record_failure") {
       const result = await handleRecordFailure(args);
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
+      };
+    }
+
+    if (name === "kira_personal_brief") {
+      const result = await handlePersonalBrief(args);
       return {
         content: [
           {
