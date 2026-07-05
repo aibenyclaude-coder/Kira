@@ -1,0 +1,39 @@
+name: "Bug report"
+description: "Something in Kira misbehaved (server, tools, corpus loading, feed)"
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: "Kira version"
+      description: "`npm view kira-mcp version` for the registry, or `kira_status` output for your install"
+      placeholder: "0.8.1"
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: "MCP client"
+      placeholder: "Claude Code / Cursor / Cline / Windsurf / Zed / ..."
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: "What happened"
+      description: "What did the agent call, what came back, what did you expect? Tool-call JSON is ideal."
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: "Reproduction"
+      description: "Smallest sequence that triggers it (e.g., `kira_lookup(\"...\")` → wrong scars)."
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Checks"
+      options:
+        - label: "I looked at TROUBLESHOOTING.md first"
+        - label: "No secrets/private paths in this report (Kira's own rule applies here too)"
+          required: true
