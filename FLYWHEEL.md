@@ -51,6 +51,14 @@ Environment=CLAUDE_BIN=%h/.npm-global/bin/claude
 ExecStart=/usr/bin/node %h/Kira/dist/flywheel.js --emit-candidates
 ```
 
+## 吸収 (F4) — 個人の scar を全員の装備にする
+
+- **v1 (live, 2026-07-06)**: GitHub-native。`kira_share_scar` が personal scar を再 sanitize + 一般化して提出リンクを生成 (ツール自身は何も送信しない — 共有は常に明示的な人間の行為)。issue form + intake bot (`scripts/scar-intake.mjs`) が corpus と同一ルール (`scripts/validate-entry.mjs`) で自動検証、人間が内容をレビューして merge。採用 = contributor 資格
+- **v2 (計画)**: Worker 直接受付。Phase B (rate limit / abuse heuristics) が前提条件
+- **v3 (計画)**: Phase D — telemetry の failure cluster から scar 候補を自動起票
+- **毒入り防御**: corpus は agent の文脈に注入される指示文である。ゆえに (1) 全 corpus が sanitize 安定 (secret 形状ゼロ) を CI で強制、(2) merge は常に人間レビュー経由、(3) skill の instructions は自然言語のみ (実行コードなし)
+
 ## 判断ログ
 
 - 2026-07-06: Fable 5 セッションでの全コード評価に基づき制定。lookup の 0-hit 実測 (34 skills が web-dev 偏重でオーナー自身のタスクに当たらない) が直接の動機。miss log は repo 相対パスで実質故障していたため ~/.kira/ へ移設。
+- 2026-07-06 (夜): オーナー指示により F4 を解凍・v1 出荷。同指示で reciprocity (共有か購読か — share-or-pay) を F5 として設計着手 — 「凍結」節の Pro license 項はこの限りで解除。ただし課金の**執行**は grace mode で開始し、発動条件 (community corpus 100 件 or 実利用の閾値) を満たすまで警告なし・全機能開放を維持する。
