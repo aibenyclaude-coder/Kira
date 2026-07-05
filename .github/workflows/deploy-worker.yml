@@ -22,7 +22,10 @@ permissions:
 
 jobs:
   deploy:
-    if: vars.CF_DEPLOY_ENABLED == 'true'
+    # Ref gate: workflow_dispatch can be pointed at any ref, and the workflow
+    # definition runs FROM that ref — without this, a modified copy on a rogue
+    # branch could mint the deploy secrets. main only, always.
+    if: vars.CF_DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
