@@ -1,6 +1,6 @@
 {
   "name": "kira-mcp",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Where agents shine — auto-manages Skills and Scars for AI agents via MCP.",
   "mcpName": "io.github.aibenyclaude-coder/kira",
   "license": "MIT",
