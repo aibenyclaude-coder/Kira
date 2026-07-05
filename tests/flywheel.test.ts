@@ -1,0 +1,115 @@
+import { mkdtemp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  aggregateReports,
+  buildCandidates,
+  clusterMisses,
+  clusterNotes,
+  readNdjson,
+  runFlywheel,
+} from "../src/flywheel.js";
+
+let home: string;
+let prevKiraHome: string | undefined;
+
+beforeEach(async () => {
+  home = await mkdtemp(join(tmpdir(), "kira-flywheel-"));
+  prevKiraHome = process.env.KIRA_HOME;
+  process.env.KIRA_HOME = home;
+});
+
+afterEach(() => {
+  if (prevKiraHome === undefined) delete process.env.KIRA_HOME;
+  else process.env.KIRA_HOME = prevKiraHome;
+});
+
+const miss = (keyword: string, near: Array<{ id: string; score: number }> = []) =>
+  JSON.stringify({ v: 1, keyword, context: ["typescript"], near, ts: "2026-07-06T00:00:00Z" });
+
+describe("readNdjson", () => {
+  it("skips malformed lines and survives a missing file", async () => {
+    await writeFile(join(home, "misses.log"), miss("a b c") + "\nnot json\n\n" + miss("a b c") + "\n");
+    const rows = await readNdjson<{ keyword: string }>(join(home, "misses.log"));
+    expect(rows.length).toBe(2);
+    expect(await readNdjson(join(home, "nope.log"))).toEqual([]);
+  });
+});
+
+describe("clusterMisses", () => {
+  it("groups similar keywords and keeps the best near score", () => {
+    const clusters = clusterMisses([
+      { keyword: "deploy fastapi app", near: [{ id: "s1", score: 0.31 }] },
+      { keyword: "deploying fastapi", near: [{ id: "s1", score: 0.4 }] },
+      { keyword: "totally unrelated thing" },
+    ]);
+    expect(clusters.length).toBe(2);
+    expect(clusters[0]!.count).toBe(2);
+    expect(clusters[0]!.nearBest.get("s1")).toBe(0.4);
+  });
+});
+
+describe("aggregateReports + clusterNotes", () => {
+  it("counts statuses and clusters repeated failure notes", () => {
+    const stats = aggregateReports([
+      { skill_id: "community.x.v1", status: "retry", detail: { note: "env var missing on deploy" } },
+      { skill_id: "community.x.v1", status: "failure", detail: { note: "missing env vars during deploy" } },
+      { skill_id: "community.x.v1", status: "success" },
+      { skill_id: "community.y.v1", status: "success" },
+    ]);
+    expect(stats[0]!.skill_id).toBe("community.x.v1");
+    expect(stats[0]!.retry + stats[0]!.failure).toBe(2);
+    const noteClusters = clusterNotes(stats[0]!.notes);
+    expect(noteClusters.length).toBe(1);
+    expect(noteClusters[0]!.all.length).toBe(2);
+  });
+});
+
+describe("buildCandidates", () => {
+  it("proposes an alias when a near match existed, a gap stub otherwise", () => {
+    const clusters = clusterMisses([
+      { keyword: "deploy fastapi", near: [{ id: "community.deploy-vercel.v1", score: 0.35 }] },
+      { keyword: "deploying fastapi", near: [{ id: "community.deploy-vercel.v1", score: 0.35 }] },
+      { keyword: "terraform state locking" },
+      { keyword: "terraform state lock stuck" },
+    ]);
+    const cands = buildCandidates(clusters, [], "2026-07-06T00:00:00Z");
+    const kinds = cands.map((c) => c.kind).sort();
+    expect(kinds).toContain("alias");
+    expect(kinds).toContain("skill-gap");
+  });
+});
+
+describe("runFlywheel (end-to-end, no LLM)", () => {
+  it("writes a digest and candidate stubs from dirty real-shaped logs", async () => {
+    await writeFile(
+      join(home, "misses.log"),
+      [miss("terraform state locking"), miss("terraform state lock stuck"), "garbage line"].join("\n") + "\n"
+    );
+    await writeFile(
+      join(home, "reports.log"),
+      [
+        JSON.stringify({ skill_id: "community.x.v1", status: "retry", detail: { note: "prisma generate forgotten" } }),
+        JSON.stringify({ skill_id: "community.x.v1", status: "failure", detail: { note: "forgot prisma generate again" } }),
+      ].join("\n") + "\n"
+    );
+    await mkdir(join(home, "personal-scars"), { recursive: true });
+    await writeFile(
+      join(home, "personal-scars", "p1.json"),
+      JSON.stringify({ id: "pscar.p1", title: "pkill -f self-match", hit_count: 4 })
+    );
+
+    const res = await runFlywheel({ emitCandidates: true });
+    expect(res.candidates).toBeGreaterThanOrEqual(2);
+
+    const digest = await readFile(res.digestPath, "utf-8");
+    expect(digest).toContain("terraform");
+    expect(digest).toContain("community.x.v1");
+    expect(digest).toContain("promotion candidate"); // hit_count 4 ≥ 3
+
+    const emitted = await readdir(join(home, "flywheel", "candidates"));
+    expect(emitted.some((f) => f.startsWith("skill-gap-"))).toBe(true);
+    expect(emitted.some((f) => f.startsWith("scar-"))).toBe(true);
+  });
+});
