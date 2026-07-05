@@ -1,0 +1,75 @@
+name: release
+
+# Autonomous release rail: pushing a v* tag publishes to npm.
+#
+# Auth is npm Trusted Publishing (OIDC) — no long-lived token anywhere.
+# One-time setup on npmjs.com (package kira-mcp → Settings → Trusted
+# Publisher): GitHub repo aibenyclaude-coder/Kira, workflow release.yml.
+# Until that is configured, the publish step fails loudly and nothing ships.
+#
+# Provenance: `npm publish --provenance` attaches a verifiable build
+# attestation (this repo + this workflow) to the package.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify tag (build + tests + demo + corpus gates)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - run: npm run demo
+      - run: node scripts/gen-stats.mjs --check
+      - run: node scripts/gen-corpus.mjs --check
+      - name: tag matches package.json version
+        run: |
+          PKG_V="$(node -p "require('./package.json').version")"
+          TAG_V="${GITHUB_REF_NAME#v}"
+          if [ "$PKG_V" != "$TAG_V" ]; then
+            echo "::error::tag $GITHUB_REF_NAME != package.json $PKG_V"
+            exit 1
+          fi
+
+  publish:
+    name: npm publish (trusted publishing)
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write # OIDC — this is the whole credential
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: "https://registry.npmjs.org"
+      # Trusted publishing needs a recent npm CLI.
+      - run: npm install -g npm@latest
+      - run: npm ci
+      - run: npm run build
+      - run: npm publish --provenance --access public
+      - name: verify from the outside
+        run: |
+          sleep 20
+          PUBLISHED="$(npm view kira-mcp version)"
+          TAG_V="${GITHUB_REF_NAME#v}"
+          if [ "$PUBLISHED" != "$TAG_V" ]; then
+            echo "::error::registry shows $PUBLISHED, expected $TAG_V"
+            exit 1
+          fi
+          echo "npm now serves kira-mcp@$PUBLISHED"
