@@ -8,17 +8,17 @@
  * people doing this, and how much time will avoiding it save me?"
  *
  * It matches the goal (+ optional project context) against the scar corpus
- * using the same firing logic as lookup, then ranks the hits by `hit_count`
- * (how many agents have already slammed into each wall) and attaches a
- * quantified prevention value in estimated minutes saved.
+ * (shared + personal) using the same firing logic as lookup, then ranks the
+ * hits by `hit_count` (how many times each wall has been recorded) and
+ * attaches a quantified prevention value in estimated minutes saved.
  *
  * Per DESIGN.md the unit of value is not tokens but "re-firing count reduction"
  * (再発火回数の削減) — so the response reports both a per-task estimate (what
- * avoiding these traps saves you now) and a network figure weighted by how many
- * times each trap has historically burned agents.
+ * avoiding these traps saves you now) and a cumulative figure weighted by how
+ * many times each trap has been recorded.
  */
-import { lookup, indexItems } from "../lookup.js";
-import type { Scar, ScarSeverity } from "../types.js";
+import { lookup, type Indexed } from "../lookup.js";
+import type { NearMatch, Scar, ScarSeverity } from "../types.js";
 
 /**
  * Typical minutes an agent burns to reproduce, diagnose, fix and re-verify a
@@ -48,7 +48,7 @@ export interface PremortemHotspot {
   id: string;
   title: string;
   severity: ScarSeverity;
-  /** How many agents have hit this wall across the network. */
+  /** How many times this failure has been recorded (seed counts for the shipped corpus, actual recurrences for personal scars). */
   hit_count: number;
   contexts: string[];
   /** What the agent did wrong. */
@@ -74,9 +74,9 @@ export interface PremortemResponse {
     /** Sum of estimated_minutes_saved across returned hotspots (this task). */
     estimated_minutes_saved: number;
     /** Sum of hit_count across returned hotspots. */
-    total_historical_failures: number;
-    /** hit_count-weighted minutes — cumulative value across the network. */
-    network_minutes_saved: number;
+    total_recorded_failures: number;
+    /** hit_count-weighted minutes — cumulative across all recordings. */
+    recorded_minutes_saved: number;
     critical_count: number;
     warning_count: number;
     /** Human-readable one-liner. */
@@ -84,6 +84,8 @@ export interface PremortemResponse {
     /** Reminder that the minute figures are heuristic estimates. */
     basis: string;
   };
+  /** When nothing matches strictly, the closest recorded scars (recovery path). */
+  near_scars?: NearMatch[];
   /** What the agent should do with this heat map. */
   advice: string;
 }
@@ -92,10 +94,11 @@ export const KIRA_PREMORTEM_TOOL = {
   name: "kira_premortem",
   description:
     "Run a PRE-MORTEM before starting a task. Given a goal (and optional project context), " +
-    "return a heat map of the past failure patterns (scars) most likely to bite — ranked by how " +
-    "many agents have already hit each wall (hit_count). Each hotspot includes the mistake, the " +
-    "fix ('instead'), a relative heat score, and estimated minutes saved by avoiding it, plus an " +
-    "aggregate prevention value. " +
+    "return a heat map of the past failure patterns (scars, shared and personal) most likely to " +
+    "bite — ranked by how many times each wall has been recorded (hit_count). Each hotspot " +
+    "includes the mistake, the fix ('instead'), a relative heat score, and estimated minutes " +
+    "saved by avoiding it, plus an aggregate prevention value. When nothing matches strictly, " +
+    "'near_scars' lists the closest recorded scars instead. " +
     "Call this FIRST for any non-trivial task to surface known traps up front, then read each " +
     "hotspot's 'instead' and use kira_lookup / kira_route to plan the actual work.",
   inputSchema: {
@@ -134,11 +137,12 @@ function clampTopK(value?: number): number {
 }
 
 /**
- * Build the heat map for a goal. Pure: takes the raw scar corpus, indexes it,
- * matches via the shared lookup firing logic, then ranks and scores.
+ * Build the heat map for a goal. Pure: takes the pre-indexed scar corpus
+ * (index once at load time — see server.ts), matches via the shared lookup
+ * firing logic, then ranks and scores.
  */
 export function buildPremortem(
-  scars: Scar[],
+  scars: (Scar & Indexed)[],
   request: PremortemRequest
 ): PremortemResponse {
   const goal = request.goal;
@@ -146,11 +150,13 @@ export function buildPremortem(
   const k = clampTopK(request.top_k);
 
   // Reuse the exact scar firing logic (keyword + context) used everywhere else.
-  // Skills are irrelevant to a pre-mortem, so pass an empty skill set.
-  const matched = lookup([], indexItems(scars), {
+  // Skills are irrelevant to a pre-mortem, so pass an empty skill set. On a
+  // 0-hit, lookup already computes the scored near-matches — reuse them below.
+  const looked = lookup([], scars, {
     keyword: goal,
     context: request.context,
-  }).scars;
+  });
+  const matched = looked.scars;
 
   // Rank by hit_count (proven traps first), then critical-first, then title
   // for a stable order.
@@ -179,25 +185,34 @@ export function buildPremortem(
     (sum, h) => sum + h.estimated_minutes_saved,
     0
   );
-  const totalHistorical = hotspots.reduce((sum, h) => sum + h.hit_count, 0);
-  const networkMinutes = hotspots.reduce(
+  const totalRecorded = hotspots.reduce((sum, h) => sum + h.hit_count, 0);
+  const recordedMinutes = hotspots.reduce(
     (sum, h) => sum + h.hit_count * RECOVERY_MINUTES[h.severity],
     0
   );
   const criticalCount = hotspots.filter((h) => h.severity === "critical").length;
   const warningCount = hotspots.filter((h) => h.severity === "warning").length;
 
+  const near_scars =
+    hotspots.length === 0 && looked.near_scars && looked.near_scars.length > 0
+      ? looked.near_scars
+      : undefined;
+
   const summary =
     hotspots.length === 0
       ? "No known failure patterns match this goal."
       : `${hotspots.length} known failure pattern${hotspots.length === 1 ? " intersects" : "s intersect"} this goal ` +
         `(${criticalCount} critical, ${warningCount} warning). Avoiding them saves ~${estimatedMinutes} min on ` +
-        `this task; these traps have burned agents ${totalHistorical} time${totalHistorical === 1 ? "" : "s"} across the network.`;
+        `this task; these traps have been recorded ${totalRecorded} time${totalRecorded === 1 ? "" : "s"} so far.`;
 
   const advice =
     hotspots.length === 0
-      ? "No known failure patterns match this goal. Proceed, but call kira_lookup on each concrete step " +
-        "and kira_report any new failures so future pre-mortems cover this path."
+      ? near_scars
+        ? "No failure pattern matches this goal exactly, but near_scars lists the closest " +
+          "recorded ones — read their 'instead' (via kira_get) before you start, then call " +
+          "kira_lookup on each concrete step and kira_report any new failures."
+        : "No known failure patterns match this goal. Proceed, but call kira_lookup on each concrete step " +
+          "and kira_report any new failures so future pre-mortems cover this path."
       : "Read each hotspot's 'instead' before you start — highest-heat traps first — then use " +
         "kira_lookup / kira_route to plan the work while steering clear of these patterns.";
 
@@ -209,15 +224,16 @@ export function buildPremortem(
     hotspots,
     prevention_value: {
       estimated_minutes_saved: estimatedMinutes,
-      total_historical_failures: totalHistorical,
-      network_minutes_saved: networkMinutes,
+      total_recorded_failures: totalRecorded,
+      recorded_minutes_saved: recordedMinutes,
       critical_count: criticalCount,
       warning_count: warningCount,
       summary,
       basis:
         "Estimates: ~20 min saved per avoided critical failure, ~8 min per warning " +
-        "(typical diagnose + fix + re-verify time). network_minutes_saved weights each by hit_count.",
+        "(typical diagnose + fix + re-verify time). recorded_minutes_saved weights each by hit_count.",
     },
+    ...(near_scars ? { near_scars } : {}),
     advice,
   };
 }

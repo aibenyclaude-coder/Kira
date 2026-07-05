@@ -5,6 +5,7 @@ import {
   RECOVERY_MINUTES,
 } from "../src/tools/premortem.ts";
 import { loadAllScars } from "../src/index-loader.ts";
+import { indexItems } from "../src/lookup.ts";
 import type { Scar, ScarSeverity } from "../src/types.ts";
 
 function scar(
@@ -28,6 +29,8 @@ const B = scar({ id: "scar.bravo.v1", title: "Bravo", keywords: ["alpha deploy"]
 const C = scar({ id: "scar.charlie.v1", title: "Charlie", keywords: ["alpha deploy"], hit_count: 1, severity: "critical" });
 const UNRELATED = scar({ id: "scar.zzz.v1", title: "Zzz", keywords: ["totally unrelated topic"], hit_count: 99, severity: "critical" });
 const SYNTHETIC = [A, B, C, UNRELATED];
+// buildPremortem takes the pre-indexed corpus (indexed once at load time).
+const IDX = indexItems(SYNTHETIC);
 
 describe("kira_premortem tool descriptor", () => {
   it("is named kira_premortem", () => {
@@ -48,7 +51,7 @@ describe("kira_premortem tool descriptor", () => {
 
 describe("buildPremortem — matching & ranking", () => {
   it("returns only scars whose keywords match the goal", () => {
-    const r = buildPremortem(SYNTHETIC, { goal: "alpha deploy" });
+    const r = buildPremortem(IDX, { goal: "alpha deploy" });
     const ids = r.hotspots.map((h) => h.id);
     expect(ids).toContain("scar.alpha.v1");
     expect(ids).toContain("scar.bravo.v1");
@@ -58,35 +61,35 @@ describe("buildPremortem — matching & ranking", () => {
   });
 
   it("ranks hotspots by hit_count descending", () => {
-    const r = buildPremortem(SYNTHETIC, { goal: "alpha deploy" });
+    const r = buildPremortem(IDX, { goal: "alpha deploy" });
     const hits = r.hotspots.map((h) => h.hit_count);
     expect(hits).toEqual([10, 5, 1]);
     expect(r.hotspots[0]!.id).toBe("scar.alpha.v1");
   });
 
   it("echoes the goal and returned_count", () => {
-    const r = buildPremortem(SYNTHETIC, { goal: "alpha deploy" });
+    const r = buildPremortem(IDX, { goal: "alpha deploy" });
     expect(r.goal).toBe("alpha deploy");
     expect(r.returned_count).toBe(3);
     expect(r.returned_count).toBe(r.hotspots.length);
   });
 
   it("is deterministic across calls", () => {
-    const a = buildPremortem(SYNTHETIC, { goal: "alpha deploy" });
-    const b = buildPremortem(SYNTHETIC, { goal: "alpha deploy" });
+    const a = buildPremortem(IDX, { goal: "alpha deploy" });
+    const b = buildPremortem(IDX, { goal: "alpha deploy" });
     expect(a).toEqual(b);
   });
 
   it("does not mutate the input scar array", () => {
-    const before = SYNTHETIC.map((s) => s.id);
-    buildPremortem(SYNTHETIC, { goal: "alpha deploy" });
-    expect(SYNTHETIC.map((s) => s.id)).toEqual(before);
+    const before = IDX.map((s) => s.id);
+    buildPremortem(IDX, { goal: "alpha deploy" });
+    expect(IDX.map((s) => s.id)).toEqual(before);
   });
 });
 
 describe("buildPremortem — heat map", () => {
   it("scales heat 0–100 relative to the hottest matched scar", () => {
-    const r = buildPremortem(SYNTHETIC, { goal: "alpha deploy" });
+    const r = buildPremortem(IDX, { goal: "alpha deploy" });
     const byId = Object.fromEntries(r.hotspots.map((h) => [h.id, h.heat]));
     expect(byId["scar.alpha.v1"]).toBe(100); // 10/10
     expect(byId["scar.bravo.v1"]).toBe(50); //  5/10
@@ -94,7 +97,7 @@ describe("buildPremortem — heat map", () => {
   });
 
   it("heat is monotonic with hit_count", () => {
-    const r = buildPremortem(SYNTHETIC, { goal: "alpha deploy" });
+    const r = buildPremortem(IDX, { goal: "alpha deploy" });
     const heats = r.hotspots.map((h) => h.heat);
     for (let i = 1; i < heats.length; i++) {
       expect(heats[i]!).toBeLessThanOrEqual(heats[i - 1]!);
@@ -104,7 +107,7 @@ describe("buildPremortem — heat map", () => {
 
 describe("buildPremortem — quantified prevention value", () => {
   it("estimates minutes saved per hotspot by severity", () => {
-    const r = buildPremortem(SYNTHETIC, { goal: "alpha deploy" });
+    const r = buildPremortem(IDX, { goal: "alpha deploy" });
     const byId = Object.fromEntries(r.hotspots.map((h) => [h.id, h]));
     expect(byId["scar.alpha.v1"]!.estimated_minutes_saved).toBe(RECOVERY_MINUTES.critical);
     expect(byId["scar.bravo.v1"]!.estimated_minutes_saved).toBe(RECOVERY_MINUTES.warning);
@@ -112,7 +115,7 @@ describe("buildPremortem — quantified prevention value", () => {
   });
 
   it("aggregate estimated_minutes_saved is the sum over returned hotspots", () => {
-    const r = buildPremortem(SYNTHETIC, { goal: "alpha deploy" });
+    const r = buildPremortem(IDX, { goal: "alpha deploy" });
     // 2 critical (20 each) + 1 warning (8) = 48
     expect(r.prevention_value.estimated_minutes_saved).toBe(48);
     expect(r.prevention_value.estimated_minutes_saved).toBe(
@@ -120,25 +123,25 @@ describe("buildPremortem — quantified prevention value", () => {
     );
   });
 
-  it("total_historical_failures sums hit_count", () => {
-    const r = buildPremortem(SYNTHETIC, { goal: "alpha deploy" });
-    expect(r.prevention_value.total_historical_failures).toBe(16); // 10+5+1
+  it("total_recorded_failures sums hit_count", () => {
+    const r = buildPremortem(IDX, { goal: "alpha deploy" });
+    expect(r.prevention_value.total_recorded_failures).toBe(16); // 10+5+1
   });
 
-  it("network_minutes_saved weights each scar by hit_count", () => {
-    const r = buildPremortem(SYNTHETIC, { goal: "alpha deploy" });
+  it("recorded_minutes_saved weights each scar by hit_count", () => {
+    const r = buildPremortem(IDX, { goal: "alpha deploy" });
     // 10*20 + 5*8 + 1*20 = 260
-    expect(r.prevention_value.network_minutes_saved).toBe(260);
+    expect(r.prevention_value.recorded_minutes_saved).toBe(260);
   });
 
   it("counts critical vs warning hotspots", () => {
-    const r = buildPremortem(SYNTHETIC, { goal: "alpha deploy" });
+    const r = buildPremortem(IDX, { goal: "alpha deploy" });
     expect(r.prevention_value.critical_count).toBe(2);
     expect(r.prevention_value.warning_count).toBe(1);
   });
 
   it("includes a heuristic basis note and a summary", () => {
-    const r = buildPremortem(SYNTHETIC, { goal: "alpha deploy" });
+    const r = buildPremortem(IDX, { goal: "alpha deploy" });
     expect(r.prevention_value.basis).toMatch(/estimate/i);
     expect(r.prevention_value.summary).toContain("48 min");
   });
@@ -155,13 +158,13 @@ describe("buildPremortem — top_k", () => {
         severity: i % 2 === 0 ? "critical" : "warning",
       })
     );
-    const r = buildPremortem(many, { goal: "many trap" });
+    const r = buildPremortem(indexItems(many), { goal: "many trap" });
     expect(r.returned_count).toBe(5);
     expect(r.matched_count).toBe(25);
   });
 
   it("honors an explicit top_k", () => {
-    const r = buildPremortem(SYNTHETIC, { goal: "alpha deploy", top_k: 1 });
+    const r = buildPremortem(IDX, { goal: "alpha deploy", top_k: 1 });
     expect(r.returned_count).toBe(1);
     expect(r.hotspots[0]!.id).toBe("scar.alpha.v1"); // highest hit_count
   });
@@ -176,18 +179,18 @@ describe("buildPremortem — top_k", () => {
         severity: "critical",
       })
     );
-    const r = buildPremortem(many, { goal: "many trap", top_k: 999 });
+    const r = buildPremortem(indexItems(many), { goal: "many trap", top_k: 999 });
     expect(r.returned_count).toBe(20);
     expect(r.matched_count).toBe(25);
   });
 
   it("clamps a non-positive top_k up to 1", () => {
-    const r = buildPremortem(SYNTHETIC, { goal: "alpha deploy", top_k: 0 });
+    const r = buildPremortem(IDX, { goal: "alpha deploy", top_k: 0 });
     expect(r.returned_count).toBe(1);
   });
 
   it("ignores a non-numeric top_k and uses the default", () => {
-    const r = buildPremortem(SYNTHETIC, {
+    const r = buildPremortem(IDX, {
       goal: "alpha deploy",
       top_k: NaN,
     });
@@ -198,7 +201,7 @@ describe("buildPremortem — top_k", () => {
 describe("buildPremortem — context filter", () => {
   const E = scar({ id: "scar.echo.v1", title: "Echo", keywords: ["shared kw"], contexts: ["nextjs"], hit_count: 3, severity: "critical" });
   const F = scar({ id: "scar.foxtrot.v1", title: "Foxtrot", keywords: ["shared kw"], contexts: ["python"], hit_count: 3, severity: "critical" });
-  const both = [E, F];
+  const both = indexItems([E, F]);
 
   it("narrows the heat map to the given context", () => {
     const r = buildPremortem(both, { goal: "shared kw", context: ["nextjs"] });
@@ -213,20 +216,32 @@ describe("buildPremortem — context filter", () => {
 
 describe("buildPremortem — no matches", () => {
   it("returns an empty, zero-valued heat map with proceed advice", () => {
-    const r = buildPremortem(SYNTHETIC, { goal: "nonexistent quux frobnicate" });
+    const r = buildPremortem(IDX, { goal: "nonexistent quux frobnicate" });
     expect(r.hotspots).toHaveLength(0);
     expect(r.matched_count).toBe(0);
     expect(r.returned_count).toBe(0);
     expect(r.prevention_value.estimated_minutes_saved).toBe(0);
-    expect(r.prevention_value.network_minutes_saved).toBe(0);
+    expect(r.prevention_value.recorded_minutes_saved).toBe(0);
+    expect(r.near_scars).toBeUndefined();
     expect(r.advice).toMatch(/proceed/i);
+  });
+
+  it("falls back to near_scars when something almost matches", () => {
+    // "alpha rollout" shares only one strong token with "alpha deploy", so the
+    // strict tiers miss but token-level near-matching catches it.
+    const r = buildPremortem(IDX, { goal: "alpha rollout" });
+    expect(r.matched_count).toBe(0);
+    expect(r.near_scars).toBeDefined();
+    expect(r.near_scars!.some((n) => n.id === "scar.alpha.v1")).toBe(true);
+    expect(r.near_scars![0]!.score).toBeGreaterThan(0);
+    expect(r.advice).toMatch(/near_scars/);
   });
 });
 
 describe("buildPremortem — real scar corpus", () => {
   it("surfaces the vercel env-vars trap for a deploy goal", async () => {
     const scars = await loadAllScars();
-    const r = buildPremortem(scars, {
+    const r = buildPremortem(indexItems(scars), {
       goal: "deploy vercel",
       context: ["nextjs"],
     });
@@ -240,7 +255,7 @@ describe("buildPremortem — real scar corpus", () => {
 
   it("produces a valid response shape from real data", async () => {
     const scars = await loadAllScars();
-    const r = buildPremortem(scars, { goal: "add prisma database" });
+    const r = buildPremortem(indexItems(scars), { goal: "add prisma database" });
     for (const h of r.hotspots) {
       expect(typeof h.title).toBe("string");
       expect(h.heat).toBeGreaterThanOrEqual(0);

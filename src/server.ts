@@ -332,9 +332,10 @@ export async function startServer(): Promise<void> {
         typeof args?.top_k === "number" ? (args.top_k as number) : undefined;
 
       // The heat map covers shared AND personal scars — your own recorded
-      // failures are exactly what a pre-mortem must not miss.
-      const personal = await loadPersonalScars();
-      const result = buildPremortem([...rawScars, ...personal], {
+      // failures are exactly what a pre-mortem must not miss. Shipped corpus
+      // is indexed once at startup; only the tiny personal set per call.
+      const personal = indexItems(await loadPersonalScars());
+      const result = buildPremortem([...scars, ...personal], {
         goal,
         context,
         top_k,
