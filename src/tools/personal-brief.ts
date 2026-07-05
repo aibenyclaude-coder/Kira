@@ -11,9 +11,11 @@
  * first), and returns the top-N. It is local-only: it performs no network I/O
  * and writes nothing to stdout (stdout is the MCP transport).
  */
-import { readdir, readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { PERSONAL_SCARS_DIR, type PersonalScar } from "../personal-scars.js";
+import {
+  loadPersonalScars,
+  PERSONAL_SCARS_DIR,
+  type PersonalScar,
+} from "../personal-scars.js";
 
 const DEFAULT_LIMIT = 5;
 const MAX_LIMIT = 50;
@@ -79,44 +81,6 @@ export interface PersonalBrief {
   read: "local-only";
   /** A ready-to-print one-liner + summary for a SessionStart banner. */
   headline: string;
-}
-
-/** Narrow an unknown parsed object to a usable PersonalScar. */
-function isPersonalScar(s: Partial<PersonalScar> | null | undefined): s is PersonalScar {
-  return (
-    !!s &&
-    typeof s.id === "string" &&
-    typeof s.title === "string" &&
-    typeof s.updated_at === "string" &&
-    typeof s.hit_count === "number"
-  );
-}
-
-/**
- * Load every personal scar from ~/.kira/personal-scars/. A missing directory
- * (no failures recorded yet) yields an empty list; corrupt or non-JSON files
- * are skipped rather than failing the whole brief.
- */
-async function loadPersonalScars(): Promise<PersonalScar[]> {
-  let names: string[];
-  try {
-    names = await readdir(PERSONAL_SCARS_DIR);
-  } catch {
-    return []; // directory absent — clean slate
-  }
-
-  const out: PersonalScar[] = [];
-  for (const name of names) {
-    if (!name.endsWith(".json")) continue;
-    try {
-      const raw = await readFile(join(PERSONAL_SCARS_DIR, name), "utf-8");
-      const parsed = JSON.parse(raw) as Partial<PersonalScar>;
-      if (isPersonalScar(parsed)) out.push(parsed);
-    } catch {
-      // corrupt / unreadable file — skip it
-    }
-  }
-  return out;
 }
 
 /** Epoch ms for an ISO timestamp; unparseable timestamps sort oldest. */

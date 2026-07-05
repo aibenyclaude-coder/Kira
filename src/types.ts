@@ -74,10 +74,18 @@ export interface Scar {
   instead: string;
 
   /**
-   * How many times this failure was reported across the network.
-   * Higher = more agents have hit this wall.
+   * How many times this failure has been recorded — curated seed counts for
+   * the shipped corpus, actual local recurrences for personal scars.
+   * Higher = hit more often.
    */
   hit_count: number;
+
+  /**
+   * Provenance. Shipped scars omit this; scars recorded locally by
+   * kira_record_failure carry "personal" so agents can tell their own
+   * walls from the shared corpus.
+   */
+  source?: string;
 
   version: string;
   updated_at: string;

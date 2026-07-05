@@ -12,7 +12,7 @@
  * disk, so a personal scar can never persist an API key, path, or email — even
  * locally.
  */
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, readdir, readFile } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
@@ -155,4 +155,69 @@ export async function recordPersonalScar(
 
   await writeFile(file, JSON.stringify(scar, null, 2) + "\n", "utf-8");
   return scar;
+}
+
+/**
+ * Load every personal scar, normalized to the full PersonalScar shape
+ * (missing optional fields get safe defaults).
+ *
+ * This is the single shared reader behind lookup/premortem recall,
+ * kira_personal_brief and kira_status. A missing directory (no failures
+ * recorded yet) yields an empty list; corrupt files, non-JSON files and
+ * entries without the id/title/mistake core are skipped — recall must
+ * survive a dirty directory.
+ */
+export async function loadPersonalScars(
+  dir: string = PERSONAL_SCARS_DIR
+): Promise<PersonalScar[]> {
+  let names: string[];
+  try {
+    names = await readdir(dir);
+  } catch {
+    return []; // Directory absent — no failures recorded yet.
+  }
+
+  const out: PersonalScar[] = [];
+  for (const name of names) {
+    if (!name.endsWith(".json")) continue;
+    try {
+      const raw = JSON.parse(
+        await readFile(join(dir, name), "utf-8")
+      ) as Partial<PersonalScar>;
+      if (
+        typeof raw.id !== "string" ||
+        typeof raw.title !== "string" ||
+        typeof raw.mistake !== "string"
+      ) {
+        continue;
+      }
+      out.push({
+        id: raw.id,
+        keywords: stringArray(raw.keywords),
+        contexts: stringArray(raw.contexts),
+        title: raw.title,
+        summary: typeof raw.summary === "string" ? raw.summary : raw.title,
+        severity: raw.severity === "critical" ? "critical" : "warning",
+        mistake: raw.mistake,
+        instead: typeof raw.instead === "string" ? raw.instead : "",
+        hit_count:
+          typeof raw.hit_count === "number" && raw.hit_count > 0
+            ? raw.hit_count
+            : 1,
+        source: "personal",
+        version: typeof raw.version === "string" ? raw.version : "1.0.0",
+        created_at: typeof raw.created_at === "string" ? raw.created_at : "",
+        updated_at: typeof raw.updated_at === "string" ? raw.updated_at : "",
+      });
+    } catch {
+      // Corrupt or unreadable file — skip it.
+    }
+  }
+  return out;
+}
+
+function stringArray(v: unknown): string[] {
+  return Array.isArray(v)
+    ? v.filter((x): x is string => typeof x === "string")
+    : [];
 }

@@ -153,6 +153,11 @@ export function lookup(
     if (a.severity !== b.severity) {
       return a.severity === "critical" ? -1 : 1;
     }
+    // At equal severity your own recorded failures come first — "I personally
+    // hit this here" beats any shared-corpus frequency signal.
+    const personal =
+      Number(b.source === "personal") - Number(a.source === "personal");
+    if (personal !== 0) return personal;
     return b.hit_count - a.hit_count;
   });
 

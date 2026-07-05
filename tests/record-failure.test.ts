@@ -1,5 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { mkdtempSync, rmSync, existsSync, readFileSync, readdirSync } from "node:fs";
+import {
+  mkdtempSync,
+  rmSync,
+  existsSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+  mkdirSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -131,6 +139,46 @@ describe("recordPersonalScar", () => {
     const stdoutSpy = vi.spyOn(process.stdout, "write");
     await recordPersonalScar({ title: "t", mistake: "m" });
     expect(stdoutSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("loadPersonalScars", () => {
+  it("returns [] when no scar has been recorded yet", async () => {
+    const { loadPersonalScars } = await fresh();
+    expect(await loadPersonalScars()).toEqual([]);
+  });
+
+  it("loads recorded scars with source=personal and skips junk files", async () => {
+    const { recordPersonalScar, loadPersonalScars, PERSONAL_SCARS_DIR } =
+      await fresh();
+    await recordPersonalScar({ title: "deploy failed", mistake: "missing env var" });
+    writeFileSync(join(PERSONAL_SCARS_DIR, "broken.json"), "{ nope");
+    writeFileSync(join(PERSONAL_SCARS_DIR, "notes.txt"), "not a scar");
+    writeFileSync(
+      join(PERSONAL_SCARS_DIR, "missing-core.json"),
+      JSON.stringify({ id: "scar.personal.x.v1", title: "no mistake field" })
+    );
+
+    const loaded = await loadPersonalScars();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0]!.source).toBe("personal");
+    expect(loaded[0]!.title).toContain("deploy");
+  });
+
+  it("normalizes missing optional fields to safe defaults", async () => {
+    const { loadPersonalScars, PERSONAL_SCARS_DIR } = await fresh();
+    mkdirSync(PERSONAL_SCARS_DIR, { recursive: true });
+    writeFileSync(
+      join(PERSONAL_SCARS_DIR, "bare.json"),
+      JSON.stringify({ id: "scar.personal.bare.v1", title: "bare", mistake: "m" })
+    );
+
+    const [scar] = await loadPersonalScars();
+    expect(scar!.summary).toBe("bare");
+    expect(scar!.severity).toBe("warning");
+    expect(scar!.hit_count).toBe(1);
+    expect(scar!.keywords).toEqual([]);
+    expect(scar!.instead).toBe("");
   });
 });
 

@@ -313,6 +313,52 @@ describe("unknown tool", () => {
   });
 });
 
+describe("personal scar recall (record_failure output feeds lookup/premortem)", () => {
+  let recordedId: string;
+
+  it("kira_record_failure acks local-only and returns the scar", async () => {
+    const res = await callJson("kira_record_failure", {
+      title: "vitest missing in fresh worktree",
+      mistake: "ran the suite in a new worktree without npm ci first",
+      instead: "npm ci right after git worktree add",
+      keywords: ["worktree setup", "vitest missing"],
+    });
+    expect(res.ack).toBe(true);
+    expect(res.stored).toBe("local-only");
+    recordedId = res.scar.id;
+    expect(recordedId).toMatch(/^scar\.personal\./);
+  });
+
+  it("the recorded failure fires in a subsequent kira_lookup", async () => {
+    const res = await callJson("kira_lookup", { keyword: "worktree setup" });
+    expect(res.scar_count).toBeGreaterThan(0);
+    const mine = res.scars.find((s: any) => s.id === recordedId);
+    expect(mine).toBeDefined();
+    expect(mine.source).toBe("personal");
+    expect(mine.instead).toContain("npm ci");
+  });
+
+  it("the recorded failure appears in the kira_premortem heat map", async () => {
+    const res = await callJson("kira_premortem", {
+      goal: "worktree setup for running the test suite",
+    });
+    expect(res.hotspots.some((h: any) => h.id === recordedId)).toBe(true);
+  });
+
+  it("kira_get resolves the personal scar by id", async () => {
+    const res = await callJson("kira_get", { id: recordedId });
+    expect(res.skill).toBeNull();
+    expect(res.scar.id).toBe(recordedId);
+    expect(res.scar.source).toBe("personal");
+  });
+
+  it("kira_status counts personal scars separately", async () => {
+    const res = await callJson("kira_status", {});
+    expect(res.counts.personal_scars).toBeGreaterThanOrEqual(1);
+    expect(res.paths.personal_scars_dir).toContain(tmp);
+  });
+});
+
 describe("network isolation", () => {
   it("never performed any network I/O", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
