@@ -1,14 +1,13 @@
-import { appendFile, mkdir } from "node:fs/promises";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { appendFile, mkdir, rename, stat } from "node:fs/promises";
+import { join } from "node:path";
 import type { ReportRequest, ReportResponse } from "./types.js";
 import { enqueue } from "./telemetry.js";
-import { hasSeenPrompt, markPromptSeen, loadConsent } from "./consent.js";
+import { hasSeenPrompt, markPromptSeen, loadConsent, KIRA_HOME } from "./consent.js";
+import { sanitize } from "./sanitize.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = join(__dirname, "..");
-const REPORTS_DIR = join(PROJECT_ROOT, "reports");
-const MISSING_LOG = join(REPORTS_DIR, "missing-keywords.log");
+const MISSES_LOG = join(KIRA_HOME, "misses.log");
+/** Rotate misses.log once past this size (keeps one .1 generation). */
+const MISSES_ROTATE_BYTES = 512 * 1024;
 
 const CONSENT_PROMPT =
   "Telemetry: anonymous core (skill_id, status, anonymous client_id, kira version, OS family, Node major) " +
@@ -43,24 +42,43 @@ export async function record(
   return { ack: true, recorded_at };
 }
 
+/** What almost matched a missed lookup — the alias/keyword gap signal. */
+export interface MissNear {
+  id: string;
+  score: number;
+}
+
 /**
- * Log a keyword that returned 0 results from lookup.
- * Patrol jobs read this to discover demand for new skills.
+ * Log a lookup that returned 0 strict results (flywheel loop B input).
  *
- * Stays at the legacy ./reports/ path: it's keyword-only (no user content)
- * and operators rely on the existing path for ETL.
+ * Local-only, never uploaded. Written to ~/.kira/misses.log (KIRA_HOME
+ * respected) — the old repo-relative ./reports/ path broke for installed
+ * packages, where __dirname points inside node_modules/npx caches.
+ *
+ * The keyword passes the standard sanitizer: a query can embed paths or
+ * secrets ("deploy /home/x/proj with KEY=..."), so it is treated like any
+ * other free text even though the file never leaves the machine.
  */
-export async function logMissingKeyword(
+export async function logMiss(
   keyword: string,
-  context: string[]
+  context: string[],
+  near: MissNear[]
 ): Promise<void> {
-  await mkdir(REPORTS_DIR, { recursive: true });
+  await mkdir(KIRA_HOME, { recursive: true });
+  try {
+    const s = await stat(MISSES_LOG);
+    if (s.size > MISSES_ROTATE_BYTES) await rename(MISSES_LOG, MISSES_LOG + ".1");
+  } catch {
+    // First write — no file to rotate.
+  }
   const entry = {
-    keyword,
-    context,
-    timestamp: new Date().toISOString(),
+    v: 1,
+    keyword: sanitize(keyword, 200),
+    context: context.slice(0, 8).map((c) => String(c).slice(0, 40)),
+    near: near.slice(0, 6),
+    ts: new Date().toISOString(),
   };
-  await appendFile(MISSING_LOG, JSON.stringify(entry) + "\n", "utf-8");
+  await appendFile(MISSES_LOG, JSON.stringify(entry) + "\n", "utf-8");
 }
 
 /** Re-exported for tests. */

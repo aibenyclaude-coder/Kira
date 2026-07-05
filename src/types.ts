@@ -94,13 +94,26 @@ export interface LookupRequest {
   context?: string[];
 }
 
+/** Scored near-match, returned only when strict matching found nothing. */
+export interface NearMatch {
+  id: string;
+  title: string;
+  /** 0-1 query coverage; keyword-token hits weigh double. See similarity.ts. */
+  score: number;
+  matched_tokens: string[];
+}
+
 export interface LookupResponse {
   skills: SkillSummary[];
   scars: ScarSummary[];
   skill_count: number;
   scar_count: number;
-  /** When 0 results, suggests the closest available skills. */
+  /** When 0 results, titles of the closest available skills. */
   suggestions?: string[];
+  /** When 0 results, scored closest skills (recovery path + miss-log signal). */
+  near_skills?: NearMatch[];
+  /** When 0 results, scored closest scars. */
+  near_scars?: NearMatch[];
 }
 
 export interface GetResponse {
