@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-07-06
+
+### Added
+- 5 community scars and 4 process skills harvested from this repo's own release night: piped-gate, push-race, write-without-read, merge-compile-gate, UTC-misread, npm-404-is-auth, nested-package-install, credential-CI three gates (v1.0.1), plus `cut-a-release`, `delegate-to-subagents`, `npm-trusted-publishing` and `mcp-registry-publish` skills. Corpus: **38 skills / 20 scars**.
+- Listed in the official **MCP Server Registry** (`io.github.aibenyclaude-coder/kira`) via a new OIDC publish rail — PulseMCP/Smithery ingest automatically.
+
+### Changed
+- README: tools table 9→10, fresh v0.8.0-story demo.gif, npm search keywords; USAGE.md documents the personal failure loop and drops a leftover fabricated figure; examples/TROUBLESHOOTING say ten tools.
+- Release rails hardened: ref gates, tag-ancestry checks, pinned + checksum-verified toolchains in every credential-holding job.
+
+
 ## [0.8.0] - 2026-07-06
 
 ### Added
@@ -90,7 +101,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2026-04-XX
 - Initial public release with 31 skills, 12 scars, 7 routes, and three core MCP tools (`kira_lookup`, `kira_route`, `kira_report`).
 
-[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.8.1
 [0.8.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.8.0
 [0.7.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.7.0
 [0.6.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.6.0
