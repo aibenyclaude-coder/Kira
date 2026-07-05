@@ -68,11 +68,12 @@ Not a hypothetical — this is the **actual first scar in the database**, record
 
 ---
 
-## Tools (8)
+## Tools (9)
 
 | | Tool | What it does |
 |---|------|-------------|
 | **Personal memory** | `kira_record_failure` | Capture a retry/exception as a personal scar (local-only) |
+| | `kira_personal_brief` | Session-start brief of your latest scars — start work already knowing where you got burned |
 | | `kira_premortem` | Failure heat-map for a goal *before* starting — "here's where this kind of task has burned you" |
 | **Catalog** | `kira_lookup` | Keyword → proven instructions + failure warnings. On a miss, returns scored `near_skills` / `near_scars` instead of a shrug |
 | | `kira_get` | Fetch full step-by-step instructions by ID |
