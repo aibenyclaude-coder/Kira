@@ -45,6 +45,7 @@
     "stats": "vite-node scripts/stats.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "bench": "vite-node bench/lookup.bench.ts",
     "worker:dev": "cd worker && wrangler dev --port 8787",
     "worker:deploy": "cd worker && wrangler deploy",
     "clean": "rm -rf dist",
