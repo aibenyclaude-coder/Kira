@@ -65,6 +65,34 @@ jobs:
           print("OK — all skill/scar/route JSON validates")
           PY
 
+  docker:
+    name: docker (build + stdio handshake)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t kira-ci .
+      - name: MCP handshake inside the container
+        run: |
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' \
+            '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+          | timeout 60 docker run -i --rm kira-ci > /tmp/mcp-out.jsonl
+          python3 - <<'PY'
+          import json
+          tools = None
+          for line in open('/tmp/mcp-out.jsonl'):
+              line = line.strip()
+              if not line: continue
+              try: d = json.loads(line)
+              except: continue
+              if d.get('id') == 2:
+                  tools = [t['name'] for t in d['result']['tools']]
+          assert tools and len(tools) >= 10, f"tools/list failed: {tools}"
+          print('OK — container serves', len(tools), 'tools')
+          PY
+
   worker:
     name: worker (tests)
     runs-on: ubuntu-latest
