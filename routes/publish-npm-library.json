@@ -1,0 +1,45 @@
+{
+  "id": "route.publish-npm-library.v1",
+  "goals": [
+    "publish npm package",
+    "build typescript library",
+    "create npm library",
+    "release open source package",
+    "publish to npm",
+    "create a typescript package",
+    "ship a library",
+    "open source typescript library"
+  ],
+  "contexts": ["typescript", "nodejs"],
+  "title": "Publish a TypeScript Library to npm",
+  "description": "Complete route from a TypeScript project to a published, CI-tested, automatically-released npm package — with linting, tests, versioning with Changesets, and keyless OIDC publishing.",
+  "steps": [
+    {
+      "order": 1,
+      "keyword": "setup eslint",
+      "description": "Configure ESLint flat config for code quality enforcement"
+    },
+    {
+      "order": 2,
+      "keyword": "setup vitest",
+      "description": "Add unit tests with Vitest — fast, TypeScript-native, with coverage reporting"
+    },
+    {
+      "order": 3,
+      "keyword": "github actions",
+      "description": "Set up CI pipeline to run lint and tests on every push and pull request"
+    },
+    {
+      "order": 4,
+      "keyword": "cut a release",
+      "description": "Add Changesets for semantic versioning — contributors add changeset files, bot bumps package.json and generates CHANGELOG"
+    },
+    {
+      "order": 5,
+      "keyword": "npm trusted publishing",
+      "description": "Configure OIDC-based keyless npm publishing from GitHub Actions — no npm tokens to rotate or leak"
+    }
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-07-06T00:00:00Z"
+}
