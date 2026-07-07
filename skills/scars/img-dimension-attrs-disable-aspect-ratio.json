@@ -1,0 +1,13 @@
+{
+  "id": "scar.img-dimension-attrs-disable-aspect-ratio.v1",
+  "keywords": ["img width height", "aspect-ratio", "CLS", "layout shift", "image squashed", "object-fit"],
+  "contexts": ["web", "css", "html"],
+  "title": "Adding width/height attributes to img silently disables CSS aspect-ratio",
+  "summary": "Agent adds width/height attributes for CLS, which fixes both axes and makes the CSS aspect-ratio rule inert, squashing the image into a stripe.",
+  "severity": "warning",
+  "mistake": "To improve CLS, the agent adds intrinsic width/height attributes to an <img> that is styled with width:100% and a CSS aspect-ratio (e.g. 4/5) + object-fit:cover. The height attribute now acts as the used height (both dimensions are determined), so aspect-ratio no longer applies: the image renders as a e.g. 400x1200 stripe with huge empty space. Because the attribute edit 'should not change visuals', the agent skips re-rendering the page and ships the regression; it is only caught later by an external reviewer measuring the rendered box.",
+  "instead": "Whenever you add width/height attributes to styled images, also set height:auto in CSS on those images (e.g. .fig img{width:100%;height:auto}) so aspect-ratio/object-fit keep working while the attributes still reserve layout space pre-load. Treat attribute additions as visual changes: re-render and measure the element's getBoundingClientRect (or compare width/height ratio) after the edit.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-07T00:00:00Z"
+}
