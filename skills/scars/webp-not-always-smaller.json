@@ -1,0 +1,13 @@
+{
+  "id": "scar.webp-not-always-smaller.v1",
+  "keywords": ["webp", "avif", "image optimization", "jpeg", "file size", "srcset"],
+  "contexts": ["web", "performance"],
+  "title": "Converting photos to WebP without measuring can produce larger, worse files",
+  "summary": "Agent assumes 'WebP is smaller than JPEG', converts a grainy-texture photo, and gets a file that is larger at equal quality and uglier at equal size.",
+  "severity": "warning",
+  "mistake": "Following the general rule that WebP/AVIF beat JPEG, the agent converts a hero photo with strong grain/noise texture (paper, film, marble) to WebP. At q80 the WebP is ~1.5x LARGER than the optimized JPEG; even at q55 it is still not smaller and visibly degraded. High-frequency noise compresses poorly in WebP's prediction model. The agent nearly ships a <picture> setup that increases transfer size while adding markup complexity.",
+  "instead": "Never switch image formats on faith: encode the actual asset at 2-3 quality levels and compare bytes AND visual quality against the optimized original before adopting. For noisy/grainy photos, prefer keeping a well-compressed JPEG and win transfer size with srcset width steps (e.g. 900w for mobile, full width for desktop) plus correct sizes. Record the measured numbers in the commit/README so the decision is auditable.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-07T00:00:00Z"
+}

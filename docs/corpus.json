@@ -1091,6 +1091,54 @@
       "updated_at": "2026-04-11T00:00:00Z"
     },
     {
+      "id": "scar.headless-chrome-window-size-clamp.v1",
+      "keywords": [
+        "headless chrome",
+        "window-size",
+        "mobile screenshot",
+        "clientWidth",
+        "viewport verification",
+        "responsive testing"
+      ],
+      "contexts": [
+        "web",
+        "testing",
+        "chrome"
+      ],
+      "title": "headless=new clamps --window-size below 500px, so mobile screenshots lie",
+      "summary": "Agent verifies mobile layout with --window-size=390 screenshots, but Chrome headless=new clamps the window to a 500px minimum (485px layout after scrollbar), so JS reads a fake width and overlays desync from the screenshot.",
+      "severity": "critical",
+      "mistake": "Agent runs google-chrome --headless=new --window-size=390,H --screenshot to verify mobile layout. Chrome silently clamps the window to a ~500px minimum; the internal layout viewport becomes ~485px (500 minus scrollbar) while the screenshot is still emitted at 390px. window.innerWidth/document.documentElement.clientWidth report the clamped value, so any JS that positions absolutely-sized overlays (SVG viewBox, canvas, coordinate-computed decorations) builds them for the wrong width. The agent then misdiagnoses the resulting misalignment as an implementation bug and burns review cycles, because the same page is correct in real browsers.",
+      "instead": "Never use --window-size for sub-500px verification. Use CDP device emulation instead (e.g. chrome-devtools MCP: emulate viewport '390x844x1,mobile' then take a fullPage screenshot), which sets a true 390px layout viewport. In page code, read width from document.body.getBoundingClientRect().width (CSS truth) rather than clientWidth, and pin overlay SVG width/height attributes AND inline style to the same pixel values as the viewBox so no preserveAspectRatio scaling can occur. To confirm what headless actually did, run --dump-dom and inspect the generated viewBox/width values.",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "scar.img-dimension-attrs-disable-aspect-ratio.v1",
+      "keywords": [
+        "img width height",
+        "aspect-ratio",
+        "CLS",
+        "layout shift",
+        "image squashed",
+        "object-fit"
+      ],
+      "contexts": [
+        "web",
+        "css",
+        "html"
+      ],
+      "title": "Adding width/height attributes to img silently disables CSS aspect-ratio",
+      "summary": "Agent adds width/height attributes for CLS, which fixes both axes and makes the CSS aspect-ratio rule inert, squashing the image into a stripe.",
+      "severity": "warning",
+      "mistake": "To improve CLS, the agent adds intrinsic width/height attributes to an <img> that is styled with width:100% and a CSS aspect-ratio (e.g. 4/5) + object-fit:cover. The height attribute now acts as the used height (both dimensions are determined), so aspect-ratio no longer applies: the image renders as a e.g. 400x1200 stripe with huge empty space. Because the attribute edit 'should not change visuals', the agent skips re-rendering the page and ships the regression; it is only caught later by an external reviewer measuring the rendered box.",
+      "instead": "Whenever you add width/height attributes to styled images, also set height:auto in CSS on those images (e.g. .fig img{width:100%;height:auto}) so aspect-ratio/object-fit keep working while the attributes still reserve layout space pre-load. Treat attribute additions as visual changes: re-render and measure the element's getBoundingClientRect (or compare width/height ratio) after the edit.",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-07T00:00:00Z"
+    },
+    {
       "id": "scar.mechanical-merge-needs-compile-gate.v1",
       "keywords": [
         "merge conflict resolution",
@@ -1416,6 +1464,29 @@
       "hit_count": 1,
       "version": "1.0.0",
       "updated_at": "2026-04-11T00:00:00Z"
+    },
+    {
+      "id": "scar.webp-not-always-smaller.v1",
+      "keywords": [
+        "webp",
+        "avif",
+        "image optimization",
+        "jpeg",
+        "file size",
+        "srcset"
+      ],
+      "contexts": [
+        "web",
+        "performance"
+      ],
+      "title": "Converting photos to WebP without measuring can produce larger, worse files",
+      "summary": "Agent assumes 'WebP is smaller than JPEG', converts a grainy-texture photo, and gets a file that is larger at equal quality and uglier at equal size.",
+      "severity": "warning",
+      "mistake": "Following the general rule that WebP/AVIF beat JPEG, the agent converts a hero photo with strong grain/noise texture (paper, film, marble) to WebP. At q80 the WebP is ~1.5x LARGER than the optimized JPEG; even at q55 it is still not smaller and visibly degraded. High-frequency noise compresses poorly in WebP's prediction model. The agent nearly ships a <picture> setup that increases transfer size while adding markup complexity.",
+      "instead": "Never switch image formats on faith: encode the actual asset at 2-3 quality levels and compare bytes AND visual quality against the optimized original before adopting. For noisy/grainy photos, prefer keeping a well-compressed JPEG and win transfer size with srcset width steps (e.g. 900w for mobile, full width for desktop) plus correct sizes. Record the measured numbers in the commit/README so the decision is auditable.",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-07T00:00:00Z"
     },
     {
       "id": "scar.write-path-without-read-path.v1",
