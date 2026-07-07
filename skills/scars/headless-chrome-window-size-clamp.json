@@ -1,0 +1,13 @@
+{
+  "id": "scar.headless-chrome-window-size-clamp.v1",
+  "keywords": ["headless chrome", "window-size", "mobile screenshot", "clientWidth", "viewport verification", "responsive testing"],
+  "contexts": ["web", "testing", "chrome"],
+  "title": "headless=new clamps --window-size below 500px, so mobile screenshots lie",
+  "summary": "Agent verifies mobile layout with --window-size=390 screenshots, but Chrome headless=new clamps the window to a 500px minimum (485px layout after scrollbar), so JS reads a fake width and overlays desync from the screenshot.",
+  "severity": "critical",
+  "mistake": "Agent runs google-chrome --headless=new --window-size=390,H --screenshot to verify mobile layout. Chrome silently clamps the window to a ~500px minimum; the internal layout viewport becomes ~485px (500 minus scrollbar) while the screenshot is still emitted at 390px. window.innerWidth/document.documentElement.clientWidth report the clamped value, so any JS that positions absolutely-sized overlays (SVG viewBox, canvas, coordinate-computed decorations) builds them for the wrong width. The agent then misdiagnoses the resulting misalignment as an implementation bug and burns review cycles, because the same page is correct in real browsers.",
+  "instead": "Never use --window-size for sub-500px verification. Use CDP device emulation instead (e.g. chrome-devtools MCP: emulate viewport '390x844x1,mobile' then take a fullPage screenshot), which sets a true 390px layout viewport. In page code, read width from document.body.getBoundingClientRect().width (CSS truth) rather than clientWidth, and pin overlay SVG width/height attributes AND inline style to the same pixel values as the viewBox so no preserveAspectRatio scaling can occur. To confirm what headless actually did, run --dump-dom and inspect the generated viewBox/width values.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-07T00:00:00Z"
+}
