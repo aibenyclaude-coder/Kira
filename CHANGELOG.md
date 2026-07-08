@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-07-09
+
+### Added
+- 7 community scars harvested from real failures since 0.8.1: the parallel-rails release race (#164), 3 web-platform traps from the bbutton-site quality loop (#172), and 3 ffmpeg pitfalls — crop w/h expressions evaluate once, animated-testsrc frame-diff false positives, infinite lavfi source + output-side `-t` hang (#173). Corpus: **38 skills / 27 scars**.
+- Multi-stage `Dockerfile` (node:22-alpine) + CI docker handshake gate: the image must start and answer `tools/list` with all 10 tools on every commit (#170).
+- `SECURITY.md` (corpus-injection threat model), bug report form, and private vulnerability reporting (#165).
+- `glama.json` for Glama profile completion (#171).
+
+### Changed
+- Registry publish rail waits for npm availability before validating — fixes the parallel-rails race it now ships a scar about (#164).
+- Worker deploy rail materializes the D1 database id from a repo secret; placeholder de-landmined (#166).
+- Docs: positioning vs memory servers + launch-day objection prep (#167); install guidance pins `npx kira-mcp@latest` with stale-cache troubleshooting (#166).
+
 ## [0.8.1] - 2026-07-06
 
 ### Added
@@ -101,7 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2026-04-XX
 - Initial public release with 31 skills, 12 scars, 7 routes, and three core MCP tools (`kira_lookup`, `kira_route`, `kira_report`).
 
-[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.8.2...HEAD
+[0.8.2]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.8.2
 [0.8.1]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.8.1
 [0.8.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.8.0
 [0.7.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.7.0
