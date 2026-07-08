@@ -947,6 +947,31 @@
   ],
   "scars": [
     {
+      "id": "scar.animated-testsrc-frame-diff-verification.v1",
+      "keywords": [
+        "ffmpeg verification",
+        "testsrc2",
+        "frame diff",
+        "static grid",
+        "control case",
+        "false positive test",
+        "visual transform testing"
+      ],
+      "contexts": [
+        "ffmpeg",
+        "video",
+        "testing"
+      ],
+      "title": "Frame-diffing testsrc2 output proves nothing: the test source itself animates",
+      "summary": "Agent verifies a video transform by diffing two output frames rendered from testsrc2; testsrc2 is animated, so the diff is nonzero whether or not the transform works.",
+      "severity": "warning",
+      "mistake": "To prove a time-varying filter (zoom pulse) was active, the agent applied it to testsrc2, extracted two frames, and treated a nonzero pixel diff as confirmation. testsrc2 (like testsrc and most lavfi demo sources) animates on its own, so any two frames differ regardless of the filter under test — the check can only ever pass, i.e. it is a false-positive generator.",
+      "instead": "Render the filter over a truly static source: 'color=c=black,drawgrid=w=40:h=40:t=2:c=white' or '-loop 1 -i still.png'. Then run a control pair FIRST: two frames where the effect should be absent must diff to exactly 0 (mean and max). Only after the control passes, measure the effect pair and require a clearly nonzero diff. A verification that cannot fail is not a verification.",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-09T00:00:00Z"
+    },
+    {
       "id": "scar.authjs-v5-signin-wrong-import.v1",
       "keywords": [
         "auth.js",
@@ -1068,6 +1093,31 @@
       "updated_at": "2026-04-11T00:00:00Z"
     },
     {
+      "id": "scar.ffmpeg-crop-wh-eval-once.v1",
+      "keywords": [
+        "ffmpeg crop expression",
+        "time-varying zoom",
+        "zoompan",
+        "in_time",
+        "eval per frame",
+        "beat zoom",
+        "crop w h static"
+      ],
+      "contexts": [
+        "ffmpeg",
+        "video",
+        "media"
+      ],
+      "title": "ffmpeg crop w/h expressions evaluate once at init, so t-based zoom via crop fails",
+      "summary": "Agent builds a time-varying zoom with t in crop's w/h expressions; those are evaluated once at configure time where t=NAN, so the graph errors out (or silently stays static).",
+      "severity": "warning",
+      "mistake": "To pulse-zoom a video, the agent writes crop=w='iw/zf(t)':h='ih/zf(t)' followed by scale back to the original size, assuming crop re-evaluates all expressions per frame. In ffmpeg only crop's x/y are per-frame; w/h are evaluated once at filter init where t=NAN, producing 'Error when evaluating the expression' at configure time (and if the expression happened to be NAN-safe, a permanently static crop instead of animation).",
+      "instead": "Use zoompan for time-varying zoom: zoompan=z='if(isnan(it),1,ZF(it))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=WxH:fps=N — its z expression is evaluated per frame and in_time (it) carries the input timestamp (guard NAN on the first frames). scale=eval=frame also re-evaluates per frame, but a per-frame output size change forces constant graph reinit downstream; avoid it for this purpose.",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-09T00:00:00Z"
+    },
+    {
       "id": "scar.github-actions-secrets-missing.v1",
       "keywords": [
         "github actions",
@@ -1137,6 +1187,31 @@
       "hit_count": 1,
       "version": "1.0.0",
       "updated_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "scar.lavfi-infinite-source-output-t-hang.v1",
+      "keywords": [
+        "ffmpeg hang",
+        "lavfi color",
+        "-t placement",
+        "select filter",
+        "infinite source",
+        "testsrc duration",
+        "anullsrc"
+      ],
+      "contexts": [
+        "ffmpeg",
+        "video",
+        "media"
+      ],
+      "title": "Infinite lavfi source + output-side -t + sparse select makes ffmpeg run forever",
+      "summary": "With an infinite lavfi source, -t as an output option only stops when output pts reaches the limit; a select filter that passes few frames means that never happens, so ffmpeg consumes the source indefinitely.",
+      "severity": "warning",
+      "mistake": "Agent runs: ffmpeg -f lavfi -i color=... -t 26.5 -vf \"...,select='eq(n,300)+eq(n,771)'\" out_%d.png. The color source is infinite and -t placed after -i is an OUTPUT limit measured on output timestamps. After the last selected frame, nothing reaches the output anymore, so the 26.5s output limit is never hit and ffmpeg reads the infinite source forever; the final selected frame can also sit buffered and unwritten. It looks like a hang and gets killed minutes later.",
+      "instead": "Put -t on the INPUT side (-t 26.5 BEFORE -i) so the source itself ends at that duration; on EOF the graph flushes and all selected frames are written. Alternatively bound the stream inside the graph with trim=end=26.5. Apply the same rule to every infinite lavfi source (color, testsrc*, anullsrc, sine) feeding frame-dropping filters.",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-09T00:00:00Z"
     },
     {
       "id": "scar.mechanical-merge-needs-compile-gate.v1",
