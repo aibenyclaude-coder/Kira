@@ -1,0 +1,13 @@
+{
+  "id": "scar.ffmpeg-crop-wh-eval-once.v1",
+  "keywords": ["ffmpeg crop expression", "time-varying zoom", "zoompan", "in_time", "eval per frame", "beat zoom", "crop w h static"],
+  "contexts": ["ffmpeg", "video", "media"],
+  "title": "ffmpeg crop w/h expressions evaluate once at init, so t-based zoom via crop fails",
+  "summary": "Agent builds a time-varying zoom with t in crop's w/h expressions; those are evaluated once at configure time where t=NAN, so the graph errors out (or silently stays static).",
+  "severity": "warning",
+  "mistake": "To pulse-zoom a video, the agent writes crop=w='iw/zf(t)':h='ih/zf(t)' followed by scale back to the original size, assuming crop re-evaluates all expressions per frame. In ffmpeg only crop's x/y are per-frame; w/h are evaluated once at filter init where t=NAN, producing 'Error when evaluating the expression' at configure time (and if the expression happened to be NAN-safe, a permanently static crop instead of animation).",
+  "instead": "Use zoompan for time-varying zoom: zoompan=z='if(isnan(it),1,ZF(it))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=WxH:fps=N — its z expression is evaluated per frame and in_time (it) carries the input timestamp (guard NAN on the first frames). scale=eval=frame also re-evaluates per frame, but a per-frame output size change forces constant graph reinit downstream; avoid it for this purpose.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-09T00:00:00Z"
+}

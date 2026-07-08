@@ -1,0 +1,13 @@
+{
+  "id": "scar.animated-testsrc-frame-diff-verification.v1",
+  "keywords": ["ffmpeg verification", "testsrc2", "frame diff", "static grid", "control case", "false positive test", "visual transform testing"],
+  "contexts": ["ffmpeg", "video", "testing"],
+  "title": "Frame-diffing testsrc2 output proves nothing: the test source itself animates",
+  "summary": "Agent verifies a video transform by diffing two output frames rendered from testsrc2; testsrc2 is animated, so the diff is nonzero whether or not the transform works.",
+  "severity": "warning",
+  "mistake": "To prove a time-varying filter (zoom pulse) was active, the agent applied it to testsrc2, extracted two frames, and treated a nonzero pixel diff as confirmation. testsrc2 (like testsrc and most lavfi demo sources) animates on its own, so any two frames differ regardless of the filter under test — the check can only ever pass, i.e. it is a false-positive generator.",
+  "instead": "Render the filter over a truly static source: 'color=c=black,drawgrid=w=40:h=40:t=2:c=white' or '-loop 1 -i still.png'. Then run a control pair FIRST: two frames where the effect should be absent must diff to exactly 0 (mean and max). Only after the control passes, measure the effect pair and require a clearly nonzero diff. A verification that cannot fail is not a verification.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-09T00:00:00Z"
+}

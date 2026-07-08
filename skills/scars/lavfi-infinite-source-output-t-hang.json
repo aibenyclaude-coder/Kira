@@ -1,0 +1,13 @@
+{
+  "id": "scar.lavfi-infinite-source-output-t-hang.v1",
+  "keywords": ["ffmpeg hang", "lavfi color", "-t placement", "select filter", "infinite source", "testsrc duration", "anullsrc"],
+  "contexts": ["ffmpeg", "video", "media"],
+  "title": "Infinite lavfi source + output-side -t + sparse select makes ffmpeg run forever",
+  "summary": "With an infinite lavfi source, -t as an output option only stops when output pts reaches the limit; a select filter that passes few frames means that never happens, so ffmpeg consumes the source indefinitely.",
+  "severity": "warning",
+  "mistake": "Agent runs: ffmpeg -f lavfi -i color=... -t 26.5 -vf \"...,select='eq(n,300)+eq(n,771)'\" out_%d.png. The color source is infinite and -t placed after -i is an OUTPUT limit measured on output timestamps. After the last selected frame, nothing reaches the output anymore, so the 26.5s output limit is never hit and ffmpeg reads the infinite source forever; the final selected frame can also sit buffered and unwritten. It looks like a hang and gets killed minutes later.",
+  "instead": "Put -t on the INPUT side (-t 26.5 BEFORE -i) so the source itself ends at that duration; on EOF the graph flushes and all selected frames are written. Alternatively bound the stream inside the graph with trim=end=26.5. Apply the same rule to every infinite lavfi source (color, testsrc*, anullsrc, sine) feeding frame-dropping filters.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-09T00:00:00Z"
+}
