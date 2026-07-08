@@ -1,0 +1,21 @@
+{
+  "id": "scar.scheduled-automation-needs-layer-inventory.v1",
+  "keywords": [
+    "scheduled automation",
+    "cron job",
+    "systemd timer",
+    "cloud scheduler",
+    "duplicate monitoring",
+    "recurring task",
+    "automation inventory"
+  ],
+  "contexts": ["automation", "devops", "agents"],
+  "title": "New scheduled automation created without inventorying existing scheduler layers — duplicated a live watcher",
+  "summary": "Agent adds a new recurring job (monitor/patrol/sync) after checking only one scheduler layer; an existing job on another layer already covered the work, and a previously DISABLED twin encoded a deliberate decision the new job silently reversed.",
+  "mistake": "Asked to set up monitoring, the agent designed and created a new daily scheduled job after checking only the layer it was working in. A 4-hourly job on a different layer (OS timer vs cloud scheduler vs CI cron) already covered a superset of the checks — stateful, with a working notification path. Worse, a disabled twin of the new job existed: the owner had deliberately turned daily runs off, and the new job resurrected that cost. The new job was also stateless with a frozen baseline, so any legitimate change (a version bump, a new PR) would alarm forever. Options were even presented to the owner BEFORE the inventory, so they chose on false premises.",
+  "instead": "Before creating ANY recurring automation, inventory every scheduler layer the machine/org actually uses: OS level (crontab, systemd list-timers --user AND --system), agent-platform schedulers (cloud routines / scheduled agents), and CI scheduled workflows. Then search project notes for prior decisions in that domain — a disabled twin is a recorded decision, not free real estate. Prefer extending the existing stateful watcher with missing checks over adding a parallel stateless one (frozen-baseline monitors produce permanent false alarms). If you ask the owner to choose an architecture, run the inventory FIRST so the options are real.",
+  "severity": "warning",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-09T00:00:00Z"
+}

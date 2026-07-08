@@ -1118,6 +1118,30 @@
       "updated_at": "2026-07-09T00:00:00Z"
     },
     {
+      "id": "scar.git-push-delete-multi-ref-partial-success.v1",
+      "keywords": [
+        "git push delete",
+        "multi ref push",
+        "partial success",
+        "branch cleanup",
+        "remote ref does not exist",
+        "mass branch deletion",
+        "exit code not atomic"
+      ],
+      "contexts": [
+        "git",
+        "bash"
+      ],
+      "title": "git push --delete with many refs is per-ref, not atomic — nonzero exit misread as total failure",
+      "summary": "A multi-ref `git push --delete` exits nonzero if ANY ref fails, but the other refs were still deleted; retry logic then reports 'remote ref does not exist' for every already-deleted ref, making a successful cleanup look like a total failure.",
+      "mistake": "Deleting ~150 remote branches in chunks of 25 with `git push origin --delete ref1 ref2 ...`, the agent gated on the command's exit code and fell back to per-ref retries when a chunk exited nonzero. Every retry printed FAIL ('remote ref does not exist') — a wall of 149 FAILs — because the chunk pushes HAD deleted the refs: ref updates in a multi-ref push are independent, and a single rejected ref makes the whole command exit nonzero. The agent nearly reported a fully successful cleanup as failed.",
+      "instead": "Treat any multi-ref push (including --delete) as per-ref: nonzero exit means at least one ref failed, never that all did. Parse the per-ref result lines ('- [deleted]' vs '! [rejected]') instead of the exit code, or skip output-parsing entirely and verify the END STATE: `git fetch --prune` then count `git branch -r`, or list branches via the hosting API. For mass deletions the final state is the verdict — exit codes along the way are noise.",
+      "severity": "warning",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-09T00:00:00Z"
+    },
+    {
       "id": "scar.github-actions-secrets-missing.v1",
       "keywords": [
         "github actions",
@@ -1163,6 +1187,31 @@
       "hit_count": 1,
       "version": "1.0.0",
       "updated_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "scar.health-check-gated-on-unverified-command.v1",
+      "keywords": [
+        "health check",
+        "missing script",
+        "suppressed output",
+        "false failure",
+        "verification gate",
+        "npm run",
+        "could not run vs failed"
+      ],
+      "contexts": [
+        "bash",
+        "ci",
+        "node"
+      ],
+      "title": "Health check gated on a guessed command name with output suppressed — 'could not run' reported as 'failed'",
+      "summary": "Agent wires a pass/fail verdict to `guessed-command >/dev/null 2>&1 || echo FAIL`; the command name was wrong, so a 'command/script not found' error silently became a FAIL verdict against a healthy target.",
+      "mistake": "To verify generated artifacts were fresh, the agent ran `npm run gen-stats -- --check >/dev/null 2>&1 || echo MISMATCH`. The npm script name was guessed and did not exist (the real entry point was `node scripts/gen-stats.mjs --check`), so npm exited nonzero with 'Missing script' — but the suppressed output turned that into a fake MISMATCH verdict, briefly indicting a healthy repo. This is the inverse of the classic pipe-swallow: instead of a false PASS from a masked failure, a false FAIL from a check that never ran.",
+      "instead": "Never wire a pass/fail verdict to a command you have not seen succeed at least once with visible output. First run it bare (stdout+stderr shown) to confirm the tool exists and what success looks like; only then wrap it in gating. And keep the two verdicts distinguishable forever: 'the check could not run' (missing command, bad flag, no such file) must produce a different message than 'the check ran and failed' — e.g. `cmd; rc=$?; [ $rc -eq 127 ] && echo CHECK_BROKEN || ...`. When a gate trips, print the raw error before labeling the target broken.",
+      "severity": "warning",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-09T00:00:00Z"
     },
     {
       "id": "scar.img-dimension-attrs-disable-aspect-ratio.v1",
@@ -1394,6 +1443,31 @@
       "hit_count": 1,
       "version": "1.0.0",
       "updated_at": "2026-04-11T00:00:00Z"
+    },
+    {
+      "id": "scar.scheduled-automation-needs-layer-inventory.v1",
+      "keywords": [
+        "scheduled automation",
+        "cron job",
+        "systemd timer",
+        "cloud scheduler",
+        "duplicate monitoring",
+        "recurring task",
+        "automation inventory"
+      ],
+      "contexts": [
+        "automation",
+        "devops",
+        "agents"
+      ],
+      "title": "New scheduled automation created without inventorying existing scheduler layers — duplicated a live watcher",
+      "summary": "Agent adds a new recurring job (monitor/patrol/sync) after checking only one scheduler layer; an existing job on another layer already covered the work, and a previously DISABLED twin encoded a deliberate decision the new job silently reversed.",
+      "mistake": "Asked to set up monitoring, the agent designed and created a new daily scheduled job after checking only the layer it was working in. A 4-hourly job on a different layer (OS timer vs cloud scheduler vs CI cron) already covered a superset of the checks — stateful, with a working notification path. Worse, a disabled twin of the new job existed: the owner had deliberately turned daily runs off, and the new job resurrected that cost. The new job was also stateless with a frozen baseline, so any legitimate change (a version bump, a new PR) would alarm forever. Options were even presented to the owner BEFORE the inventory, so they chose on false premises.",
+      "instead": "Before creating ANY recurring automation, inventory every scheduler layer the machine/org actually uses: OS level (crontab, systemd list-timers --user AND --system), agent-platform schedulers (cloud routines / scheduled agents), and CI scheduled workflows. Then search project notes for prior decisions in that domain — a disabled twin is a recorded decision, not free real estate. Prefer extending the existing stateful watcher with missing checks over adding a parallel stateless one (frozen-baseline monitors produce permanent false alarms). If you ask the owner to choose an architecture, run the inventory FIRST so the options are real.",
+      "severity": "warning",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-09T00:00:00Z"
     },
     {
       "id": "scar.stripe-webhook-body-parsed.v1",

@@ -1,0 +1,21 @@
+{
+  "id": "scar.git-push-delete-multi-ref-partial-success.v1",
+  "keywords": [
+    "git push delete",
+    "multi ref push",
+    "partial success",
+    "branch cleanup",
+    "remote ref does not exist",
+    "mass branch deletion",
+    "exit code not atomic"
+  ],
+  "contexts": ["git", "bash"],
+  "title": "git push --delete with many refs is per-ref, not atomic — nonzero exit misread as total failure",
+  "summary": "A multi-ref `git push --delete` exits nonzero if ANY ref fails, but the other refs were still deleted; retry logic then reports 'remote ref does not exist' for every already-deleted ref, making a successful cleanup look like a total failure.",
+  "mistake": "Deleting ~150 remote branches in chunks of 25 with `git push origin --delete ref1 ref2 ...`, the agent gated on the command's exit code and fell back to per-ref retries when a chunk exited nonzero. Every retry printed FAIL ('remote ref does not exist') — a wall of 149 FAILs — because the chunk pushes HAD deleted the refs: ref updates in a multi-ref push are independent, and a single rejected ref makes the whole command exit nonzero. The agent nearly reported a fully successful cleanup as failed.",
+  "instead": "Treat any multi-ref push (including --delete) as per-ref: nonzero exit means at least one ref failed, never that all did. Parse the per-ref result lines ('- [deleted]' vs '! [rejected]') instead of the exit code, or skip output-parsing entirely and verify the END STATE: `git fetch --prune` then count `git branch -r`, or list branches via the hosting API. For mass deletions the final state is the verdict — exit codes along the way are noise.",
+  "severity": "warning",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-09T00:00:00Z"
+}
