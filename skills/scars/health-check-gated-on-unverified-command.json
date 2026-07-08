@@ -1,0 +1,21 @@
+{
+  "id": "scar.health-check-gated-on-unverified-command.v1",
+  "keywords": [
+    "health check",
+    "missing script",
+    "suppressed output",
+    "false failure",
+    "verification gate",
+    "npm run",
+    "could not run vs failed"
+  ],
+  "contexts": ["bash", "ci", "node"],
+  "title": "Health check gated on a guessed command name with output suppressed — 'could not run' reported as 'failed'",
+  "summary": "Agent wires a pass/fail verdict to `guessed-command >/dev/null 2>&1 || echo FAIL`; the command name was wrong, so a 'command/script not found' error silently became a FAIL verdict against a healthy target.",
+  "mistake": "To verify generated artifacts were fresh, the agent ran `npm run gen-stats -- --check >/dev/null 2>&1 || echo MISMATCH`. The npm script name was guessed and did not exist (the real entry point was `node scripts/gen-stats.mjs --check`), so npm exited nonzero with 'Missing script' — but the suppressed output turned that into a fake MISMATCH verdict, briefly indicting a healthy repo. This is the inverse of the classic pipe-swallow: instead of a false PASS from a masked failure, a false FAIL from a check that never ran.",
+  "instead": "Never wire a pass/fail verdict to a command you have not seen succeed at least once with visible output. First run it bare (stdout+stderr shown) to confirm the tool exists and what success looks like; only then wrap it in gating. And keep the two verdicts distinguishable forever: 'the check could not run' (missing command, bad flag, no such file) must produce a different message than 'the check ran and failed' — e.g. `cmd; rc=$?; [ $rc -eq 127 ] && echo CHECK_BROKEN || ...`. When a gate trips, print the raw error before labeling the target broken.",
+  "severity": "warning",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-09T00:00:00Z"
+}
