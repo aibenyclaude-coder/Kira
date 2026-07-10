@@ -1,0 +1,13 @@
+{
+  "id": "scar.chrome-devtools-mcp-stale-css-needs-hard-reload.v1",
+  "keywords": ["chrome-devtools mcp", "ignoreCache", "stale css", "hard reload", "navigate_page", "cache subresource", "fix not applied", "browser verification"],
+  "contexts": ["browser-testing", "mcp", "frontend"],
+  "title": "CSS fix verified via MCP browser appears not applied — stylesheet served from cache",
+  "summary": "chrome-devtools MCP navigate_page type:url does not bypass subresource cache even with ignoreCache:true; edited CSS/JS keeps loading from cache and the agent misdiagnoses its own fix as broken. Only type:reload honors ignoreCache.",
+  "severity": "warning",
+  "mistake": "After editing a stylesheet, the agent re-verified with navigate_page type:url + ignoreCache:true and found the change absent from computed styles. The document was re-fetched but CSS came from the HTTP cache (the local dev server sent Last-Modified, and Chrome's heuristic caching kept the old body). The agent nearly went hunting for a CSS bug that did not exist — document.styleSheets showed the old rule while fetch(url, {cache:'no-store'}) returned the new file.",
+  "instead": "After changing CSS/JS, re-verify with navigate_page type:reload + ignoreCache:true on the already-open page (this is the hard-reload path that flushes subresources). When a fix 'did not apply', settle it in one evaluate_script: compare the live rule (for (const s of document.styleSheets) for (const r of s.cssRules) ...) against fetch(cssUrl, {cache:'no-store'}).then(r=>r.text()) — if they differ, it is caching, not your CSS. Serving dev files with Cache-Control: no-store avoids the class entirely.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-11T00:00:00Z"
+}
