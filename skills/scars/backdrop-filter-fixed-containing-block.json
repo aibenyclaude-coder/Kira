@@ -1,0 +1,13 @@
+{
+  "id": "scar.backdrop-filter-fixed-containing-block.v1",
+  "keywords": ["backdrop-filter", "position fixed", "containing block", "drawer", "mobile nav", "overlay trapped", "fixed not viewport", "css filter transform"],
+  "contexts": ["css", "frontend"],
+  "title": "Fixed full-screen drawer collapses into the header instead of covering the viewport",
+  "summary": "A position:fixed inset:0 drawer nested inside a header with backdrop-filter gets sized to the header box, not the viewport, because filter/backdrop-filter/transform ancestors become the containing block for fixed descendants.",
+  "severity": "warning",
+  "mistake": "The agent built a mobile drawer as position:fixed; inset:0 inside a sticky header that had backdrop-filter:blur(10px). Per CSS spec, backdrop-filter (like filter, transform, perspective, will-change:transform) makes that ancestor the containing block for fixed-position descendants. The 'full-screen' overlay was silently laid out inside the ~70px header strip: its background covered only the header band and its links overflowed on top of the page content. Screenshots looked like a z-index or opacity bug, hiding the real cause.",
+  "instead": "Before implementing a fixed overlay, walk its ancestor chain for containing-block creators: in DevTools run [...ancestors].map(el => getComputedStyle(el)).find(cs => cs.backdropFilter !== 'none' || cs.filter !== 'none' || cs.transform !== 'none'). If the header needs blur, either (a) disable it in the mobile media query and use a solid rgba background instead, or (b) move the drawer node out to <body>. Verify numerically, not visually: assert drawer.getBoundingClientRect() equals {top:0, left:0, width:innerWidth, height:innerHeight} when open.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-11T00:00:00Z"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "scar.cloudflare-pages-soft-404-without-404-html.v1",
+  "keywords": ["cloudflare pages", "soft 404", "404.html", "spa fallback", "robots.txt missing", "sitemap", "seo audit", "wrangler pages deploy"],
+  "contexts": ["deploy", "seo", "cloudflare"],
+  "title": "Every nonexistent URL on a Cloudflare Pages site returns 200 with the homepage HTML",
+  "summary": "Without a root 404.html, Cloudflare Pages serves single-page-app fallback: any unknown path (including /robots.txt, /sitemap.xml, /favicon.ico) returns HTTP 200 with index.html, creating soft-404s that SEO tools and auditors flag.",
+  "severity": "warning",
+  "mistake": "The agent deployed a static multi-page site with wrangler pages deploy and assumed missing paths would 404. Pages defaults to SPA fallback mode when no 404.html exists at the build output root: /any-garbage-path/ returned 200 text/html with the homepage, and probes for robots.txt / sitemap.xml / favicon.ico all appeared to 'exist' as 200 text/html, masking that they were absent. An external audit flagged soft-404s and missing crawl files.",
+  "instead": "Ship a 404.html at the output root — its presence alone switches Pages from SPA fallback to static 404 mode. After deploy, verify with: curl -s -o /dev/null -w '%{http_code}' https://site/definitely-not-a-page/ (must be 404). Also place real robots.txt and sitemap.xml; if .txt files come back as text/html, add a _headers file (e.g. '/robots.txt' + '  Content-Type: text/plain; charset=utf-8'). Note the CDN may negative-cache a recent 404 for the root favicon — verify against the *.pages.dev deployment URL or with a cache-busting query before concluding the file is missing.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-11T00:00:00Z"
+}
