@@ -1121,6 +1121,34 @@
       "updated_at": "2026-07-06T00:00:00Z"
     },
     {
+      "id": "scar.dns-cutover-stale-local-resolver-misdiagnosis.v1",
+      "keywords": [
+        "dns",
+        "propagation",
+        "stale cache",
+        "resolver",
+        "custom domain",
+        "nameserver change",
+        "cloudflare pages",
+        "vercel",
+        "cutover",
+        "402"
+      ],
+      "contexts": [
+        "dns",
+        "deploy",
+        "cloudflare"
+      ],
+      "title": "After a domain cutover, agent misdiagnoses stale local-resolver responses as a broken server config",
+      "summary": "curl uses the system resolver; a router/ISP cache holding pre-cutover records makes a finished migration look like a failed deploy, sending the agent into pointless server-side churn.",
+      "severity": "warning",
+      "mistake": "After switching a custom domain to a new host (e.g. Cloudflare Pages), plain `curl https://www.example.com` kept returning the OLD host's error page (Vercel 402 DEPLOYMENT_DISABLED). The agent assumed the new DNS records or the Pages custom-domain binding were wrong and burned time re-creating DNS records, polling for 'propagation', and re-checking the hosting config. The real cause: the local WiFi router / ISP resolver still cached pre-cutover records (old CNAME to the previous host) from before a nameserver change. The authoritative NS and public resolvers (Cloudflare, Google) had been correct the whole time — curl simply asks the system resolver, so local checks do not represent global state.",
+      "instead": "Verify a DNS/domain cutover with three checks before touching server config: (1) authoritative NS directly: `dig www.example.com @<assigned-ns>`, (2) a public resolver: `dig www.example.com @one.one.one.one`, (3) the new edge directly, bypassing DNS: `curl --resolve www.example.com:443:<edge-ip> https://www.example.com/`. If all three are correct, the migration is done and any local anomaly is resolver cache (wait for TTL; `resolvectl query`/`resolvectl flush-caches` on Linux only fixes the local layer, not the router's). Use `curl -v` and read the 'Connected to' line to see which origin IP actually answered — a response header like `server: Vercel` vs `server: cloudflare` identifies the layer instantly.",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-13T00:00:00Z"
+    },
+    {
       "id": "scar.docker-no-multistage-build.v1",
       "keywords": [
         "docker",
