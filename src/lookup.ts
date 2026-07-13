@@ -15,6 +15,21 @@ const FILLER = new Set([
 ]);
 const MIN_WORD_OVERLAP = 2;
 
+/**
+ * Bar for the advisory near-scar path (a skill matched, no scar did).
+ *
+ * The zero-result path is a recovery path — anything beats an empty answer, so
+ * it keeps the permissive 0.30 default. The advisory path injects into a
+ * response that is NOT empty, where a wrong scar spends the agent's attention,
+ * so it demands a real overlap instead. Measured over the 230 keywords the
+ * shipping skills advertise: at 0.30/1-token the tail is junk (the query "sign
+ * in" tokenizes to the single token "sign" and scores 1.00 against an unrelated
+ * scar); at 0.50/2-tokens every emitted match is on-topic — "tag release"
+ * surfaces the scar about two release rails racing on one tag.
+ */
+const ADVISORY_SCAR_THRESHOLD = 0.5;
+const ADVISORY_MIN_MATCHED_TOKENS = 2;
+
 /** Strip instructions from a skill to produce a lightweight summary. */
 function toSkillSummary(skill: Skill & Indexed): SkillSummary {
   const {
@@ -127,6 +142,25 @@ function matchByKeywordAndContext<T extends Indexed>(
   return [...exact, ...contains, ...wordOverlap];
 }
 
+/** Project a scored near-match into the wire shape. */
+function toNear(n: {
+  item: { id: string; title: string };
+  score: number;
+  matched_tokens: string[];
+}): NearMatch {
+  return {
+    id: n.item.id,
+    title: n.item.title,
+    score: n.score,
+    matched_tokens: n.matched_tokens,
+  };
+}
+
+/** Optional wire fields are omitted rather than sent empty. */
+function orUndefined(list: NearMatch[]): NearMatch[] | undefined {
+  return list.length > 0 ? list : undefined;
+}
+
 /**
  * Lookup returns BOTH skills (how to do it) and scars (what to avoid).
  *
@@ -161,28 +195,34 @@ export function lookup(
     return b.hit_count - a.hit_count;
   });
 
-  // When 0 results, fall back to scored near-matching (token-level, with
-  // title/summary/alias coverage — see similarity.ts). Near results are a
-  // recovery path, so the context filter is intentionally NOT applied here.
+  // Fall back to scored near-matching (token-level, with title/summary/alias
+  // coverage — see similarity.ts). Near results are a recovery path, so the
+  // context filter is intentionally NOT applied here.
   let suggestions: string[] | undefined;
   let nearSkills: NearMatch[] | undefined;
   let nearScars: NearMatch[] | undefined;
+
   if (sortedSkills.length === 0 && sortedScars.length === 0) {
-    const toNear = (n: { item: { id: string; title: string }; score: number; matched_tokens: string[] }): NearMatch => ({
-      id: n.item.id,
-      title: n.item.title,
-      score: n.score,
-      matched_tokens: n.matched_tokens,
-    });
-    nearSkills = nearMatches(allSkills, keyword).map(toNear);
-    nearScars = nearMatches(allScars, keyword).map(toNear);
-    if (nearSkills.length === 0) nearSkills = undefined;
-    if (nearScars.length === 0) nearScars = undefined;
+    nearSkills = orUndefined(nearMatches(allSkills, keyword).map(toNear));
+    nearScars = orUndefined(nearMatches(allScars, keyword).map(toNear));
 
     suggestions = (nearSkills ?? []).map((n) => n.title);
     if (suggestions.length === 0) {
       suggestions = ["No matching skills found. Try broader keywords like 'deploy', 'auth', 'database', 'testing'."];
     }
+  } else if (sortedScars.length === 0) {
+    // A skill matched but no scar did — the agent now holds a recipe and an
+    // empty "what not to do" list, which is exactly the moment before it
+    // executes. Gating near-scars on a fully empty response hid them there:
+    // asking for "deploy vercel" returned the Vercel deploy skill while the
+    // scar "Vercel deploy fails from missing env vars" stayed silent, because
+    // its keywords ("vercel env") miss all three lexical tiers. Scars are the
+    // point of Kira, so a strong near-scar ships even when a skill matched.
+    nearScars = orUndefined(
+      nearMatches(allScars, keyword, { threshold: ADVISORY_SCAR_THRESHOLD })
+        .filter((n) => n.matched_tokens.length >= ADVISORY_MIN_MATCHED_TOKENS)
+        .map(toNear)
+    );
   }
 
   return {

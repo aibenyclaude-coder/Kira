@@ -53,9 +53,15 @@ const scars = indexItems([
 ]);
 
 describe("lookup near-match (additive on 0-hit)", () => {
-  it("keeps strict-hit responses unchanged (no near fields)", () => {
-    const res = lookup(skills, scars, { keyword: "deploy vercel" });
+  it("keeps fully strict-hit responses unchanged (no near fields)", () => {
+    // Both a skill AND a scar match lexically — nothing is missing, so nothing
+    // is inferred.
+    const strictScars = indexItems([
+      mkScar({ id: "scar.vercel-deploy.v1", keywords: ["deploy vercel"] }),
+    ]);
+    const res = lookup(skills, strictScars, { keyword: "deploy vercel" });
     expect(res.skill_count).toBeGreaterThan(0);
+    expect(res.scar_count).toBeGreaterThan(0);
     expect(res.near_skills).toBeUndefined();
     expect(res.near_scars).toBeUndefined();
     expect(res.suggestions).toBeUndefined();
@@ -87,5 +93,50 @@ describe("lookup near-match (additive on 0-hit)", () => {
     const res = lookup(skills, scars, { keyword: "quantum blockchain yodeling" });
     expect(res.near_skills).toBeUndefined();
     expect(res.suggestions?.[0]).toContain("No matching skills found");
+  });
+});
+
+describe("lookup advisory near-scars (skill hit, zero scars)", () => {
+  it("surfaces a strong near-scar even though a skill matched outright", () => {
+    // The scar's keywords ("vercel env") clear none of the three lexical tiers
+    // against "deploy vercel", so scar_count is 0 — yet it is the exact warning
+    // this lookup exists to deliver. Before, a skill hit suppressed it entirely.
+    const res = lookup(skills, scars, { keyword: "deploy vercel" });
+    expect(res.skill_count).toBeGreaterThan(0);
+    expect(res.scar_count).toBe(0);
+    expect(res.near_scars?.map((n) => n.id)).toContain("scar.vercel-env.v1");
+  });
+
+  it("does not infer skills on this path — only the missing half is filled in", () => {
+    const res = lookup(skills, scars, { keyword: "deploy vercel" });
+    expect(res.near_skills).toBeUndefined();
+    expect(res.suggestions).toBeUndefined();
+  });
+
+  it("holds a higher bar than the 0-hit recovery path", () => {
+    // A one-word query scores 0.50 off a single incidental token — over the
+    // recovery path's 0.30, so only the two-token floor rejects it. A response
+    // that already carries a skill must not spend the agent's attention on one
+    // word colliding in a title.
+    const shipSkill = indexItems([
+      mkSkill({ id: "community.ship.v1", keywords: ["ship"], title: "Ship a build" }),
+    ]);
+    const cacheScar = indexItems([
+      mkScar({
+        id: "scar.stale-cache.v1",
+        keywords: ["cache invalidation"],
+        title: "Ship blocked by a stale cache",
+      }),
+    ]);
+    const res = lookup(shipSkill, cacheScar, { keyword: "ship" });
+    expect(res.skill_count).toBeGreaterThan(0);
+    expect(res.scar_count).toBe(0);
+    expect(res.near_scars).toBeUndefined();
+  });
+
+  it("stays silent when a scar did match lexically", () => {
+    const res = lookup(skills, scars, { keyword: "vercel env" });
+    expect(res.scar_count).toBeGreaterThan(0);
+    expect(res.near_scars).toBeUndefined();
   });
 });
