@@ -209,9 +209,10 @@ export async function startServer(): Promise<void> {
         "scar that automatically fires in future kira_lookup / kira_premortem calls on this machine. " +
         "IMPORTANT: kira_lookup and kira_route return summaries WITHOUT instructions to save tokens. " +
         "Always call kira_get to fetch the full instructions before executing. " +
-        "If lookup returns 0 results, check 'near_skills' and 'near_scars' (scored closest matches) — " +
-        "a near scar is still worth reading before you proceed. Every miss is recorded locally " +
-        "so the catalog learns what was asked for. " +
+        "If lookup returns 0 results, check 'near_skills' and 'near_scars' (scored closest matches). " +
+        "'near_scars' can also appear alongside a skill hit when no scar matched outright — read it " +
+        "before you act on the skill; it is the closest thing to a warning the catalog has. " +
+        "Every miss is recorded locally so the catalog learns what was asked for. " +
         "Kira is community-vetted and designed for zero-retry execution.",
     }
   );
