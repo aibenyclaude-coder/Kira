@@ -97,12 +97,20 @@ function cleanList(list: string[] | undefined, maxCount: number): string[] {
 /**
  * Two recordings of the "same" failure rarely share identical text, so exact
  * id matching alone would fragment recurrences into near-duplicate files and
- * hit_count would never grow past 1. Token-set Jaccard over title+mistake at
- * or above this threshold treats a new recording as a recurrence of the
- * existing scar instead. 0.45 keeps paraphrases together (~0.5+ measured)
- * while distinct failures in the same area stay apart (~0.3).
+ * hit_count would never grow past 1. A new recording at or above this
+ * threshold is folded into the existing scar as a recurrence instead.
  */
 const DEDUP_THRESHOLD = 0.45;
+
+/** Title carries the identity of a failure; the mistake body is narrative around it. */
+const TITLE_WEIGHT = 0.6;
+
+/**
+ * Overlap saturates on tiny token sets — a 2-token title fully contained in a
+ * 10-token one scores 1.0 — so fields below this size score on Jaccard, which
+ * penalizes the size gap.
+ */
+const MIN_OVERLAP_TOKENS = 4;
 
 function scarTokens(title: string, mistake: string): Set<string> {
   return new Set(tokenize(`${title} ${mistake}`));
@@ -113,6 +121,49 @@ function jaccard(a: Set<string>, b: Set<string>): number {
   let inter = 0;
   for (const t of a) if (b.has(t)) inter++;
   return inter / (a.size + b.size - inter);
+}
+
+/**
+ * Overlap coefficient (|A∩B| / min(|A|,|B|)): unlike Jaccard it does not
+ * penalize one recording for being wordier than the other, which is the normal
+ * case when the same wall is described twice.
+ */
+function overlap(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 || b.size === 0) return 0;
+  const smaller = Math.min(a.size, b.size);
+  if (smaller < MIN_OVERLAP_TOKENS) return jaccard(a, b);
+  let inter = 0;
+  for (const t of a) if (b.has(t)) inter++;
+  return inter / smaller;
+}
+
+/**
+ * How strongly two recordings look like the same failure.
+ *
+ * Pooling title+mistake into one token set (the Jaccard term) lets a long,
+ * freely-worded mistake body outvote a strong title match: a real recurrence
+ * pair on a 77-scar store scored 0.35 pooled against the 0.45 threshold and
+ * forked into two scars, each stuck at hit_count 1. Scoring the two fields
+ * separately — title weighted higher, overlap instead of Jaccard so verbosity
+ * costs nothing — puts that pair at 0.65 while the closest genuinely distinct
+ * pair in the same store stays at 0.40.
+ *
+ * The pooled Jaccard is kept as a floor so this is purely additive: every pair
+ * that folded before still folds.
+ */
+function scarSimilarity(
+  a: { title: string; mistake: string },
+  b: { title: string; mistake: string }
+): number {
+  const pooled = jaccard(
+    scarTokens(a.title, a.mistake),
+    scarTokens(b.title, b.mistake)
+  );
+  const fieldwise =
+    TITLE_WEIGHT * overlap(new Set(tokenize(a.title)), new Set(tokenize(b.title))) +
+    (1 - TITLE_WEIGHT) *
+      overlap(new Set(tokenize(a.mistake)), new Set(tokenize(b.mistake)));
+  return Math.max(pooled, fieldwise);
 }
 
 function readExisting(file: string): PersonalScar | null {
@@ -154,11 +205,10 @@ export async function recordPersonalScar(
 
   // Recurrence check: fold a near-duplicate recording into the existing scar
   // so hit_count measures how often the wall was actually hit.
-  const tokens = scarTokens(title, mistake);
   let match: PersonalScar | null = null;
   let best = 0;
   for (const existing of await loadPersonalScars()) {
-    const sim = jaccard(tokens, scarTokens(existing.title, existing.mistake));
+    const sim = scarSimilarity({ title, mistake }, existing);
     if (sim >= DEDUP_THRESHOLD && sim > best) {
       best = sim;
       match = existing;

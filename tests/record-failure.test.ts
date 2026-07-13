@@ -178,6 +178,44 @@ describe("near-duplicate recurrence folding", () => {
     expect(readdirSync(join(tmp, "personal-scars"))).toHaveLength(2);
   });
 
+  it("merges a recurrence whose mistake bodies are worded differently", async () => {
+    // Regression: pooling title+mistake into one token set let the long,
+    // freely-worded mistake body outvote a strong title match, so this pair
+    // (a real recurrence recorded twice on the author's machine) forked into
+    // two scars, each stuck at hit_count 1 — the exact fragmentation the
+    // recurrence check exists to prevent.
+    const { recordPersonalScar } = await fresh();
+    const first = await recordPersonalScar({
+      title: "patrol: read state file and composed measurement in parallel",
+      mistake:
+        "read the patrol state file and composed the measurement command in the same turn, so the documented Glama parse note could not inform the command that was already sent",
+    });
+    const second = await recordPersonalScar({
+      title: "Patrol read state-file and composed measurement command in parallel",
+      mistake:
+        "composed the measurement command in parallel with reading the state file; the parse note documented in that state file arrived too late to be applied",
+    });
+    expect(second.id).toBe(first.id);
+    expect(second.hit_count).toBe(2);
+    expect(readdirSync(join(tmp, "personal-scars"))).toHaveLength(1);
+  });
+
+  it("does not merge on a short title swallowed by a longer one", async () => {
+    // Overlap saturates on tiny token sets, so a 2-token title fully contained
+    // in a longer one would score 1.0 on the title term. Distinct failures.
+    const { recordPersonalScar } = await fresh();
+    await recordPersonalScar({
+      title: "build failed",
+      mistake: "the npm run build step failed because tsc could not resolve a path alias",
+    });
+    await recordPersonalScar({
+      title: "build failed on ci after a cache restore",
+      mistake:
+        "github actions restored a stale node_modules cache and the install step was skipped",
+    });
+    expect(readdirSync(join(tmp, "personal-scars"))).toHaveLength(2);
+  });
+
   it("unions keywords across merged recordings", async () => {
     const { recordPersonalScar } = await fresh();
     await recordPersonalScar({
