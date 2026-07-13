@@ -39,7 +39,8 @@ const ALIASES: Record<string, string[]> = {
   ci: ["continuous", "integration"],
 };
 
-function stem(w: string): string {
+/** Exported so lookup.ts's word-boundary matcher folds plurals the same way this does. */
+export function stem(w: string): string {
   if (w.length > 5 && w.endsWith("ing")) return w.slice(0, -3);
   if (w.length > 3 && w.endsWith("s") && !w.endsWith("ss")) return w.slice(0, -1);
   return w;
@@ -51,6 +52,17 @@ function expand(w: string): string[] {
 
 /** CJK (かな/カナ/漢字/半角カナ) の連続 run にマッチ。 */
 const CJK_RUN = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uff66-\uff9f]+/g;
+
+/** Single CJK char \u2014 same class as CJK_RUN, unanchored and without the /g state. */
+const CJK_CHAR = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uff66-\uff9f]/;
+
+/**
+ * CJK \u306f\u5206\u304b\u3061\u66f8\u304d\u3057\u306a\u3044\u305f\u3081\u8a9e\u5883\u754c\u304c\u5b58\u5728\u3057\u306a\u3044\u3002lookup.ts \u306e tier 2 \u306f
+ * CJK \u3092\u542b\u3080\u6587\u5b57\u5217\u306b\u3060\u3051\u90e8\u5206\u6587\u5b57\u5217\u30de\u30c3\u30c1\u3092\u8a31\u3057\u3001Latin \u306b\u306f\u8a9e\u5883\u754c\u3092\u8981\u6c42\u3059\u308b\u3002
+ */
+export function hasCJK(text: string): boolean {
+  return CJK_CHAR.test(text);
+}
 
 /**
  * CJK run は文字 bigram に割る (分かち書きが無いため)。

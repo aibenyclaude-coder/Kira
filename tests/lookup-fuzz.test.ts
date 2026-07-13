@@ -284,10 +284,16 @@ describe("kira_lookup matcher — property-based fuzz", () => {
     expect(res.skills.map((s) => s.id)).not.toContain("skill.0");
   });
 
-  it("returns the whole corpus for an empty keyword with no context", () => {
-    // An empty query is a substring of every keyword, so tier 2 matches all.
+  it("returns nothing — not the whole corpus — for an empty keyword", () => {
+    // This used to assert the opposite: the empty string is a substring of every
+    // keyword, so the old tier 2 matched EVERY item and an empty/malformed call
+    // dumped all 77 items (~118KB, scar bodies and all) into the agent's context.
+    // That was an accident of substring matching, not a feature. Word-boundary
+    // matching has no words to match on, so the caller gets the recovery
+    // suggestion instead of a token bomb.
     const res = lookup(realSkills, realScars, { keyword: "", context: [] });
-    expect(res.skill_count).toBe(realSkills.length);
-    expect(res.scar_count).toBe(realScars.length);
+    expect(res.skill_count).toBe(0);
+    expect(res.scar_count).toBe(0);
+    expect(res.suggestions).toBeDefined();
   });
 });

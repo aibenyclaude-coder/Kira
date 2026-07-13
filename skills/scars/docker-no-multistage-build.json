@@ -1,6 +1,6 @@
 {
   "id": "scar.docker-no-multistage-build.v1",
-  "keywords": ["docker", "docker image", "dockerfile", "docker build", "container", "docker deploy"],
+  "keywords": ["docker", "docker image", "dockerfile", "docker build", "container", "containerize", "docker deploy"],
   "contexts": ["nodejs", "docker", "typescript"],
   "title": "Single-stage Dockerfile produces bloated image with devDependencies",
   "summary": "Agent writes a single-stage Dockerfile that includes node_modules, devDependencies, and source files, resulting in an image over 1GB.",
