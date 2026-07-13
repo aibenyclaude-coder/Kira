@@ -1099,6 +1099,32 @@
       "updated_at": "2026-07-11T00:00:00Z"
     },
     {
+      "id": "scar.cloudflare-quick-scan-imports-edge-ips.v1",
+      "keywords": [
+        "cloudflare",
+        "quick scan",
+        "zone migration",
+        "edge ip",
+        "proxy loop",
+        "error 1000",
+        "dns import",
+        "add site"
+      ],
+      "contexts": [
+        "cloudflare",
+        "dns",
+        "infrastructure"
+      ],
+      "title": "Cloudflare add-site quick scan imports the OLD zone's proxied edge IPs (104.21.x/172.67.x) as origin records",
+      "summary": "Re-adding a domain Cloudflare already proxies (e.g. moving a zone between accounts) makes the onboarding quick scan resolve public DNS and import Cloudflare edge IPs as A/AAAA origin records. Activating that zone causes a proxy loop (Error 1000), and the proxy has already hidden the true origin.",
+      "mistake": "Recreated a zone in a second Cloudflare account using the default 'Import DNS records automatically' option. The scan imported 9 junk records: apex and www A/AAAA pointing at 104.21.x.x, 172.67.x.x and 2606:4700::/32 — Cloudflare edge addresses, not the origin. The original origin (a Vercel IP and CNAME) was only known because the old zone's record table had been captured beforehand; without that capture the origin would have been lost.",
+      "instead": "Before recreating a proxied zone: (1) export or capture the full record list from the old zone first — proxied records hide the origin from public DNS; (2) after quick scan, delete every A/AAAA whose content falls in Cloudflare's published edge ranges (cloudflare.com/ips — the 104.16/13 and 172.64/13 IPv4 blocks, 2606:4700::/32 for IPv6) and re-enter the true origin records; (3) for more than a couple of fixes, skip the dashboard dialogs and push records via the API (token with Zone Write + DNS Write) — one POST per record beats one confirm-dialog per click.",
+      "severity": "warning",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-13T00:00:00Z"
+    },
+    {
       "id": "scar.credential-ci-jobs-need-three-gates.v1",
       "keywords": [
         "workflow secrets hardening",
@@ -1171,6 +1197,31 @@
       "hit_count": 1,
       "version": "1.0.0",
       "updated_at": "2026-04-11T00:00:00Z"
+    },
+    {
+      "id": "scar.email-mcp-quoted-printable-fffd-links.v1",
+      "keywords": [
+        "gmail mcp",
+        "quoted-printable",
+        "U+FFFD",
+        "verification link",
+        "one-time code",
+        "email body corruption",
+        "replacement character"
+      ],
+      "contexts": [
+        "mcp",
+        "email",
+        "browser-automation"
+      ],
+      "title": "Email fetched via MCP/API can double-decode quoted-printable, turning '=XX' inside URLs into U+FFFD and destroying one-time links",
+      "summary": "Agent extracts a verification/invitation URL from an email body returned by a mail MCP tool; a quoted-printable double-decode has already replaced '=XX' hex-pair sequences with U+FFFD, so the token is silently truncated and the link is dead. The lost bytes are unrecoverable from the fetched copy.",
+      "mistake": "Fetched a Cloudflare invitation email through a Gmail MCP tool and grepped the membership URL from htmlBody. The code parameter contained a literal '=95' which an upstream quoted-printable decode pass consumed into a single invalid byte, surfaced as U+FFFD (EF BF BD). Both htmlBody and plaintextBody were corrupted identically. The agent then wasted time hexdumping the saved output trying to recover the original bytes — impossible, since U+FFFD carries no information about the byte it replaced.",
+      "instead": "If any extracted URL, token, or code from a mail-tool response contains U+FFFD (or the email shows other '=XX'-eating artifacts like 'IE=edge' rendered as 'IE�ge'), do not attempt recovery from that copy. Open the same message in the provider's web UI (e.g. mail.google.com via browser automation) and copy the raw href from the rendered DOM. For emails known to carry one-time links or auth codes, prefer the web UI from the start.",
+      "severity": "warning",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-13T00:00:00Z"
     },
     {
       "id": "scar.expo-npm-install-version-mismatch.v1",

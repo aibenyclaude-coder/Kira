@@ -1,0 +1,13 @@
+{
+  "id": "scar.email-mcp-quoted-printable-fffd-links.v1",
+  "keywords": ["gmail mcp", "quoted-printable", "U+FFFD", "verification link", "one-time code", "email body corruption", "replacement character"],
+  "contexts": ["mcp", "email", "browser-automation"],
+  "title": "Email fetched via MCP/API can double-decode quoted-printable, turning '=XX' inside URLs into U+FFFD and destroying one-time links",
+  "summary": "Agent extracts a verification/invitation URL from an email body returned by a mail MCP tool; a quoted-printable double-decode has already replaced '=XX' hex-pair sequences with U+FFFD, so the token is silently truncated and the link is dead. The lost bytes are unrecoverable from the fetched copy.",
+  "mistake": "Fetched a Cloudflare invitation email through a Gmail MCP tool and grepped the membership URL from htmlBody. The code parameter contained a literal '=95' which an upstream quoted-printable decode pass consumed into a single invalid byte, surfaced as U+FFFD (EF BF BD). Both htmlBody and plaintextBody were corrupted identically. The agent then wasted time hexdumping the saved output trying to recover the original bytes — impossible, since U+FFFD carries no information about the byte it replaced.",
+  "instead": "If any extracted URL, token, or code from a mail-tool response contains U+FFFD (or the email shows other '=XX'-eating artifacts like 'IE=edge' rendered as 'IE�ge'), do not attempt recovery from that copy. Open the same message in the provider's web UI (e.g. mail.google.com via browser automation) and copy the raw href from the rendered DOM. For emails known to carry one-time links or auth codes, prefer the web UI from the start.",
+  "severity": "warning",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-13T00:00:00Z"
+}

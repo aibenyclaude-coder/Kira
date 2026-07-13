@@ -1,0 +1,13 @@
+{
+  "id": "scar.cloudflare-quick-scan-imports-edge-ips.v1",
+  "keywords": ["cloudflare", "quick scan", "zone migration", "edge ip", "proxy loop", "error 1000", "dns import", "add site"],
+  "contexts": ["cloudflare", "dns", "infrastructure"],
+  "title": "Cloudflare add-site quick scan imports the OLD zone's proxied edge IPs (104.21.x/172.67.x) as origin records",
+  "summary": "Re-adding a domain Cloudflare already proxies (e.g. moving a zone between accounts) makes the onboarding quick scan resolve public DNS and import Cloudflare edge IPs as A/AAAA origin records. Activating that zone causes a proxy loop (Error 1000), and the proxy has already hidden the true origin.",
+  "mistake": "Recreated a zone in a second Cloudflare account using the default 'Import DNS records automatically' option. The scan imported 9 junk records: apex and www A/AAAA pointing at 104.21.x.x, 172.67.x.x and 2606:4700::/32 — Cloudflare edge addresses, not the origin. The original origin (a Vercel IP and CNAME) was only known because the old zone's record table had been captured beforehand; without that capture the origin would have been lost.",
+  "instead": "Before recreating a proxied zone: (1) export or capture the full record list from the old zone first — proxied records hide the origin from public DNS; (2) after quick scan, delete every A/AAAA whose content falls in Cloudflare's published edge ranges (cloudflare.com/ips — the 104.16/13 and 172.64/13 IPv4 blocks, 2606:4700::/32 for IPv6) and re-enter the true origin records; (3) for more than a couple of fixes, skip the dashboard dialogs and push records via the API (token with Zone Write + DNS Write) — one POST per record beats one confirm-dialog per click.",
+  "severity": "warning",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-13T00:00:00Z"
+}
