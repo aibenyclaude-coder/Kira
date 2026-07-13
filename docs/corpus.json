@@ -1182,6 +1182,7 @@
         "dockerfile",
         "docker build",
         "container",
+        "containerize",
         "docker deploy"
       ],
       "contexts": [

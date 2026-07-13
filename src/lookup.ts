@@ -2,11 +2,12 @@ import type {
   Skill,
   Scar,
   SkillSummary,
+  ScarSummary,
   LookupRequest,
   LookupResponse,
   NearMatch,
 } from "./types.js";
-import { tokenize, nearMatches, type SimIndexed } from "./similarity.js";
+import { tokenize, nearMatches, stem, hasCJK, type SimIndexed } from "./similarity.js";
 
 // Module-level constants — allocated once, not per-lookup.
 const FILLER = new Set([
@@ -32,21 +33,60 @@ const ADVISORY_MIN_MATCHED_TOKENS = 2;
 
 /** Strip instructions from a skill to produce a lightweight summary. */
 function toSkillSummary(skill: Skill & Indexed): SkillSummary {
+  const { instructions: _, ...rest } = skill;
+  return stripIndex(rest);
+}
+
+/**
+ * A scar ships whole — mistake + instead ARE the payload — but its index fields
+ * are internal. They used to ride along on every scar in every response:
+ * _keywordsLower duplicated keywords verbatim, and the two Set fields serialized
+ * to a pair of useless `{}` (JSON.stringify cannot see into a Set).
+ */
+function toScarSummary(scar: Scar & Indexed): ScarSummary {
+  return stripIndex(scar);
+}
+
+/** Drop the Indexed bookkeeping so it never reaches the wire. */
+function stripIndex<T extends Indexed>(item: T): Omit<T, keyof Indexed> {
   const {
-    instructions: _,
     _keywordsLower: _k,
     _contextsLower: _c,
+    _kwPhrases: _p,
     _kwTokens: _t,
     _simTokens: _s,
-    ...summary
-  } = skill;
-  return summary;
+    ...rest
+  } = item;
+  return rest;
 }
 
 /** Pre-computed lowercase keywords + similarity token sets for a skill/scar item. */
 export interface Indexed extends SimIndexed {
   _keywordsLower: string[];
   _contextsLower: string[];
+  /** Per keyword, its stemmed word sequence — empty for CJK keywords (no word boundaries). */
+  _kwPhrases: string[][];
+}
+
+/**
+ * Split into an ordered list of stemmed words. Any non-alphanumeric run is a
+ * separator, so "cloudflare-pages" is two words — the same split tokenize() uses.
+ */
+function phraseWords(text: string): string[] {
+  return text
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean)
+    .map(stem);
+}
+
+/** Does `hay` contain `needle` as a contiguous run of whole words? */
+function phraseIn(needle: string[], hay: string[]): boolean {
+  if (needle.length === 0 || needle.length > hay.length) return false;
+  for (let i = 0; i + needle.length <= hay.length; i++) {
+    if (needle.every((w, j) => hay[i + j] === w)) return true;
+  }
+  return false;
 }
 
 /**
@@ -60,6 +100,7 @@ export function indexItems<
     ...item,
     _keywordsLower: item.keywords.map((k) => k.toLowerCase()),
     _contextsLower: item.contexts.map((c) => c.toLowerCase()),
+    _kwPhrases: item.keywords.map((k) => (hasCJK(k) ? [] : phraseWords(k))),
     _kwTokens: new Set(item.keywords.flatMap((k) => tokenize(k))),
     _simTokens: new Set(
       [item.title, item.summary, ...item.keywords, ...item.contexts].flatMap((t) =>
@@ -67,6 +108,39 @@ export function indexItems<
       )
     ),
   }));
+}
+
+/**
+ * Tier-2 containment, at word boundaries.
+ *
+ * This used to be raw substring containment, which fired an item whenever a
+ * query merely SPELLED a keyword inside a longer word. "rm" lives inside
+ * "fo(rm) validation", so a CRITICAL scar about `rm` wiping live data led the
+ * response for anyone building a form — and critical sorts first, so it was the
+ * agent's top "what not to do". Likewise "tail" inside "(tail)wind", "test"
+ * inside "vi(test)", "git" inside "(git)hub", "cli" inside "apollo (cli)ent".
+ * Measured over the 237 keywords the corpus advertises plus the real miss log:
+ * 19 such false positives, 8 of them CRITICAL. No skill lost a single match —
+ * every "docker"/"dockerfile"-shaped pair was the same item matching twice.
+ *
+ * Word-splitting on punctuation also FIXES matches the substring rule missed:
+ * "multi agent workflow" now reaches the "multi-agent" scars (the hyphen made
+ * `includes` fail), and stemming pairs "rate limiting" with "rate limit".
+ *
+ * CJK is exempt: it has no word boundaries to respect, so a CJK keyword keeps
+ * substring containment — the same assumption the bigram path in similarity.ts
+ * makes. Without this carve-out every Japanese scar would stop matching.
+ */
+function containsAtWordBoundary(
+  keywordLower: string,
+  keywordPhrase: string[],
+  queryLower: string,
+  queryPhrase: string[]
+): boolean {
+  if (keywordPhrase.length === 0 || hasCJK(queryLower)) {
+    return queryLower.includes(keywordLower) || keywordLower.includes(queryLower);
+  }
+  return phraseIn(keywordPhrase, queryPhrase) || phraseIn(queryPhrase, keywordPhrase);
 }
 
 /**
@@ -86,6 +160,7 @@ function matchByKeywordAndContext<T extends Indexed>(
   const normalizedKeyword = keyword.toLowerCase().trim();
   const normalizedContexts = new Set(contexts.map((c) => c.toLowerCase().trim()));
   const queryWords = normalizedKeyword.split(/\s+/);
+  const queryPhrase = phraseWords(normalizedKeyword);
 
   const exact: T[] = [];
   const contains: T[] = [];
@@ -111,10 +186,16 @@ function matchByKeywordAndContext<T extends Indexed>(
       continue;
     }
 
-    // Tier 2: Query contains a skill keyword, or skill keyword contains query
+    // Tier 2: Query contains a skill keyword, or skill keyword contains query —
+    // at WORD boundaries, so "form validation" no longer matches the keyword "rm".
     if (
-      itemKeywords.some(
-        (k) => normalizedKeyword.includes(k) || k.includes(normalizedKeyword)
+      itemKeywords.some((k, ki) =>
+        containsAtWordBoundary(
+          k,
+          item._kwPhrases[ki] ?? [],
+          normalizedKeyword,
+          queryPhrase
+        )
       )
     ) {
       contains.push(item);
@@ -183,7 +264,7 @@ export function lookup(
 
   // ── Scars ────────────────────────────────────────────────────────────
   const matchedScars = matchByKeywordAndContext(allScars, keyword, contexts);
-  const sortedScars = [...matchedScars].sort((a, b) => {
+  const rankedScars = [...matchedScars].sort((a, b) => {
     if (a.severity !== b.severity) {
       return a.severity === "critical" ? -1 : 1;
     }
@@ -194,6 +275,7 @@ export function lookup(
     if (personal !== 0) return personal;
     return b.hit_count - a.hit_count;
   });
+  const sortedScars = rankedScars.map(toScarSummary);
 
   // Fall back to scored near-matching (token-level, with title/summary/alias
   // coverage — see similarity.ts). Near results are a recovery path, so the
