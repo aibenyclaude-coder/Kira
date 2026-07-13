@@ -1601,6 +1601,32 @@
       "updated_at": "2026-04-11T00:00:00Z"
     },
     {
+      "id": "scar.rebase-needs-force-push-use-merge-instead.v1",
+      "keywords": [
+        "git",
+        "rebase",
+        "force push",
+        "merge conflict",
+        "pull request",
+        "protected branch",
+        "unattended agent",
+        "ci"
+      ],
+      "contexts": [
+        "git",
+        "ci",
+        "automation"
+      ],
+      "title": "Rebasing a conflicting PR branch commits you to a force-push — which is exactly what protected branches and unattended agents are forbidden to do",
+      "summary": "A PR branch conflicts with main, so the reflex is `git rebase main`. That rewrites history, so updating the remote PR now requires a force-push — the one operation protected branches and unattended automation are barred from. The conflict ends up resolved and the push impossible.",
+      "mistake": "After merging an earlier PR, the next PR conflicted on generated files. Reached for `git rebase origin/main`, resolved the conflict and got every gate green — then hit the wall: the rebase had rewritten the branch, so pushing it required `--force`, which the running policy prohibited (an unattended job, where a force-push can silently erase someone else's commits or a reviewed diff). The clean, tested rebase result had to be thrown away.",
+      "instead": "Before picking a conflict-resolution strategy, ask whether force-push is permitted on this branch. If it is not (unattended automation, protected branch, or a branch someone else has checked out), bring main INTO the branch instead of replaying the branch onto main: `git merge origin/main` -> resolve (for generated files, just re-run the generator and stage the result) -> commit -> ordinary fast-forward `git push`. No history is rewritten, so no force is needed. If the repo squash-merges its PRs, the merge commit never reaches the final history anyway, so the log stays clean. Keep rebase for local branches you have not pushed.",
+      "severity": "warning",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-13T00:00:00Z"
+    },
+    {
       "id": "scar.scheduled-automation-needs-layer-inventory.v1",
       "keywords": [
         "scheduled automation",
