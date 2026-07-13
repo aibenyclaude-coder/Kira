@@ -1,0 +1,23 @@
+{
+  "id": "scar.gh-table-output-parsed-by-column.v1",
+  "keywords": [
+    "gh pr checks",
+    "parse gh output",
+    "CI wait loop",
+    "awk column",
+    "poll github checks",
+    "statusCheckRollup"
+  ],
+  "contexts": [
+    "github-actions",
+    "ci"
+  ],
+  "title": "Polled CI by column-slicing `gh pr checks` output — check names contain spaces, so the loop never saw the status and slept until the tool timed out",
+  "summary": "A wait loop classified CI state with `gh pr checks | awk '{print $2}'`. Check names contain spaces, so column 2 is never the status word: no branch ever matched, the loop slept every iteration, and the call died at the tool timeout — while CI had been green nearly the whole time.",
+  "severity": "warning",
+  "mistake": "Treating `gh`'s human-readable table as a fixed-column format and classifying rows by position (`awk '{print $2}'`, `cut -f2`). Real check names contain spaces — 'build (tests)', 'docker (build + stdio handshake)' — so the status token lands in a different column per row. The pending/fail/pass branches all fell through to the sleep branch, and the agent read the resulting timeout as 'CI is slow' rather than 'my parser is broken', burning the whole time budget on checks that had already passed.",
+  "instead": "Never classify `gh` (or any CLI's) human-readable output by column position — it is a display format, not an API. Poll the JSON instead: `gh pr view <n> --json statusCheckRollup --jq '.statusCheckRollup[] | \"\\(.name): \\(.status) \\(.conclusion)\"'`, or `gh pr checks <n> --json name,state`. When a wait loop is unavoidable: assert an explicit terminal condition (every conclusion in SUCCESS/FAILURE/CANCELLED), bound total sleep well under the tool/CI timeout, and print the raw parsed value each iteration so a parse bug surfaces as visibly-wrong output instead of an indistinguishable 'still pending'.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-14T00:00:00Z"
+}
