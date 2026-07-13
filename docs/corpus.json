@@ -1274,6 +1274,29 @@
       "updated_at": "2026-07-09T00:00:00Z"
     },
     {
+      "id": "scar.gh-table-output-parsed-by-column.v1",
+      "keywords": [
+        "gh pr checks",
+        "parse gh output",
+        "CI wait loop",
+        "awk column",
+        "poll github checks",
+        "statusCheckRollup"
+      ],
+      "contexts": [
+        "github-actions",
+        "ci"
+      ],
+      "title": "Polled CI by column-slicing `gh pr checks` output — check names contain spaces, so the loop never saw the status and slept until the tool timed out",
+      "summary": "A wait loop classified CI state with `gh pr checks | awk '{print $2}'`. Check names contain spaces, so column 2 is never the status word: no branch ever matched, the loop slept every iteration, and the call died at the tool timeout — while CI had been green nearly the whole time.",
+      "severity": "warning",
+      "mistake": "Treating `gh`'s human-readable table as a fixed-column format and classifying rows by position (`awk '{print $2}'`, `cut -f2`). Real check names contain spaces — 'build (tests)', 'docker (build + stdio handshake)' — so the status token lands in a different column per row. The pending/fail/pass branches all fell through to the sleep branch, and the agent read the resulting timeout as 'CI is slow' rather than 'my parser is broken', burning the whole time budget on checks that had already passed.",
+      "instead": "Never classify `gh` (or any CLI's) human-readable output by column position — it is a display format, not an API. Poll the JSON instead: `gh pr view <n> --json statusCheckRollup --jq '.statusCheckRollup[] | \"\\(.name): \\(.status) \\(.conclusion)\"'`, or `gh pr checks <n> --json name,state`. When a wait loop is unavoidable: assert an explicit terminal condition (every conclusion in SUCCESS/FAILURE/CANCELLED), bound total sleep well under the tool/CI timeout, and print the raw parsed value each iteration so a parse bug surfaces as visibly-wrong output instead of an indistinguishable 'still pending'.",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-14T00:00:00Z"
+    },
+    {
       "id": "scar.git-push-delete-multi-ref-partial-success.v1",
       "keywords": [
         "git push delete",
@@ -1724,6 +1747,26 @@
       "hit_count": 1,
       "version": "1.0.0",
       "updated_at": "2026-04-11T00:00:00Z"
+    },
+    {
+      "id": "scar.threshold-tuned-to-one-example.v1",
+      "keywords": [
+        "similarity threshold",
+        "tune threshold",
+        "dedup heuristic",
+        "overfit to one example",
+        "matching score regression",
+        "fuzzy match tuning"
+      ],
+      "contexts": [],
+      "title": "Tuned a matching threshold until the one newly-found case passed — the same threshold silently broke two cases the suite already accepted",
+      "summary": "A dedup heuristic missed a real duplicate. The fix measured a new metric on that single pair and picked the threshold that made it merge. Replaying that metric over the cases the tests already asserted showed two would stop merging: one false split traded for two regressions.",
+      "severity": "warning",
+      "mistake": "Treating a scoring heuristic's threshold as a dial to turn until the case in front of you passes. The newly-observed failure was the only positive example examined, so the constant got fitted to a sample of one. The cases the test suite already asserted (both must-match and must-not-match) were never re-scored under the proposed metric — they were assumed to be safe because they passed under the OLD one, which is exactly the assumption a metric change invalidates.",
+      "instead": "A change to a scoring metric is a hypothesis, and the cases the suite already asserts are the labelled set. Before writing code: (1) collect every asserted case, positive and negative; (2) replay the PROPOSED metric over all of them plus the new case; (3) adopt a threshold only if it has margin on both sides. If no single constant satisfies everything, do not tune the constant — change the metric's shape. Strongest pattern: keep the old score as a floor, `score = max(oldMetric, newMetric)`, so the change is purely additive and no previously-passing case can regress by construction. Then sweep the new metric over a real dataset to count exactly which pairs newly cross.",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-14T00:00:00Z"
     },
     {
       "id": "scar.utc-timestamp-misread.v1",

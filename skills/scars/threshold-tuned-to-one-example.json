@@ -1,0 +1,20 @@
+{
+  "id": "scar.threshold-tuned-to-one-example.v1",
+  "keywords": [
+    "similarity threshold",
+    "tune threshold",
+    "dedup heuristic",
+    "overfit to one example",
+    "matching score regression",
+    "fuzzy match tuning"
+  ],
+  "contexts": [],
+  "title": "Tuned a matching threshold until the one newly-found case passed — the same threshold silently broke two cases the suite already accepted",
+  "summary": "A dedup heuristic missed a real duplicate. The fix measured a new metric on that single pair and picked the threshold that made it merge. Replaying that metric over the cases the tests already asserted showed two would stop merging: one false split traded for two regressions.",
+  "severity": "warning",
+  "mistake": "Treating a scoring heuristic's threshold as a dial to turn until the case in front of you passes. The newly-observed failure was the only positive example examined, so the constant got fitted to a sample of one. The cases the test suite already asserted (both must-match and must-not-match) were never re-scored under the proposed metric — they were assumed to be safe because they passed under the OLD one, which is exactly the assumption a metric change invalidates.",
+  "instead": "A change to a scoring metric is a hypothesis, and the cases the suite already asserts are the labelled set. Before writing code: (1) collect every asserted case, positive and negative; (2) replay the PROPOSED metric over all of them plus the new case; (3) adopt a threshold only if it has margin on both sides. If no single constant satisfies everything, do not tune the constant — change the metric's shape. Strongest pattern: keep the old score as a floor, `score = max(oldMetric, newMetric)`, so the change is purely additive and no previously-passing case can regress by construction. Then sweep the new metric over a real dataset to count exactly which pairs newly cross.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-14T00:00:00Z"
+}
