@@ -1,0 +1,26 @@
+{
+  "id": "scar.test-asserts-the-bug.v1",
+  "keywords": [
+    "test fails after fix",
+    "existing test",
+    "assertion",
+    "regression test",
+    "fixture",
+    "revert the fix",
+    "expected value"
+  ],
+  "contexts": [
+    "typescript",
+    "javascript",
+    "python",
+    "testing"
+  ],
+  "title": "A green test suite can be pinning the bug in place — the failing test after your fix may be the wrong one",
+  "summary": "Agent fixes a real defect, an existing test goes red, and the agent reverts or weakens the fix — but the test was asserting the buggy behavior as correct.",
+  "severity": "critical",
+  "mistake": "The agent lands a correct fix, an existing test turns red, and the agent treats red-means-I-broke-it as an axiom: it reverts the fix, or special-cases the code until the old assertion passes again. It never reads what the failing assertion actually CLAIMS. Defects that survive review get frozen into fixtures — someone wrote the test by running the buggy code and recording whatever came out, so the assertion now documents the bug as the specification. Two real examples from one codebase: a fixture asserted that looking up 'deploy vercel' returns the deploy skill with NO warning attached, which was exactly the recall bug being fixed; and a fuzz test asserted that an EMPTY query returns the entire corpus, which was an accident of substring matching that dumped ~118KB into the caller's context. Both suites were green, and both tests were wrong.",
+  "instead": "When a fix makes an existing test fail, read the test's PREMISE before you touch either side. Ask: does this assertion state a behavior a user actually wants, or does it merely record what the old code happened to do? Its comments often confess — 'an empty query is a substring of every keyword, so tier 2 matches all' is describing a mechanism, not a requirement. Then take one of two branches, explicitly: (a) the assertion encodes a real requirement -> your fix is wrong, fix the fix; (b) the assertion encodes the defect -> update the test to assert the correct behavior, and say so in the commit message with the evidence (what the old test claimed, why it was wrong). Never split the difference by weakening the fix until the old test passes — that re-ships the bug with extra code on top. And do not judge the fix by the suite alone: measure it against real data (production queries, a miss log, the fixtures' own source corpus) so you can state what the change wins and loses in numbers.",
+  "hit_count": 2,
+  "version": "1.0.0",
+  "updated_at": "2026-07-14T00:00:00Z"
+}
