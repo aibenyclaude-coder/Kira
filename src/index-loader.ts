@@ -32,7 +32,12 @@ export function getRemoteUrl(tier: KiraTier): string {
 async function readJsonDir<T>(dir: string): Promise<T[]> {
   let files: string[];
   try {
-    files = await readdir(dir);
+    // readdir order is filesystem-defined, not alphabetical, and the corpus
+    // ships inside the npm tarball — so the order is whatever the USER's
+    // filesystem produces on extract. loadRoutes() already sorts for exactly
+    // this reason; its twin here did not, which left the load order free to
+    // decide which skill a route step resolved to.
+    files = (await readdir(dir)).sort();
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
     throw err;

@@ -135,6 +135,16 @@ export interface RouteStep {
   order: number;
   keyword: string;
   skill: SkillSummary | null;
+
+  /**
+   * Skills that claim this step's keyword just as outright as the selected one
+   * — coequal alternatives, not runners-up ("add auth" is declared by both the
+   * Auth.js and the Clerk skill). Empty unless the tie is real. The corpus has
+   * no basis to choose between them; the agent, which can see what the project
+   * already uses, does.
+   */
+  alternatives: SkillSummary[];
+
   scars: ScarSummary[];
   description: string;
 }
