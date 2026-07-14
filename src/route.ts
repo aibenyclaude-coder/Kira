@@ -13,7 +13,7 @@ import { lookup, type Indexed } from "./lookup.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROUTES_DIR = join(__dirname, "..", "routes");
 
-interface RouteDefinition {
+export interface RouteDefinition {
   id: string;
   goals: string[];
   contexts: string[];
@@ -135,21 +135,28 @@ export function resolveRoute(
       context: contexts,
     });
 
-    // When multiple skills match, prefer the one whose keywords
-    // most closely match the step keyword (longer overlap = better fit).
-    let selectedSkill = result.skills[0] ?? null;
-    if (result.skills.length > 1) {
-      const stepKw = stepDef.keyword.toLowerCase();
-      const exact = result.skills.find((s) =>
-        s.keywords.some((k) => k.toLowerCase() === stepKw)
-      );
-      if (exact) selectedSkill = exact;
-    }
+    // Skills that claim this step's keyword OUTRIGHT. More than one can: "add
+    // auth" is declared by both the Auth.js and the Clerk skill, and nothing in
+    // the schema ranks them, because they are not better and worse — they are
+    // alternatives. Picking with .find() meant picking by array order, i.e. by
+    // whatever readdir() handed back, so the plan an agent got for "add
+    // authentication" depended on the filesystem it read the corpus off, and the
+    // skill not picked vanished without a trace. Settle a real tie by id so the
+    // answer is reproducible, and pass the runners-up to the agent, the only
+    // party here that can see which stack the project is already on.
+    const stepKw = stepDef.keyword.toLowerCase();
+    const claimed = result.skills
+      .filter((s) => s.keywords.some((k) => k.toLowerCase() === stepKw))
+      .sort((a, b) => a.id.localeCompare(b.id));
 
+    // Below an outright claim there is no tie to settle: lookup's tiers ARE the
+    // ranking (exact > containment > word overlap), so leave that order alone. A
+    // weaker match is not an alternative, either — it is just a weaker match.
     return {
       order: stepDef.order,
       keyword: stepDef.keyword,
-      skill: selectedSkill,
+      skill: claimed[0] ?? result.skills[0] ?? null,
+      alternatives: claimed.slice(1),
       scars: result.scars,
       description: stepDef.description,
     };
