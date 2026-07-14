@@ -101,6 +101,48 @@ export function tokenize(text: string): string[] {
   return [...out];
 }
 
+/**
+ * Project two token sets onto the scripts they BOTH use.
+ *
+ * tokenize() emits CJK bigrams alongside latin word tokens, so the same failure
+ * written up in Japanese and in English produces token sets of wildly different
+ * shape: the Japanese one carries a large bigram set that the English one cannot
+ * match by construction. Those tokens are not evidence that the two texts differ
+ * — they are unmatchable weight in the denominator of every similarity measure,
+ * and they push genuine recurrences below the dedup threshold (measured on the
+ * author's 94-scar store: the same trap recorded in each language scored 0.37
+ * against a 0.45 threshold and forked into two scars, each stuck at hit_count 1).
+ * Dropping the unmatchable script leaves what the two texts could actually share
+ * — for scars about tooling, the command names both authors typed.
+ *
+ * The projection is deliberately narrow: it fires only when one side uses a
+ * script the other never uses AT ALL. Two Japanese texts keep every bigram and
+ * are compared exactly as before — that matters, because ignoring CJK outright
+ * would score two unrelated Japanese failures on their incidental latin tokens
+ * alone (0.09 -> 0.68 on a real pair) and collapse them into one.
+ */
+export function sharedScripts(
+  a: Set<string>,
+  b: Set<string>
+): [Set<string>, Set<string>] {
+  const aCJK = [...a].some(hasCJK);
+  const bCJK = [...b].some(hasCJK);
+  const aLatin = [...a].some((t) => !hasCJK(t));
+  const bLatin = [...b].some((t) => !hasCJK(t));
+
+  // An empty set has no script of its own, so there is nothing to intersect with
+  // — projecting would blank the other side on no evidence at all.
+  if (a.size === 0 || b.size === 0) return [a, b];
+
+  const dropCJK = aCJK !== bCJK;
+  const dropLatin = aLatin !== bLatin;
+  if (!dropCJK && !dropLatin) return [a, b];
+
+  const project = (s: Set<string>) =>
+    new Set([...s].filter((t) => (hasCJK(t) ? !dropCJK : !dropLatin)));
+  return [project(a), project(b)];
+}
+
 /** Pre-computed token sets, built once at load time (see lookup.indexItems). */
 export interface SimIndexed {
   /** Tokens from keywords[] only — matches here weigh double. */
