@@ -314,7 +314,7 @@ describe("unknown tool", () => {
   });
 });
 
-describe("personal scar recall (record_failure output feeds lookup/premortem)", () => {
+describe("personal scar recall (record_failure output feeds lookup/premortem/route)", () => {
   let recordedId: string;
 
   it("kira_record_failure acks local-only and returns the scar", async () => {
@@ -344,6 +344,37 @@ describe("personal scar recall (record_failure output feeds lookup/premortem)", 
       goal: "worktree setup for running the test suite",
     });
     expect(res.hotspots.some((h: any) => h.id === recordedId)).toBe(true);
+  });
+
+  // kira_route is what the server instructions tell an agent to call FIRST for
+  // a broad goal, so a failure it cannot surface is one the agent re-runs into
+  // at the very step that produced it. ROUTE_GOAL's step 3 is "deploy vercel";
+  // a failure recorded against that keyword must ride along on that step.
+  it("the recorded failure rides the matching step of a kira_route", async () => {
+    const rec = await callJson("kira_record_failure", {
+      title: "vercel deploy looked broken but DNS was stale",
+      mistake: "read the old host's 402 as a failed deploy and rolled back a good build",
+      instead: "resolve the domain against an authoritative nameserver before judging the deploy",
+      keywords: ["deploy vercel"],
+    });
+    const deployScarId = rec.scar.id;
+
+    const res = await callJson("kira_route", {
+      goal: ROUTE_GOAL,
+      context: ["nextjs"],
+    });
+    const step = res.steps.find((s: any) => s.keyword === "deploy vercel");
+    expect(step).toBeDefined();
+    const mine = step.scars.find((s: any) => s.id === deployScarId);
+    expect(mine).toBeDefined();
+    expect(mine.source).toBe("personal");
+    expect(mine.instead).toContain("authoritative nameserver");
+
+    // Merging must ADD, never evict: the shared scar the step already carried
+    // is still there. (lookup() does not cap the scar list — this pins that.)
+    expect(
+      step.scars.some((s: any) => s.id === "scar.vercel-env-vars-missing.v1")
+    ).toBe(true);
   });
 
   it("kira_get resolves the personal scar by id", async () => {
