@@ -400,7 +400,19 @@ export async function startServer(): Promise<void> {
         ? (args.context as string[])
         : undefined;
 
-      const result = resolveRoute(routes, skills, scars, { goal, context });
+      // The route is the FIRST call the instructions above tell an agent to
+      // make for a broad goal — and it was the one recall path blind to this
+      // machine's own recorded failures. kira_lookup and kira_premortem both
+      // merge personal scars; route passed the bare shared corpus, so the
+      // ranking rule in lookup() ("at equal severity your own recorded
+      // failures come first") described a branch route could never reach.
+      // Each step resolves through the same lookup(), so merging here is all
+      // it takes. Same freshness contract as kira_lookup: re-read per call.
+      const personal = indexItems(await loadPersonalScars());
+      const result = resolveRoute(routes, skills, [...scars, ...personal], {
+        goal,
+        context,
+      });
 
       return {
         content: [
