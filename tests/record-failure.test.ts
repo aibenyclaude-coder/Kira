@@ -216,6 +216,51 @@ describe("near-duplicate recurrence folding", () => {
     expect(readdirSync(join(tmp, "personal-scars"))).toHaveLength(2);
   });
 
+  it("folds a recurrence recorded in Japanese into the same scar recorded in English", async () => {
+    // tokenize() emits CJK character bigrams alongside latin word tokens, so a
+    // scar written in Japanese carries a large bigram set that an English scar
+    // cannot match by construction. Those tokens are dead weight in every
+    // denominator: this pair — the same trap, hit twice on the author's machine
+    // and written up once in each language — scored 0.37 against the 0.45
+    // threshold and forked into two scars, each stuck at hit_count 1, so the
+    // store claimed the wall was hit once and once instead of twice.
+    const { recordPersonalScar } = await fresh();
+    const first = await recordPersonalScar({
+      title:
+        "gh pr merge --delete-branch silently leaves BOTH branches behind when a worktree still holds the head branch",
+      mistake:
+        "Merged a PR with gh pr merge --squash --delete-branch while the feature branch was still checked out in a git worktree. The command exited 0 and deleted nothing: the remote branch survived and so did the local one.",
+    });
+    const second = await recordPersonalScar({
+      title:
+        "worktree を先に remove しても gh pr merge --delete-branch はローカルブランチを消さない (squash merge 時)",
+      mistake:
+        "git worktree remove を先に実行し、その後 gh pr merge --squash --delete-branch を実行した。merge は成功しリモートブランチも削除されたが、ローカルブランチだけが残った。コマンドはエラーも非ゼロ終了も出さない。",
+    });
+    expect(second.id).toBe(first.id);
+    expect(second.hit_count).toBe(2);
+    expect(readdirSync(join(tmp, "personal-scars"))).toHaveLength(1);
+  });
+
+  it("keeps two distinct Japanese failures separate — CJK still carries the signal", async () => {
+    // Guard on the fix above. Ignoring CJK outright would make these two score
+    // 0.68 on their shared latin tokens alone and collapse two unrelated
+    // failures into one; the bigrams are what tells them apart (0.09). Only a
+    // script the OTHER side never uses may be dropped.
+    const { recordPersonalScar } = await fresh();
+    await recordPersonalScar({
+      title: "AI の「送りました」という行動完了報告が虚偽だった",
+      mistake:
+        "実行はタグ経由のみなのに、AI が自然文で宣言した完了報告をそのまま信じた。実際には何も送信されていない。",
+    });
+    await recordPersonalScar({
+      title: "AI 自身の応答を会話履歴に書き戻さない設計",
+      mistake:
+        "自分の発言を履歴に残さないため毎回作り直しが起き、成果物が失われて完了の幻覚が生まれる。",
+    });
+    expect(readdirSync(join(tmp, "personal-scars"))).toHaveLength(2);
+  });
+
   it("unions keywords across merged recordings", async () => {
     const { recordPersonalScar } = await fresh();
     await recordPersonalScar({

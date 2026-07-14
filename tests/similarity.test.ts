@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nearMatches, tokenize, type SimIndexed } from "../src/similarity.js";
+import { nearMatches, sharedScripts, tokenize, type SimIndexed } from "../src/similarity.js";
 
 function item(title: string, keywords: string[], extra = ""): SimIndexed & { title: string } {
   return {
@@ -99,5 +99,52 @@ describe("tokenize — CJK (日本語)", () => {
 
   it("query/item 両側が同じパイプラインを通るので一貫する", () => {
     expect(tokenize("デプロイ失敗")).toEqual(tokenize("デプロイ失敗"));
+  });
+});
+
+describe("sharedScripts", () => {
+  const S = (...t: string[]) => new Set(t);
+  const seen = (pair: [Set<string>, Set<string>]) => pair.map((s) => [...s].sort());
+
+  it("drops the CJK tokens when the other side has none at all", () => {
+    // An English text cannot contain a CJK bigram, so those tokens are not
+    // evidence that the two texts differ — they only inflate the denominator.
+    const ja = S("gh", "merge", "ブラ", "ラン", "ンチ");
+    const en = S("gh", "merge", "branch");
+    expect(seen(sharedScripts(ja, en))).toEqual([
+      ["gh", "merge"],
+      ["branch", "gh", "merge"],
+    ]);
+  });
+
+  it("keeps the CJK tokens when both sides use CJK", () => {
+    const a = S("gh", "ブラ", "ラン");
+    const b = S("npm", "デプ", "プロ");
+    expect(seen(sharedScripts(a, b))).toEqual([
+      ["gh", "ブラ", "ラン"],
+      ["npm", "デプ", "プロ"],
+    ]);
+  });
+
+  it("is a no-op for two latin-only sets", () => {
+    const a = S("build", "gate");
+    const b = S("build", "pipe");
+    expect(seen(sharedScripts(a, b))).toEqual([
+      ["build", "gate"],
+      ["build", "pipe"],
+    ]);
+  });
+
+  it("drops the latin tokens when the other side is pure CJK", () => {
+    const a = S("デプ", "プロ");
+    const b = S("デプ", "プロ", "vercel");
+    expect(seen(sharedScripts(a, b))).toEqual([
+      ["デプ", "プロ"],
+      ["デプ", "プロ"],
+    ]);
+  });
+
+  it("leaves an empty set alone rather than projecting against nothing", () => {
+    expect(seen(sharedScripts(S(), S("gh", "ブラ")))).toEqual([[], ["gh", "ブラ"]]);
   });
 });

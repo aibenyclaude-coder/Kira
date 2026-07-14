@@ -18,7 +18,7 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { KIRA_HOME } from "./consent.js";
 import { sanitize } from "./sanitize.js";
-import { tokenize } from "./similarity.js";
+import { sharedScripts, tokenize } from "./similarity.js";
 import type { ScarSeverity } from "./types.js";
 
 export const PERSONAL_SCARS_DIR = join(KIRA_HOME, "personal-scars");
@@ -155,14 +155,20 @@ function scarSimilarity(
   a: { title: string; mistake: string },
   b: { title: string; mistake: string }
 ): number {
+  // Compare each field only within the scripts both recordings actually use:
+  // a bigram from a script the other side never writes in can never match, so
+  // counting it would penalize a recurrence for having been written up in a
+  // different language. See sharedScripts().
   const pooled = jaccard(
-    scarTokens(a.title, a.mistake),
-    scarTokens(b.title, b.mistake)
+    ...sharedScripts(scarTokens(a.title, a.mistake), scarTokens(b.title, b.mistake))
   );
   const fieldwise =
-    TITLE_WEIGHT * overlap(new Set(tokenize(a.title)), new Set(tokenize(b.title))) +
+    TITLE_WEIGHT *
+      overlap(...sharedScripts(new Set(tokenize(a.title)), new Set(tokenize(b.title)))) +
     (1 - TITLE_WEIGHT) *
-      overlap(new Set(tokenize(a.mistake)), new Set(tokenize(b.mistake)));
+      overlap(
+        ...sharedScripts(new Set(tokenize(a.mistake)), new Set(tokenize(b.mistake)))
+      );
   return Math.max(pooled, fieldwise);
 }
 
