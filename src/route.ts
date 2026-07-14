@@ -32,7 +32,9 @@ export async function loadRoutes(): Promise<RouteDefinition[]> {
   const routes: RouteDefinition[] = [];
   let files: string[];
   try {
-    files = await readdir(ROUTES_DIR);
+    // readdir order is filesystem-defined, not alphabetical. Sort so the loaded
+    // order is at least stable; matchRoute must not depend on it either way.
+    files = (await readdir(ROUTES_DIR)).sort();
   } catch {
     return [];
   }
@@ -47,6 +49,34 @@ export async function loadRoutes(): Promise<RouteDefinition[]> {
 
 // ── Match goal to route ────────────────────────────────────────────────
 
+interface GoalMatch {
+  route: RouteDefinition;
+  exact: boolean;
+  /** Length of the route goal phrase that matched — longer means more specific. */
+  phraseLength: number;
+}
+
+/** A route is eligible when no context is requested, or one of its contexts is. */
+function contextAllows(
+  route: RouteDefinition,
+  normalizedContexts: string[]
+): boolean {
+  if (normalizedContexts.length === 0) return true;
+  return route.contexts.some((c) => normalizedContexts.includes(c.toLowerCase()));
+}
+
+/**
+ * Rank two matches: an exact goal beats a partial one, then the longest matched
+ * phrase wins (a goal saying "build a nextjs app ... and go live" is asking for
+ * the build, not just the deploy), and route id settles true ties. Every term is
+ * a property of the match itself, never of where the route sat in the array.
+ */
+function outranks(a: GoalMatch, b: GoalMatch): boolean {
+  if (a.exact !== b.exact) return a.exact;
+  if (a.phraseLength !== b.phraseLength) return a.phraseLength > b.phraseLength;
+  return a.route.id < b.route.id;
+}
+
 function matchRoute(
   routes: RouteDefinition[],
   goal: string,
@@ -55,27 +85,21 @@ function matchRoute(
   const normalizedGoal = goal.toLowerCase().trim();
   const normalizedContexts = contexts.map((c) => c.toLowerCase());
 
-  // Exact goal match
+  let best: GoalMatch | null = null;
   for (const route of routes) {
-    if (route.goals.some((g) => g.toLowerCase() === normalizedGoal)) {
-      if (normalizedContexts.length === 0) return route;
-      if (route.contexts.some((c) => normalizedContexts.includes(c.toLowerCase()))) {
-        return route;
-      }
+    if (!contextAllows(route, normalizedContexts)) continue;
+
+    for (const rawGoal of route.goals) {
+      const g = rawGoal.toLowerCase().trim();
+      const exact = g === normalizedGoal;
+      if (!exact && !normalizedGoal.includes(g)) continue;
+
+      const match: GoalMatch = { route, exact, phraseLength: g.length };
+      if (best === null || outranks(match, best)) best = match;
     }
   }
 
-  // Partial goal match (goal contains a route goal phrase)
-  for (const route of routes) {
-    if (route.goals.some((g) => normalizedGoal.includes(g.toLowerCase()))) {
-      if (normalizedContexts.length === 0) return route;
-      if (route.contexts.some((c) => normalizedContexts.includes(c.toLowerCase()))) {
-        return route;
-      }
-    }
-  }
-
-  return null;
+  return best?.route ?? null;
 }
 
 // ── Build route response ───────────────────────────────────────────────
