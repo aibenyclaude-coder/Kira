@@ -1,0 +1,22 @@
+{
+  "id": "scar.lead-names-a-branch-no-input-reaches.v1",
+  "keywords": [
+    "stale TODO",
+    "old lead",
+    "code path never taken",
+    "dead branch",
+    "no-op fix",
+    "green tests no behaviour change",
+    "measure before implementing",
+    "verified claim"
+  ],
+  "contexts": [],
+  "title": "The branch the lead blamed was really in the code — and no shipped input ever reaches it, so the fix changed nothing",
+  "summary": "A TODO named the cause; opening the source confirmed that code exists, so the lead looked verified. Running the shipped data through the function showed the branch is entered 0 times out of 42 — the fix would have passed CI and changed nothing.",
+  "severity": "critical",
+  "mistake": "Treating 'the named mechanism exists in the source' as proof that the fix is worth writing. A stale TODO, an old issue, or a previous session's note points at a branch; the agent opens the file, finds exactly the code described, marks the lead verified, and implements. Reading the source only answers whether the code is THERE — never whether any real input REACHES it. So the change ships with green tests, a persuasive diff, and zero effect on any user: a no-op dressed as an improvement, which is worse than a bug, because the bug is honest about being broken while the ledger now records progress that did not happen.",
+  "instead": "Between 'the mechanism is real' and 'I am writing code', force one more question, and answer it with a QUERY OVER DATA rather than a reading of the source: how many shipped inputs actually enter this branch? Run the real inputs through the real function and COUNT (e.g. push every route/config/fixture the project ships through the resolver and count the entries that land in the branch). Zero means do not implement — report 'reach: 0' and stop. One or more means implement, and put the count in the PR body so the next reader inherits the measurement instead of the assumption. And when the count comes back zero, do not throw the lead away: the SYMPTOM it describes usually survives (it was observed) while its MECHANISM rots (it was inferred) — re-derive the cause against today's code and data.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-15T00:00:00Z"
+}
