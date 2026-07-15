@@ -49,8 +49,17 @@ export interface MissNear {
   score: number;
 }
 
+/** Which recall path produced the miss — the two demand signals differ. */
+export type MissKind = "lookup" | "route";
+
 /**
- * Log a lookup that returned 0 strict results (flywheel loop B input).
+ * Log a recall that returned 0 strict results (flywheel loop B input).
+ *
+ * `kind` records which path produced the miss: "lookup" (default) means no
+ * SKILL/scar matched a specific task — the maintainer's fix is a skill/alias.
+ * "route" means no ROUTE matched a broad goal — the fix is a whole new route.
+ * The flywheel must not cluster the two together, so the source is written
+ * down rather than inferred.
  *
  * Local-only, never uploaded. Written to ~/.kira/misses.log (KIRA_HOME
  * respected) — the old repo-relative ./reports/ path broke for installed
@@ -63,7 +72,8 @@ export interface MissNear {
 export async function logMiss(
   keyword: string,
   context: string[],
-  near: MissNear[]
+  near: MissNear[],
+  kind: MissKind = "lookup"
 ): Promise<void> {
   await mkdir(KIRA_HOME, { recursive: true });
   try {
@@ -74,6 +84,7 @@ export async function logMiss(
   }
   const entry = {
     v: 1,
+    kind,
     keyword: sanitize(keyword, 200),
     // Context tags get the same treatment as the keyword — candidates built
     // from this log can end up in public PRs, so nothing lands here unsanitized.

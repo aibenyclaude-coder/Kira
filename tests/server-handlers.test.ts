@@ -201,6 +201,44 @@ describe("kira_route handler", () => {
     expect(res.steps).toEqual([]);
     expect(res.coverage).toBe("no matching route found");
   });
+
+  // route is the FIRST call the instructions tell an agent to make for a broad
+  // goal, yet it was the one recall path that dropped its misses on the floor.
+  // A goal that maps to no route is the flywheel's loudest demand signal —
+  // record it, tagged kind:"route", so a matched goal never logs and an
+  // unmatched one is visible to the maintainer.
+  it("logs a kind:'route' miss for an unmatched goal, and nothing for a matched one", async () => {
+    // The matched call is issued (and awaited) first and never touches the log;
+    // the unmatched call is the only route write, so once it lands the matched
+    // goal's absence is definitive — no timing race.
+    await callJson("kira_route", { goal: ROUTE_GOAL, context: ["nextjs"] });
+    const unmatched = "assemble a submarine navigation system from scratch";
+    await callJson("kira_route", { goal: unmatched });
+
+    // logMiss is fire-and-forget; poll the local log for the route entry.
+    const logPath = join(tmp, "misses.log");
+    const readEntries = () =>
+      existsSync(logPath)
+        ? readFileSync(logPath, "utf-8")
+            .trim()
+            .split("\n")
+            .filter(Boolean)
+            .map((l) => JSON.parse(l))
+        : [];
+    let submarine: any;
+    for (let i = 0; i < 100 && !submarine; i++) {
+      submarine = readEntries().find((e) => e.keyword?.includes("submarine"));
+      if (!submarine) await new Promise((r) => setTimeout(r, 10));
+    }
+    expect(submarine).toBeDefined();
+    expect(submarine.kind).toBe("route");
+
+    // The matched goal produced no route miss.
+    const matchedMiss = readEntries().find(
+      (e) => e.kind === "route" && String(e.keyword ?? "").includes(ROUTE_GOAL)
+    );
+    expect(matchedMiss).toBeUndefined();
+  });
 });
 
 describe("kira_get handler", () => {

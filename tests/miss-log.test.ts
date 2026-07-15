@@ -68,4 +68,26 @@ describe("logMiss", () => {
     expect(entry.near).toHaveLength(6);
     expect(entry.near[0]).toEqual({ id: "s0", score: 0.5 });
   });
+
+  // A miss carries which recall path produced it. lookup is the default; the
+  // route path tags "route" so the flywheel can count route gaps (author a
+  // whole route) apart from lookup gaps (author a skill/alias) instead of
+  // clustering the two into one polluted demand signal.
+  it("tags the entry kind 'lookup' by default", async () => {
+    const logMiss = await freshLogMiss();
+    await logMiss("some keyword", [], []);
+    const entry = JSON.parse(
+      readFileSync(join(tmp, "misses.log"), "utf-8").trim()
+    );
+    expect(entry.kind).toBe("lookup");
+  });
+
+  it("tags the entry kind 'route' when a route miss is logged", async () => {
+    const logMiss = await freshLogMiss();
+    await logMiss("build a discord bot", [], [], "route");
+    const entry = JSON.parse(
+      readFileSync(join(tmp, "misses.log"), "utf-8").trim()
+    );
+    expect(entry.kind).toBe("route");
+  });
 });
