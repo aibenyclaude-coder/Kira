@@ -95,6 +95,48 @@ describe("buildCandidates", () => {
   });
 });
 
+describe("route-miss separation (Loop B stays clean, route gaps surfaced)", () => {
+  const rmiss = (keyword: string) =>
+    JSON.stringify({
+      v: 1,
+      kind: "route",
+      keyword,
+      context: [],
+      near: [],
+      ts: "2026-07-06T00:00:00Z",
+    });
+
+  it("keeps kind:route misses out of the lookup clusters and lists them as route gaps", async () => {
+    await writeFile(
+      join(home, "misses.log"),
+      [
+        miss("terraform state locking"),
+        miss("terraform state lock stuck"),
+        rmiss("build a discord bot"),
+        rmiss("build a discord bot with slash commands"),
+      ].join("\n") + "\n"
+    );
+
+    const res = await runFlywheel({ emitCandidates: true });
+    const digest = await readFile(res.digestPath, "utf-8");
+
+    // The lookup Loop B section (everything before the route-gap header) still
+    // sees terraform and must NOT absorb the route goal as a lookup miss.
+    const loopB = digest.split(/route gaps/i)[0]!;
+    expect(loopB).toContain("terraform");
+    expect(loopB).not.toContain("discord");
+
+    // Route gaps get their own section.
+    expect(digest).toMatch(/route gaps/i);
+    expect(digest).toContain("discord bot");
+
+    // A route gap is not a skill gap: buildCandidates never sees it, so no
+    // skill-gap/alias candidate is emitted for the route goal.
+    const emitted = await readdir(join(home, "flywheel", "candidates"));
+    expect(emitted.some((f) => f.toLowerCase().includes("discord"))).toBe(false);
+  });
+});
+
 describe("runFlywheel (end-to-end, no LLM)", () => {
   it("writes a digest and candidate stubs from dirty real-shaped logs", async () => {
     await writeFile(

@@ -414,6 +414,19 @@ export async function startServer(): Promise<void> {
         context,
       });
 
+      // route is the FIRST call the instructions above tell an agent to make
+      // for a broad goal, yet it was the one recall path blind to its own
+      // misses while those instructions promise "every miss is recorded".
+      // A goal that maps to no route is the loudest demand signal there is —
+      // it asks the maintainer to author a whole ROUTE — so log it, tagged
+      // kind:"route" so the flywheel counts it as a route gap and never mixes
+      // it into the lookup-miss clusters that drive skill/alias candidates.
+      // near is empty: matchRoute reports only a match or nothing, and the
+      // goal string is the signal a route author needs.
+      if (result.step_count === 0) {
+        logMiss(goal, context ?? [], [], "route").catch(() => {});
+      }
+
       return {
         content: [
           {

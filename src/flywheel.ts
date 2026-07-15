@@ -46,6 +46,13 @@ export interface MissEntry {
   keyword?: string;
   context?: string[];
   near?: Array<{ id: string; score: number }>;
+  /**
+   * Which recall path produced the miss. Absent on entries written before the
+   * field existed — those are lookup misses, so anything that is not "route"
+   * is treated as a lookup miss (a route gap is the fix-a-whole-route signal,
+   * kept out of the skill/alias clusters).
+   */
+  kind?: string;
   ts?: string;
 }
 
@@ -336,6 +343,7 @@ export function renderDigest(
   date: string,
   misses: MissEntry[],
   missClusters: MissCluster[],
+  routeClusters: MissCluster[],
   stats: SkillStats[],
   personal: PersonalScarLite[],
   candidates: Candidate[]
@@ -343,7 +351,7 @@ export function renderDigest(
   const L: string[] = [];
   L.push(`# Kira flywheel digest — ${date}`);
   L.push("");
-  L.push(`inputs: misses=${misses.length} / reports(skills)=${stats.length} / personal-scars=${personal.length}`);
+  L.push(`inputs: lookup-misses=${misses.length} / route-misses=${routeClusters.reduce((n, c) => n + c.count, 0)} / reports(skills)=${stats.length} / personal-scars=${personal.length}`);
   L.push("");
   L.push("## Loop B — 需要 (lookup misses)");
   if (missClusters.length === 0) L.push("(no misses — either perfect coverage or nobody is asking)");
@@ -353,6 +361,12 @@ export function renderDigest(
       ? `→ alias 追加候補: \`${best[0]}\` (score ${best[1]})`
       : "→ 新規 skill/scar 候補";
     L.push(`- **${c.rep}** ×${c.count} ${c.contexts.size ? `[${[...c.contexts].join(", ")}]` : ""} ${action}`);
+  }
+  L.push("");
+  L.push("## Loop B — 需要 (route gaps: broad goals with no matching route)");
+  if (routeClusters.length === 0) L.push("(no route misses — every broad goal hit a route, or none were asked)");
+  for (const c of routeClusters.slice(0, 15)) {
+    L.push(`- **${c.rep}** ×${c.count} ${c.contexts.size ? `[${[...c.contexts].join(", ")}]` : ""} → 新規 route 候補`);
   }
   L.push("");
   L.push("## Loop C — 品質 (report outcomes)");
@@ -400,7 +414,14 @@ export async function runFlywheel(opts: {
     readPersonalScars(join(home, "personal-scars")),
   ]);
 
-  const missClusters = clusterMisses(misses);
+  // Route gaps (no route matched a broad goal) and lookup gaps (no skill
+  // matched a task) are different demands with different fixes, so cluster
+  // them apart. Only lookup clusters feed buildCandidates — a route gap must
+  // never masquerade as a skill-gap/alias candidate.
+  const lookupMisses = misses.filter((m) => m.kind !== "route");
+  const routeMisses = misses.filter((m) => m.kind === "route");
+  const missClusters = clusterMisses(lookupMisses);
+  const routeClusters = clusterMisses(routeMisses);
   const stats = aggregateReports(reports);
   const now = new Date().toISOString();
   let candidates = buildCandidates(missClusters, stats, now);
@@ -428,11 +449,11 @@ export async function runFlywheel(opts: {
   }
 
   // The digest lists candidates even when they were not emitted to disk.
-  const digest = renderDigest(date, misses, missClusters, stats, personal, candidates);
+  const digest = renderDigest(date, lookupMisses, missClusters, routeClusters, stats, personal, candidates);
   const digestPath = join(outDir, `${date}-digest.md`);
   await writeFile(digestPath, digest, "utf-8");
 
-  const summary = `[flywheel] misses=${misses.length}→clusters=${missClusters.length}, skills-reported=${stats.length}, personal-scars=${personal.length}, candidates=${candidates.length} → ${digestPath}`;
+  const summary = `[flywheel] misses=${misses.length} (lookup ${lookupMisses.length}→${missClusters.length} / route ${routeMisses.length}→${routeClusters.length}), skills-reported=${stats.length}, personal-scars=${personal.length}, candidates=${candidates.length} → ${digestPath}`;
   return { digestPath, candidates: candidates.length, summary };
 }
 
