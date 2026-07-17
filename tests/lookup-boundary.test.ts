@@ -113,6 +113,42 @@ describe("CJK keeps substring containment", () => {
   });
 });
 
+describe("mixed-script queries", () => {
+  // A CJK query still needs substring containment: Japanese runs Latin words
+  // flush against kana with no space to split on ("dockerをインストール"). But
+  // that exemption used to be keyed on the QUERY, so it handed every Latin
+  // keyword back its substring behaviour — "expo" fired inside "export" for
+  // anyone querying in Japanese, long after the Latin rule had fixed it.
+  const scars = indexItems([
+    scar({ id: "scar.expo.v1", keywords: ["expo"], title: "Expo install mismatch", severity: "critical" }),
+    scar({ id: "scar.queue.v1", keywords: ["queue"], title: "Job queue ordering" }),
+  ]);
+  const skills = indexItems([
+    skill({ id: "community.docker.v1", keywords: ["docker"] }),
+    skill({ id: "community.redis.v1", keywords: ["redis"] }),
+    skill({ id: "community.s3.v1", keywords: ["s3"] }),
+  ]);
+
+  it.each([
+    ["export を使う", "expo"],
+    ["bash の source .env が export されない", "expo"],
+    ["enqueue の順序が壊れる", "queue"],
+  ])("query %j does not fire the keyword %j buried in a longer Latin word", (query) => {
+    const res = lookup([], scars, { keyword: query });
+    expect(res.scars).toEqual([]);
+    expect(res.scar_count).toBe(0);
+  });
+
+  it.each([
+    ["dockerをインストールする", "community.docker.v1"],
+    ["redisに接続できない", "community.redis.v1"],
+    ["s3へアップロード", "community.s3.v1"],
+  ])("query %j still fires a Latin keyword sitting flush against CJK", (query, id) => {
+    const res = lookup(skills, [], { keyword: query });
+    expect(res.skills.map((s) => s.id)).toContain(id);
+  });
+});
+
 describe("index internals stay off the wire", () => {
   it("strips _kwPhrases and friends from returned scars and skills", () => {
     const res = lookup(

@@ -130,6 +130,16 @@ export function indexItems<
  * CJK is exempt: it has no word boundaries to respect, so a CJK keyword keeps
  * substring containment — the same assumption the bigram path in similarity.ts
  * makes. Without this carve-out every Japanese scar would stop matching.
+ *
+ * A CJK QUERY is exempt too, but only halfway. Japanese runs Latin words flush
+ * against kana with no space to split on, so "dockerをインストール" has to reach
+ * the keyword "docker" by containment. Keying the whole exemption on the query
+ * went too far: it handed every Latin keyword its substring behaviour back the
+ * moment a query contained one CJK character, so "expo" fired inside "export"
+ * and "queue" inside "enqueue" — the exact class the rule above removed, still
+ * live for anyone querying in Japanese. Measured over the shipped corpus (79
+ * entries) against 69 real CJK queries: 6 spurious matches, one of them a
+ * CRITICAL scar (which sorts first), and 0 legitimate matches lost.
  */
 function containsAtWordBoundary(
   keywordLower: string,
@@ -137,10 +147,35 @@ function containsAtWordBoundary(
   queryLower: string,
   queryPhrase: string[]
 ): boolean {
-  if (keywordPhrase.length === 0 || hasCJK(queryLower)) {
+  if (keywordPhrase.length === 0) {
     return queryLower.includes(keywordLower) || keywordLower.includes(queryLower);
   }
+  if (hasCJK(queryLower)) {
+    return (
+      containsOutsideLatinWord(queryLower, keywordLower) ||
+      containsOutsideLatinWord(keywordLower, queryLower)
+    );
+  }
   return phraseIn(keywordPhrase, queryPhrase) || phraseIn(queryPhrase, keywordPhrase);
+}
+
+/** Latin letters and digits — the characters that make a longer word, not a boundary. */
+const LATIN_WORD_CHAR = /[\p{Script=Latin}\p{N}]/u;
+
+/**
+ * Substring containment that refuses a hit buried inside a longer Latin word.
+ * A CJK character (or punctuation, or either edge) counts as a boundary, so
+ * "docker" is found in "dockerをインストール" but "expo" is not in "export".
+ */
+function containsOutsideLatinWord(hay: string, needle: string): boolean {
+  for (let i = hay.indexOf(needle); i !== -1; i = hay.indexOf(needle, i + 1)) {
+    const before = i > 0 ? hay[i - 1]! : "";
+    const after = hay[i + needle.length] ?? "";
+    if (!LATIN_WORD_CHAR.test(before) && !LATIN_WORD_CHAR.test(after)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
