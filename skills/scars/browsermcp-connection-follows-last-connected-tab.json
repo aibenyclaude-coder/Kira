@@ -1,0 +1,13 @@
+{
+  "id": "scar.browsermcp-connection-follows-last-connected-tab.v1",
+  "keywords": ["browser mcp", "browsermcp", "connected tab", "wrong tab", "tab switch", "navigate timeout", "extension connect"],
+  "contexts": ["browser-automation", "mcp", "browser-extension"],
+  "title": "Browser MCP silently operates on whichever tab was last Connected, not the one you think",
+  "summary": "Agent keeps driving Browser MCP assuming the connection still points at the original tab; the user re-clicked Connect on a different tab, so commands act on (or hang against) the wrong page.",
+  "mistake": "During a multi-step Browser MCP session the user pressed the extension's Connect button while a different tab was active. The MCP connection silently moved to that tab. The agent, unaware, issued browser_navigate against the assumed tab and the call hung with no response until the MCP idle timeout (30 min lost), then later operated on the wrong page. The Browser MCP extension binds to exactly one tab — the active tab at the moment Connect was pressed — and nothing in the tool results announces that the binding changed.",
+  "instead": "Before every Browser MCP action batch, call browser_snapshot first and check the reported Page URL against what you expect; if it differs, tell the user which tab is actually connected and either ask them to re-Connect on the right tab or switch strategy. If a Browser MCP call hangs far beyond normal page-load time, suspect a moved/dead connection instead of a slow page — abort and re-verify the connection rather than waiting out the timeout. Note that a separate chrome-devtools MCP cannot be used as a fallback to reach the user's own browser: it launches its own Chrome instance with a different profile.",
+  "severity": "warning",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-07-19T00:00:00Z"
+}

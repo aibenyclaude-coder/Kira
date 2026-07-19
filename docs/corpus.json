@@ -1022,6 +1022,31 @@
       "updated_at": "2026-07-11T00:00:00Z"
     },
     {
+      "id": "scar.browsermcp-connection-follows-last-connected-tab.v1",
+      "keywords": [
+        "browser mcp",
+        "browsermcp",
+        "connected tab",
+        "wrong tab",
+        "tab switch",
+        "navigate timeout",
+        "extension connect"
+      ],
+      "contexts": [
+        "browser-automation",
+        "mcp",
+        "browser-extension"
+      ],
+      "title": "Browser MCP silently operates on whichever tab was last Connected, not the one you think",
+      "summary": "Agent keeps driving Browser MCP assuming the connection still points at the original tab; the user re-clicked Connect on a different tab, so commands act on (or hang against) the wrong page.",
+      "mistake": "During a multi-step Browser MCP session the user pressed the extension's Connect button while a different tab was active. The MCP connection silently moved to that tab. The agent, unaware, issued browser_navigate against the assumed tab and the call hung with no response until the MCP idle timeout (30 min lost), then later operated on the wrong page. The Browser MCP extension binds to exactly one tab — the active tab at the moment Connect was pressed — and nothing in the tool results announces that the binding changed.",
+      "instead": "Before every Browser MCP action batch, call browser_snapshot first and check the reported Page URL against what you expect; if it differs, tell the user which tab is actually connected and either ask them to re-Connect on the right tab or switch strategy. If a Browser MCP call hangs far beyond normal page-load time, suspect a moved/dead connection instead of a slow page — abort and re-verify the connection rather than waiting out the timeout. Note that a separate chrome-devtools MCP cannot be used as a fallback to reach the user's own browser: it launches its own Chrome instance with a different profile.",
+      "severity": "warning",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-19T00:00:00Z"
+    },
+    {
       "id": "scar.chrome-devtools-mcp-stale-css-needs-hard-reload.v1",
       "keywords": [
         "chrome-devtools mcp",
@@ -1930,6 +1955,32 @@
       "hit_count": 1,
       "version": "1.0.0",
       "updated_at": "2026-07-06T00:00:00Z"
+    },
+    {
+      "id": "scar.xdotool-type-garbled-by-active-ime.v1",
+      "keywords": [
+        "xdotool type",
+        "ime",
+        "ibus",
+        "fcitx",
+        "japanese input",
+        "garbled text",
+        "clipboard paste",
+        "desktop automation"
+      ],
+      "contexts": [
+        "desktop-automation",
+        "x11",
+        "linux"
+      ],
+      "title": "xdotool type gets intercepted by an active IME and the target receives converted gibberish",
+      "summary": "Agent types ASCII into a GUI field via xdotool type on a machine with a CJK input method enabled; the IME intercepts the synthetic key events and converts them, so the field receives transformed characters instead of the literal string.",
+      "mistake": "To fill Chrome's tab-search box the agent ran xdotool type \"navi.onamae\" on a desktop with ibus (Japanese IME) active. The IME intercepted the synthetic keystrokes and composed them into kana, so the search box received garbled text and matched nothing. This bites even for pure-ASCII strings: whether the text survives depends on the focused field's IME state, which the agent cannot reliably know.",
+      "instead": "Never send literal strings to GUI fields with xdotool type when an IME may be active. Put the string on the clipboard and paste instead: printf '%s' 'the-string' | xclip -selection clipboard, then xdotool key --clearmodifiers ctrl+v. Paste bypasses the IME composition layer entirely. Use the same pattern for URL entry (ctrl+l then ctrl+v). Reserve xdotool key for chords (ctrl+..., Return, Escape), which pass through IMEs safely.",
+      "severity": "warning",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-07-19T00:00:00Z"
     }
   ]
 }
