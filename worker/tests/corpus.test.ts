@@ -3,11 +3,12 @@
  *
  * JWT fixtures are pre-signed (ES256, raw ieee-p1363) against the test
  * keypair whose PUBLIC pem is bound as CORPUS_PUBKEY_PEM in vitest.config.ts.
- * The corpus source is mocked via cloudflare:test fetchMock at the
- * CORPUS_SOURCE_URL binding.
+ * The corpus source is mocked by stubbing globalThis.fetch (the worker runs
+ * in the same isolate, so its outbound fetch hits the stub) — cloudflare:test
+ * no longer ships fetchMock as of vitest-pool-workers 0.13+.
  */
-import { describe, it, expect, beforeAll, afterEach } from "vitest";
-import { SELF, fetchMock } from "cloudflare:test";
+import { describe, it, expect, beforeAll, afterEach, vi } from "vitest";
+import { SELF } from "cloudflare:test";
 
 const JWT_CONTRIB =
   "eyJhbGciOiJFUzI1NiIsImtpZCI6ImtpcmEtcHJvLXYxIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJlbWFpbCI6InRAZXhhbXBsZS5jb20iLCJpc3MiOiJraXJhLnNoIiwiaWF0IjoxNzUxMDAwMDAwLCJleHAiOjIwODI3NTg0MDAsInRpZXIiOiJjb250cmlidXRvciJ9.2vKbp2LMbDwa23-iB_Xk57dSFM71STLtaPWGbVqWnWO7slyBPDLouNzXm-U7Gbpks13HAV5EK6wwKapEGQwdFQ";
@@ -32,22 +33,30 @@ const BUNDLE = {
   ],
 };
 
+// One-shot interceptor queue with the old fetchMock semantics: mockSource()
+// arms exactly one reply, any other outbound URL throws (net disabled), and
+// afterEach asserts every armed reply was consumed.
+let armedSourceReplies = 0;
+
 function mockSource() {
-  fetchMock
-    .get("https://corpus-source.test")
-    .intercept({ path: "/corpus.json" })
-    .reply(200, JSON.stringify(BUNDLE), {
-      headers: { "Content-Type": "application/json" },
-    });
+  armedSourceReplies++;
 }
 
 beforeAll(() => {
-  fetchMock.activate();
-  fetchMock.disableNetConnect();
+  vi.stubGlobal("fetch", async (input: RequestInfo | URL) => {
+    const url = input instanceof Request ? input.url : String(input);
+    if (url === "https://corpus-source.test/corpus.json" && armedSourceReplies > 0) {
+      armedSourceReplies--;
+      return new Response(JSON.stringify(BUNDLE), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    throw new Error(`unmocked outbound fetch: ${url}`);
+  });
 });
 
 afterEach(() => {
-  fetchMock.assertNoPendingInterceptors();
+  expect(armedSourceReplies).toBe(0);
 });
 
 async function getScars(auth?: string): Promise<{ res: Response; ids: string[] }> {
