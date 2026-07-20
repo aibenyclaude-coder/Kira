@@ -261,6 +261,60 @@ describe("near-duplicate recurrence folding", () => {
     expect(readdirSync(join(tmp, "personal-scars"))).toHaveLength(2);
   });
 
+  it("does not fold a mixed-script recording into an unrelated latin-only scar on generic shared tokens", async () => {
+    // 2026-07-20 incident on the author's store: sharedScripts() drops CJK
+    // bigrams when the other side is latin-only, so a 35-token Japanese title
+    // shrank to 4 latin tokens — and two of them (continuous + integration)
+    // were the expansion of the single word "CI". Two generic tokens over a
+    // collapsed divisor scored 0.491 >= 0.45 and the recording folded into a
+    // completely unrelated scar, overwriting its `instead`.
+    const { recordPersonalScar } = await fresh();
+    const first = await recordPersonalScar({
+      title:
+        "Adding a scar via PR without regenerating docs/stats.json + docs/corpus.json turns CI red",
+      mistake:
+        "A /harvest opened PR #172 adding 3 new scar JSONs under skills/scars/ but did not regenerate the committed feed/badge artifacts. The client CI job runs `node scripts/gen-stats.mjs --check` and `node scripts/gen-corpus.mjs --check`, both fail-closed when docs/stats.json or docs/corpus.json are stale — so the PR sat UNSTABLE (client exit 1) even though build/test/demo/schema were green.",
+      instead: "Regenerate docs/stats.json and docs/corpus.json in the same commit.",
+    });
+    const second = await recordPersonalScar({
+      title:
+        "メジャー bump は CI が実行しない script を黙って壊す — 同梱ツールの消失は全ゲートが緑のままでは検知できず、列挙して手で走らせるまで見えない",
+      mistake:
+        "npm audit を 0 にするため vitest を 2.1.9 → 4.1.10 にメジャー bump した。テスト 362 件全通過、build / demo / gen-stats --check / gen-corpus --check も全部 green で出荷可能に見えた。しかし vitest 4 は vite-node を同梱しなくなる。vite-node は package.json の stats と bench の TS ランナーで、両者は src/ の外にあるため tsc がビルドせず CI も一切実行しない。つまり全ゲート green のまま壊れたスクリプト 2 本を出荷する寸前だった。",
+    });
+    expect(second.id).not.toBe(first.id);
+    expect(second.hit_count).toBe(1);
+    expect(readdirSync(join(tmp, "personal-scars"))).toHaveLength(2);
+    const onDisk = JSON.parse(
+      readFileSync(join(tmp, "personal-scars", `${first.id}.json`), "utf-8")
+    );
+    expect(onDisk.instead).toBe(
+      "Regenerate docs/stats.json and docs/corpus.json in the same commit."
+    );
+  });
+
+  it("keeps the superseded instead below the newest one when a recurrence folds", async () => {
+    // The store has no history: before this guard, a fold silently replaced
+    // `instead`, destroying the only copy of the earlier fix — even on a
+    // correct fold.
+    const { recordPersonalScar } = await fresh();
+    await recordPersonalScar({
+      title: "build gate bypassed by pipe",
+      mistake: "gated the merge on npm run build piped to tail; exit code came from tail",
+      instead: "run the build bare so the gate sees the real exit code",
+    });
+    const merged = await recordPersonalScar({
+      title: "pipe swallowed build exit code",
+      mistake:
+        "npm run build piped to tail returned 0 despite tsc failure and the merge gate passed",
+      instead: "set -o pipefail before any piped gate command",
+    });
+    expect(merged.hit_count).toBe(2);
+    expect(merged.instead).toMatch(/^set -o pipefail/); // newest fix stays first
+    expect(merged.instead).toContain("[previous instead]");
+    expect(merged.instead).toContain("run the build bare");
+  });
+
   it("unions keywords across merged recordings", async () => {
     const { recordPersonalScar } = await fresh();
     await recordPersonalScar({

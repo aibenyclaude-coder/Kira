@@ -112,6 +112,22 @@ const TITLE_WEIGHT = 0.6;
  */
 const MIN_OVERLAP_TOKENS = 4;
 
+/**
+ * When sharedScripts() dropped tokens, the overlap divisor no longer reflects
+ * how much the author actually wrote: a mixed-script recording can shrink to a
+ * handful of latin tokens, where one shared generic word — worse, an aliased
+ * one ("ci" expands to continuous + integration) — covers half the divisor.
+ * A recording on this store folded into a completely unrelated scar at 0.491
+ * on exactly two shared tokens, both from "CI". Cross-script overlap is only
+ * trusted above this much absolute shared evidence; below it, the pair scores
+ * on Jaccard like the tiny-set guard. The bar sits above two so a single
+ * aliased word can never clear it.
+ */
+const MIN_PROJECTED_INTERSECTION = 3;
+
+/** Separates the newest fix from the one it superseded inside `instead`. */
+const PREVIOUS_INSTEAD_MARKER = "\n\n[previous instead]\n";
+
 function scarTokens(title: string, mistake: string): Set<string> {
   return new Set(tokenize(`${title} ${mistake}`));
 }
@@ -124,16 +140,23 @@ function jaccard(a: Set<string>, b: Set<string>): number {
 }
 
 /**
- * Overlap coefficient (|A∩B| / min(|A|,|B|)): unlike Jaccard it does not
- * penalize one recording for being wordier than the other, which is the normal
- * case when the same wall is described twice.
+ * Overlap coefficient (|A∩B| / min(|A|,|B|)) within the scripts both sides
+ * use: unlike Jaccard it does not penalize one recording for being wordier
+ * than the other, which is the normal case when the same wall is described
+ * twice. Takes the RAW token sets and projects internally — the guards need
+ * both views, because a set that is small after projection is small because
+ * tokens were deleted, not because the author was terse, and that smallness
+ * must not buy a lower evidence bar (see MIN_PROJECTED_INTERSECTION).
  */
 function overlap(a: Set<string>, b: Set<string>): number {
-  if (a.size === 0 || b.size === 0) return 0;
-  const smaller = Math.min(a.size, b.size);
-  if (smaller < MIN_OVERLAP_TOKENS) return jaccard(a, b);
+  const [pa, pb] = sharedScripts(a, b);
+  if (pa.size === 0 || pb.size === 0) return 0;
+  const smaller = Math.min(pa.size, pb.size);
+  if (smaller < MIN_OVERLAP_TOKENS) return jaccard(pa, pb);
   let inter = 0;
-  for (const t of a) if (b.has(t)) inter++;
+  for (const t of pa) if (pb.has(t)) inter++;
+  const projected = pa.size !== a.size || pb.size !== b.size;
+  if (projected && inter < MIN_PROJECTED_INTERSECTION) return jaccard(pa, pb);
   return inter / smaller;
 }
 
@@ -163,13 +186,23 @@ function scarSimilarity(
     ...sharedScripts(scarTokens(a.title, a.mistake), scarTokens(b.title, b.mistake))
   );
   const fieldwise =
-    TITLE_WEIGHT *
-      overlap(...sharedScripts(new Set(tokenize(a.title)), new Set(tokenize(b.title)))) +
+    TITLE_WEIGHT * overlap(new Set(tokenize(a.title)), new Set(tokenize(b.title))) +
     (1 - TITLE_WEIGHT) *
-      overlap(
-        ...sharedScripts(new Set(tokenize(a.mistake)), new Set(tokenize(b.mistake)))
-      );
+      overlap(new Set(tokenize(a.mistake)), new Set(tokenize(b.mistake)));
   return Math.max(pooled, fieldwise);
+}
+
+/**
+ * A fold rewrites the scar file in place and the store has no history, so
+ * replacing `instead` outright destroys the only copy of the earlier fix —
+ * even on a correct fold. Keep the newest fix first (it reflects the latest
+ * understanding) and retain the superseded text below a marker, within the
+ * same length cap that bounds a freshly recorded `instead`.
+ */
+function mergeInstead(next: string, prev: string): string {
+  if (!next) return prev;
+  if (!prev || next.includes(prev)) return next;
+  return (next + PREVIOUS_INSTEAD_MARKER + prev).slice(0, INSTEAD_MAX);
 }
 
 function readExisting(file: string): PersonalScar | null {
@@ -225,9 +258,7 @@ export async function recordPersonalScar(
       ...match,
       keywords: [...new Set([...match.keywords, ...keywords])].slice(0, MAX_KEYWORDS),
       contexts: [...new Set([...match.contexts, ...contexts])].slice(0, MAX_CONTEXTS),
-      // The newest fix reflects the latest understanding; keep the old one
-      // only when the new recording brought none.
-      instead: instead || match.instead,
+      instead: mergeInstead(instead, match.instead),
       severity:
         severity === "critical" || match.severity === "critical"
           ? "critical"
