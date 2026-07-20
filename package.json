@@ -49,10 +49,10 @@
     "demo": "tsc && node dist/demo.js",
     "demo:privacy": "tsc && node dist/demo-redaction.js",
     "aggregate": "tsc && node dist/aggregate.js",
-    "stats": "vite-node scripts/stats.ts",
+    "stats": "tsx scripts/stats.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "bench": "vite-node bench/lookup.bench.ts",
+    "bench": "tsx bench/lookup.bench.ts",
     "worker:dev": "cd worker && wrangler dev --port 8787",
     "worker:deploy": "cd worker && wrangler deploy",
     "clean": "rm -rf dist",
@@ -64,10 +64,11 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
-    "@vitest/coverage-v8": "^2.1.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "fast-check": "^4.8.0",
+    "tsx": "^4.23.1",
     "typescript": "^5.4.0",
-    "vitest": "^2.1.0"
+    "vitest": "^4.1.10"
   },
   "engines": {
     "node": ">=18"
