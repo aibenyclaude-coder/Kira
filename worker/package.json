@@ -23,5 +23,8 @@
   },
   "dependencies": {
     "zod": "^3.23.0"
+  },
+  "overrides": {
+    "sharp": "^0.35.3"
   }
 }
