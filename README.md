@@ -95,7 +95,7 @@ A lookup miss is not a dead end — it's demand data. Kira returns the closest s
 
 ![Kira Demo](./demo.gif)
 
-38 community skills across deploy / database / auth / payments / UI / testing / CI / infra / mobile / CMS, and 41 community scars — real failure patterns like *"Vercel deploy succeeds but the app crashes: missing env vars"* or *"Auth.js v5 signIn imported from the wrong side"*. `kira_route` turns a goal ("build a web app") into an ordered plan with the right skill and scars per step.
+38 community skills across deploy / database / auth / payments / UI / testing / CI / infra / mobile / CMS, and 43 community scars — real failure patterns like *"Vercel deploy succeeds but the app crashes: missing env vars"* or *"Auth.js v5 signIn imported from the wrong side"*. `kira_route` turns a goal ("build a web app") into an ordered plan with the right skill and scars per step.
 
 **Community scars are where personal scars graduate to — and the flow is live.** Ask your agent to run `kira_share_scar(scar_id)`: it re-sanitizes your personal scar, generalizes it, and hands you a prefilled submission link (nothing uploads until you click). An intake bot validates the JSON; a human reviews the content; on merge it ships to every Kira user. Prefer forms? [Submit a scar directly](../../issues/new?template=scar-submission.yml).
 
