@@ -10,8 +10,10 @@
 import {
   recordPersonalScar,
   personalScarPath,
+  describeScarRedactions,
   type PersonalScar,
   type RecordFailureInput,
+  type ScarRedactionReport,
 } from "../personal-scars.js";
 import type { ScarSeverity } from "../types.js";
 
@@ -25,7 +27,9 @@ export const KIRA_RECORD_FAILURE_TOOL = {
     "Provide 'title' (what went wrong), 'mistake' (what was done / the exception), " +
     "and ideally 'instead' (what to do next time). " +
     "All free text is sanitized (keys, paths, emails redacted) before it touches " +
-    "disk. Personal scars are LOCAL-ONLY — they are never uploaded, on any tier.",
+    "disk; the response's 'redactions' field reports anything that was rewritten, " +
+    "so check it and re-record if a redaction hit something that was not a secret. " +
+    "Personal scars are LOCAL-ONLY — they are never uploaded, on any tier.",
   inputSchema: {
     type: "object",
     properties: {
@@ -86,6 +90,33 @@ export interface RecordFailureResult {
   path: string;
   /** Reassures the agent/user that nothing left the machine. */
   stored: "local-only";
+  /**
+   * Present ONLY when the sanitizer rewrote the submitted text. Absent means
+   * the stored scar says exactly what the caller sent.
+   */
+  redactions?: ScarRedactionReport & { note: string };
+}
+
+/** Caller-facing explanation of a rewrite, sized for an agent to act on. */
+function redactionNote(r: ScarRedactionReport): string {
+  const parts: string[] = [];
+  if (r.count > 0) {
+    parts.push(
+      `The sanitizer rewrote ${r.count} span${r.count === 1 ? "" : "s"} in ${r.fields.join(", ")} ` +
+        `(${r.patterns.join(", ")}), so the stored scar differs from what you sent.`
+    );
+  }
+  if (r.truncated.length > 0) {
+    parts.push(`Over the length cap, tail dropped: ${r.truncated.join(", ")}.`);
+  }
+  parts.push(
+    "Redaction is intentional for real secrets, but it also fires on things that " +
+      "are not secrets — `pkg@1.2.3` reads as an email, `JST=UTC+9` as an env " +
+      "assignment. Check scar.mistake / scar.instead above: if a redaction ate the " +
+      "detail the lesson depends on, rephrase it (quote or space out the value) and " +
+      "record again."
+  );
+  return parts.join(" ");
 }
 
 /**
@@ -134,6 +165,13 @@ export async function handleRecordFailure(
     severity: severity as ScarSeverity | undefined,
   };
 
+  const redactions = describeScarRedactions(input);
   const scar = await recordPersonalScar(input);
-  return { ack: true, scar, path: personalScarPath(scar.id), stored: "local-only" };
+  return {
+    ack: true,
+    scar,
+    path: personalScarPath(scar.id),
+    stored: "local-only",
+    ...(redactions && { redactions: { ...redactions, note: redactionNote(redactions) } }),
+  };
 }

@@ -414,6 +414,55 @@ describe("handleRecordFailure", () => {
   });
 });
 
+describe("redaction reporting", () => {
+  it("omits the redactions field when nothing was rewritten", async () => {
+    const { handleRecordFailure } = await fresh();
+    const res = await handleRecordFailure({
+      title: "deploy failed on a cold cache",
+      mistake: "assumed the build step warmed it",
+    });
+    expect(res.redactions).toBeUndefined();
+  });
+
+  it("reports which rule ate the text and in which field", async () => {
+    const { handleRecordFailure } = await fresh();
+    const res = await handleRecordFailure({
+      title: "npm publish looked fine",
+      // An npm spec, not an email — the sanitizer cannot tell them apart.
+      mistake: "the log said npm published kira-mcp@0.8.2 and I trusted it",
+      instead: "verify with MAX_TRIES=3 against the registry",
+    });
+    expect(res.redactions?.count).toBe(2);
+    expect(res.redactions?.fields).toEqual(["mistake", "instead"]);
+    expect(res.redactions?.patterns).toEqual(["email", "env-assignment"]);
+    expect(res.scar.mistake).toContain("[EMAIL]");
+    expect(res.redactions?.note).toContain("differs from what you sent");
+  });
+
+  it("reports truncation even when no rule fired", async () => {
+    const { handleRecordFailure } = await fresh();
+    const res = await handleRecordFailure({
+      title: "short title",
+      mistake: "X".repeat(2500),
+    });
+    expect(res.redactions?.count).toBe(0);
+    expect(res.redactions?.truncated).toEqual(["mistake"]);
+    expect(res.redactions?.note).toContain("tail dropped");
+  });
+
+  it("describes the rewrite even when the scar folds into an existing one", async () => {
+    const { handleRecordFailure } = await fresh();
+    const input = {
+      title: "registry publish reported a stale version",
+      mistake: "the log said npm published kira-mcp@0.8.2 and I trusted it",
+    };
+    await handleRecordFailure(input);
+    const again = await handleRecordFailure(input);
+    expect(again.scar.hit_count).toBe(2);
+    expect(again.redactions?.patterns).toEqual(["email"]);
+  });
+});
+
 describe("KIRA_RECORD_FAILURE_TOOL descriptor", () => {
   it("is a well-formed, local-only MCP tool", async () => {
     const { KIRA_RECORD_FAILURE_TOOL } = await fresh();
