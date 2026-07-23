@@ -62,6 +62,29 @@ describe("clusterMisses", () => {
     expect(grown).toBeDefined();
     expect(grown!.rep).toBe("stripe webhook retry storm");
   });
+
+  // Regression: jaccard(a,b) ≤ min/max size, so a terse miss and a verbose one
+  // about the same demand can NEVER reach the 0.5 gate. These three are the
+  // real misses off this machine's log — they stayed three singleton clusters
+  // for every weekly run, which is why Loop B never emitted a candidate.
+  it("clusters a terse miss with verbose ones about the same demand", () => {
+    const clusters = clusterMisses([
+      { keyword: "discord bot claude -p 常駐" },
+      { keyword: "discord bot persona 作成 LINE 実データ化" },
+      { keyword: "discord bot 機能追加 イベントハンドラ welcome" },
+    ]);
+    expect(clusters.length).toBe(1);
+    expect(clusters[0]!.count).toBe(3);
+  });
+
+  it("does not merge on a single shared token — that is a topic, not a demand", () => {
+    const clusters = clusterMisses([
+      { keyword: "discord channel management" },
+      { keyword: "discord bot claude -p 常駐" },
+      { keyword: "terraform state locking" },
+    ]);
+    expect(clusters.length).toBe(3);
+  });
 });
 
 describe("aggregateReports + clusterNotes", () => {
@@ -92,6 +115,37 @@ describe("buildCandidates", () => {
     const kinds = cands.map((c) => c.kind).sort();
     expect(kinds).toContain("alias");
     expect(kinds).toContain("skill-gap");
+  });
+
+  // A candidate id is the corpus filename a maintainer is told to commit, so
+  // it has to satisfy the validator and stay unique. The old token-derived
+  // slug did neither: tokenize() emits CJK bigrams first, and stripping them
+  // left the separator behind (`community.-discord-bot-claude.v1`), while a
+  // title with no latin at all collapsed onto the constant "unnamed".
+  const SKILL_ID = /^(community|vendor)\.[a-z0-9][a-z0-9-]*\.v\d+$/;
+
+  it("emits an id the validator accepts even when the demand is not latin", () => {
+    const clusters = clusterMisses([
+      { keyword: "discord bot claude -p 常駐" },
+      { keyword: "discord bot persona 作成 LINE 実データ化" },
+    ]);
+    const [cand] = buildCandidates(clusters, [], "2026-07-06T00:00:00Z");
+    expect(String(cand!.body.id)).toMatch(SKILL_ID);
+    expect(cand!.file.startsWith("skill-gap--")).toBe(false);
+  });
+
+  it("gives two all-CJK demands distinct ids instead of one shared constant", () => {
+    const clusters = clusterMisses([
+      { keyword: "データベース 設計 正規化 手順" },
+      { keyword: "データベース 設計 正規化 手順 具体例" },
+      { keyword: "請求書 作成 自動化 手順" },
+      { keyword: "請求書 作成 自動化 手順 詳細" },
+    ]);
+    const cands = buildCandidates(clusters, [], "2026-07-06T00:00:00Z");
+    expect(cands.length).toBe(2);
+    for (const c of cands) expect(String(c.body.id)).toMatch(SKILL_ID);
+    expect(new Set(cands.map((c) => c.file)).size).toBe(2);
+    expect(cands.some((c) => c.file.includes("unnamed"))).toBe(false);
   });
 });
 

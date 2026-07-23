@@ -29,6 +29,7 @@ import { appendFile, mkdir, readFile, readdir, writeFile } from "node:fs/promise
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import { promisify } from "node:util";
 import { pathToFileURL } from "node:url";
 import { tokenize } from "./similarity.js";
@@ -103,7 +104,51 @@ function jaccard(a: Set<string>, b: Set<string>): number {
   return inter / (a.size + b.size - inter);
 }
 
-/** Greedy clustering: an entry joins the MOST similar cluster with token-Jaccard ≥ 0.5 (best-fit, so membership doesn't depend on arrival order). */
+/**
+ * When the containment fallback applies, the shorter side must be at least
+ * half-covered, and by ≥ 2 real tokens — one shared word ("discord") is a
+ * topic, not a demand.
+ */
+const CONTAIN_MIN = 0.5;
+const CONTAIN_SHARED_MIN = 2;
+
+/**
+ * Similarity for "are these the same demand", ≥ 0 (0 = not the same).
+ *
+ * Jaccard is the right measure when the two sides are comparable in length,
+ * and a *structurally impossible* one when they are not: `jaccard(a,b)` is
+ * capped at `min/max size`, so once one side has more than 1/threshold times
+ * the tokens of the other, the gate is unreachable NO MATTER HOW COMPLETE the
+ * overlap is. That is not a corner case here — tokenize() expands CJK runs
+ * into character bigrams, so a Japanese phrase yields ~1 token per character
+ * while an English phrase yields ~1 per word, and real queries differ 3-5× in
+ * token count. Measured over the 12 lookup misses on this machine: 20 of the
+ * 66 pairs are barred by size ratio alone, the highest jaccard any pair
+ * reaches is 0.182, and three misses that are plainly one demand ("discord
+ * bot …" ×3) never merged — so Loop B emitted zero candidates in every weekly
+ * run it has ever made.
+ *
+ * So the containment fallback is scoped to exactly the pairs where jaccard
+ * cannot fire on its own: a terse query whose tokens sit inside a verbose one
+ * is the same demand asked twice. Where jaccard CAN fire it stays the only
+ * judge — two same-length queries sharing half their tokens ("stripe webhook
+ * signature verify" vs "stripe webhook retry storm") are a shared topic with
+ * different demands, and must stay apart.
+ */
+function demandSim(a: Set<string>, b: Set<string>, threshold: number): number {
+  const j = jaccard(a, b);
+  if (j >= threshold) return j;
+  if (a.size === 0 || b.size === 0) return 0;
+  const ratio = Math.min(a.size, b.size) / Math.max(a.size, b.size);
+  if (ratio >= threshold) return 0; // jaccard was free to fire and didn't.
+  let shared = 0;
+  for (const t of a) if (b.has(t)) shared++;
+  if (shared < CONTAIN_SHARED_MIN) return 0;
+  const contained = shared / Math.min(a.size, b.size);
+  return contained >= CONTAIN_MIN ? contained : 0;
+}
+
+/** Greedy clustering: an entry joins the MOST similar cluster (best-fit, so membership doesn't depend on arrival order). */
 export function clusterMisses(entries: MissEntry[]): MissCluster[] {
   const clusters: MissCluster[] = [];
   for (const e of entries) {
@@ -113,8 +158,8 @@ export function clusterMisses(entries: MissEntry[]): MissCluster[] {
     let home: MissCluster | undefined;
     let bestSim = 0;
     for (const c of clusters) {
-      const sim = jaccard(toks, c.tokens);
-      if (sim >= 0.5 && sim > bestSim) {
+      const sim = demandSim(toks, c.tokens, 0.5);
+      if (sim > bestSim) {
         bestSim = sim;
         home = c;
       }
@@ -174,8 +219,8 @@ export function clusterNotes(notes: string[]): Array<{ rep: string; all: string[
     let home: { rep: string; tokens: Set<string>; all: string[] } | undefined;
     let bestSim = 0;
     for (const c of clusters) {
-      const sim = jaccard(toks, c.tokens);
-      if (sim >= 0.4 && sim > bestSim) {
+      const sim = demandSim(toks, c.tokens, 0.4);
+      if (sim > bestSim) {
         bestSim = sim;
         home = c;
       }
@@ -225,10 +270,32 @@ export async function readPersonalScars(dir: string): Promise<PersonalScarLite[]
 
 // ── Candidates ──────────────────────────────────────────────────────────
 
-function slugify(s: string): string {
-  return (
-    tokenize(s).join("-").replace(/[^a-z0-9-]/g, "").slice(0, 40) || "unnamed"
-  );
+function shortHash(s: string): string {
+  return createHash("sha1").update(s).digest("hex").slice(0, 8);
+}
+
+/**
+ * Slug for a candidate FILENAME and ID — not decoration, so it has to survive
+ * the id rules (`^(community|vendor)\.[a-z0-9][a-z0-9-]*\.v\d+$`) and stay
+ * unique.
+ *
+ * Derived from the raw text, NOT from tokenize(): tokens are emitted CJK
+ * bigrams first, and stripping the non-ascii ones left the separators behind,
+ * so the first candidate this loop would ever have emitted was
+ * `community.-discord-bot-claude.v1` — a leading hyphen the validator rejects.
+ *
+ * An empty derivation falls back to a hash OF THE CONTENT, never a constant:
+ * a constant fallback is a merge point where every non-latin title lands on
+ * the same filename (see the same fix in tools/share-scar.ts).
+ */
+function slugify(s: string, max = 40): string {
+  const slug = s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, max)
+    .replace(/-+$/g, "");
+  return slug || shortHash(s);
 }
 
 export interface Candidate {
@@ -284,10 +351,10 @@ export function buildCandidates(
     for (const nc of clusterNotes(s.notes)) {
       out.push({
         kind: "scar",
-        file: `scar-${slugify(s.skill_id)}-${slugify(nc.rep).slice(0, 16)}.json`,
+        file: `scar-${slugify(s.skill_id)}-${slugify(nc.rep, 16)}.json`,
         body: {
           _kira_candidate: "scar",
-          id: `scar.${slugify(s.skill_id)}-${slugify(nc.rep).slice(0, 16)}.v1`,
+          id: `scar.${slugify(s.skill_id)}-${slugify(nc.rep, 16)}.v1`,
           keywords: [...new Set(tokenize(s.skill_id + " " + nc.rep))].slice(0, 8),
           contexts: [],
           title: `TODO: recurring failure in ${s.skill_id}`,
