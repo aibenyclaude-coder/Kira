@@ -38,6 +38,24 @@ jobs:
       - name: corpus.json freshness (feed must match the repo)
         run: node scripts/gen-corpus.mjs --check
 
+      # The MCP registry rejects a version it already has. server.json is
+      # published verbatim, so if it lags package.json the tag HALF-RELEASES:
+      # npm ships the new version, registry-publish dies on
+      # "cannot publish duplicate version" and the registry keeps serving the
+      # old record. That is exactly what happened on v0.8.2 (2026-07-08) —
+      # caught here, before a tag exists, because at tag time npm has already
+      # published and the damage is done.
+      - name: server.json version matches package.json (registry rail)
+        run: |
+          PKG_V="$(node -p "require('./package.json').version")"
+          SRV_V="$(node -p "require('./server.json').version")"
+          SRV_PKG_V="$(node -p "require('./server.json').packages[0].version")"
+          if [ "$PKG_V" != "$SRV_V" ] || [ "$PKG_V" != "$SRV_PKG_V" ]; then
+            echo "::error::server.json (version $SRV_V, packages[0].version $SRV_PKG_V) != package.json $PKG_V — bump all three together"
+            exit 1
+          fi
+          echo "OK — server.json $SRV_V matches package.json"
+
       - name: Validate skill / scar JSON
         run: |
           python3 - <<'PY'

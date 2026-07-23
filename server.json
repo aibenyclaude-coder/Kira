@@ -6,14 +6,14 @@
     "url": "https://github.com/aibenyclaude-coder/Kira.git",
     "source": "github"
   },
-  "version": "0.8.1",
+  "version": "0.8.2",
   "websiteUrl": "https://github.com/aibenyclaude-coder/Kira",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "kira-mcp",
-      "version": "0.8.1",
+      "version": "0.8.2",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

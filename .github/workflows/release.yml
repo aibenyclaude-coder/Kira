@@ -51,6 +51,19 @@ jobs:
             echo "::error::tag $GITHUB_REF_NAME != package.json $PKG_V"
             exit 1
           fi
+      # Same invariant CI enforces on every push — repeated here so a tag
+      # pushed from a stale branch cannot slip past it. registry-publish.yml
+      # runs on the same tag INDEPENDENTLY of this job, so this gate cannot
+      # stop it; it only makes the mismatch loud. CI is the real prevention.
+      - name: server.json matches package.json version
+        run: |
+          PKG_V="$(node -p "require('./package.json').version")"
+          SRV_V="$(node -p "require('./server.json').version")"
+          SRV_PKG_V="$(node -p "require('./server.json').packages[0].version")"
+          if [ "$PKG_V" != "$SRV_V" ] || [ "$PKG_V" != "$SRV_PKG_V" ]; then
+            echo "::error::server.json (version $SRV_V, packages[0].version $SRV_PKG_V) != package.json $PKG_V — the MCP registry will reject this tag as a duplicate version"
+            exit 1
+          fi
 
   publish:
     name: npm publish (trusted publishing)
