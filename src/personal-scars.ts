@@ -17,7 +17,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { KIRA_HOME } from "./consent.js";
-import { sanitize } from "./sanitize.js";
+import { sanitize, sanitizeWithReport } from "./sanitize.js";
 import { sharedScripts, tokenize } from "./similarity.js";
 import type { ScarSeverity } from "./types.js";
 
@@ -216,6 +216,58 @@ function readExisting(file: string): PersonalScar | null {
     // Corrupt file — treat as absent and overwrite with a fresh scar.
   }
   return null;
+}
+
+/** What the sanitizer changed on the way to disk, aggregated across fields. */
+export interface ScarRedactionReport {
+  /** Total number of spans rewritten across all free-text fields. */
+  count: number;
+  /** Rule names that fired, e.g. ["env-assignment", "email"]. */
+  patterns: string[];
+  /** Fields whose text the sanitizer rewrote. */
+  fields: string[];
+  /** Fields cut to their length cap — the tail was dropped. */
+  truncated: string[];
+}
+
+/**
+ * Describe what `recordPersonalScar` will change about `input` before storing it.
+ *
+ * Returns null when the stored text will match what the caller sent. The
+ * sanitizer is intentionally aggressive and fires on non-secrets too, so a scar
+ * can reach disk with the very detail it was written to preserve replaced by a
+ * marker. Reporting the rewrite lets the caller rephrase instead of trusting a
+ * lesson that no longer says what it meant.
+ *
+ * Covers the four free-text fields. `keywords` / `contexts` are sanitized as
+ * well, but they are short constrained terms the rules effectively never hit.
+ */
+export function describeScarRedactions(
+  input: RecordFailureInput
+): ScarRedactionReport | null {
+  const checked: Array<[string, string | undefined, number]> = [
+    ["title", input.title, TITLE_MAX],
+    ["mistake", input.mistake, MISTAKE_MAX],
+    ["instead", input.instead, INSTEAD_MAX],
+    ["summary", input.summary, SUMMARY_MAX],
+  ];
+  const patterns: string[] = [];
+  const fields: string[] = [];
+  const truncated: string[] = [];
+  let count = 0;
+  for (const [field, value, cap] of checked) {
+    if (!value) continue;
+    const { report } = sanitizeWithReport(value, cap);
+    if (report.truncated) truncated.push(field);
+    if (!report.hits.length) continue;
+    fields.push(field);
+    for (const hit of report.hits) {
+      count += hit.count;
+      if (!patterns.includes(hit.pattern)) patterns.push(hit.pattern);
+    }
+  }
+  if (count === 0 && truncated.length === 0) return null;
+  return { count, patterns, fields, truncated };
 }
 
 /**
