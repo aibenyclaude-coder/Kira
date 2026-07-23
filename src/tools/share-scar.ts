@@ -9,6 +9,7 @@
  * opening the issue is a deliberate human (or human-approved) act. That keeps
  * the local-only privacy promise intact: sharing is always explicit.
  */
+import { createHash } from "node:crypto";
 import { loadPersonalScars, type PersonalScar } from "../personal-scars.js";
 import { sanitize } from "../sanitize.js";
 
@@ -70,14 +71,49 @@ export interface ShareScarResult {
   shared: "nothing yet — this tool only PREPARES the submission";
 }
 
+/** Leaves room for the `-<hash>` suffix inside a readable id segment. */
+const SLUG_MAX = 48;
+
 function slugify(s: string): string {
-  const slug = s
+  return s
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 48)
+    .slice(0, SLUG_MAX)
     .replace(/-+$/g, "");
-  return slug || "scar";
+}
+
+function shortHash(s: string): string {
+  return createHash("sha1").update(s).digest("hex").slice(0, 8);
+}
+
+/**
+ * A community id is not decoration — it is the corpus FILENAME. The intake
+ * bot derives `skills/scars/<id minus scar. and .v1>.json` from it and tells
+ * the maintainer to commit that path, so two candidates that slugify alike do
+ * not merely look alike: the second one silently overwrites the first, and
+ * the corpus (keyed by id) loses an entry.
+ *
+ * A title-only slug collides constantly, because a slug is not a faithful
+ * projection of every title. Measured over the 135 personal scars on this
+ * machine, 18 of them (13.3%) shared a candidate id with another scar: any
+ * title with no latin characters slugified to "" and hit the old constant
+ * fallback (10 scars landed on the literal `scar.scar.v1` → `scar.json`),
+ * titles with incidental latin debris collapsed to 1-2 chars (`scar.0.v1`,
+ * `scar.ai.v1`), and two distinct long titles collided after the 48-char
+ * truncation. The personal id already carries a content hash for exactly this
+ * reason — `scar.personal.<slug>.<hash>.v1` — and is collision-free across the
+ * same 135 records; the community candidate now carries one too.
+ *
+ * The hash goes INSIDE the slug segment so the corpus keeps its three-segment
+ * `scar.<slug>.v1` convention and the id still satisfies the validator's
+ * `/^scar\.[a-z0-9][a-z0-9-]*\.v\d+$/`. A maintainer is free to shorten it by
+ * hand at merge time — that is a rename of a unique id, not a collision.
+ */
+function candidateId(title: string, mistake: string): string {
+  const slug = slugify(title);
+  const hash = shortHash(`${title}\n${mistake}`);
+  return `scar.${slug ? `${slug}-` : ""}${hash}.v1`;
 }
 
 function clean(text: string | undefined, cap: number): string {
@@ -88,14 +124,15 @@ function clean(text: string | undefined, cap: number): string {
 /** Generalize a personal scar into the community submission shape. */
 export function buildCandidate(scar: PersonalScar): Record<string, unknown> {
   const title = clean(scar.title, TITLE_MAX);
+  const mistake = clean(scar.mistake, TEXT_MAX);
   return {
-    id: `scar.${slugify(title)}.v1`,
+    id: candidateId(title, mistake),
     keywords: scar.keywords.slice(0, 8),
     contexts: scar.contexts,
     title,
     summary: clean(scar.summary, SUMMARY_MAX) || title,
     severity: scar.severity,
-    mistake: clean(scar.mistake, TEXT_MAX),
+    mistake,
     instead: clean(scar.instead, TEXT_MAX),
     // Honest count: how often it actually recurred on the submitter's machine.
     hit_count: scar.hit_count,

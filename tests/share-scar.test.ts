@@ -104,6 +104,88 @@ describe("handleShareScar", () => {
   });
 });
 
+// The candidate id IS the corpus filename the intake bot tells the maintainer
+// to commit (scripts/scar-intake.mjs derives skills/scars/<slug>.json from it),
+// so a collision is a silent overwrite of somebody else's scar, not a cosmetic
+// clash. Measured on the 135-scar store this patrol runs against, 18 of them
+// collided before the content hash was added.
+describe("buildCandidate id uniqueness", () => {
+  const SCAR_ID = /^scar\.[a-z0-9][a-z0-9-]*\.v\d+$/;
+
+  /** Mirrors scripts/scar-intake.mjs — what the maintainer is told to commit. */
+  const suggestedFile = (id: string) =>
+    `skills/scars/${id.replace(/^scar\./, "").replace(/\.v\d+$/, "")}.json`;
+
+  const scarOf = (title: string, mistake: string): any => ({
+    id: "scar.personal.x.00000000.v1",
+    keywords: [],
+    contexts: [],
+    title,
+    summary: title,
+    severity: "warning",
+    mistake,
+    instead: "",
+    hit_count: 1,
+    source: "personal",
+    version: "1.0.0",
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+  });
+
+  it("keeps titles with no latin characters distinct", async () => {
+    const { buildCandidate } = await fresh();
+    // Real shapes from the store: these all slugified to "" and landed on the
+    // single constant id scar.scar.v1 → skills/scars/scar.json.
+    const titles = [
+      "冪等な置換でマッチ数を書き換え件数として報告した",
+      "リードの射程を測るために入力そのものを捏造した",
+      "並走セッション間で成果物の存在確認が直後に陳腐化した",
+      "古い進捗表を根拠に残タスクを未着手と誤判断した",
+    ];
+    const ids = titles.map((t) => String(buildCandidate(scarOf(t, `${t} の詳細`)).id));
+
+    expect(new Set(ids).size).toBe(titles.length);
+    expect(new Set(ids.map(suggestedFile)).size).toBe(titles.length);
+    for (const id of ids) expect(id).toMatch(SCAR_ID);
+  });
+
+  it("keeps titles that differ only past the slug truncation distinct", async () => {
+    const { buildCandidate } = await fresh();
+    const stem = "patrol read state file and composed measurement command";
+    const a = buildCandidate(scarOf(`${stem} in parallel`, "raced the read"));
+    const b = buildCandidate(scarOf(`${stem} in one shell`, "raced the read"));
+
+    expect(a.id).not.toBe(b.id);
+    expect(String(a.id)).toMatch(SCAR_ID);
+    expect(String(b.id)).toMatch(SCAR_ID);
+  });
+
+  it("keeps titles whose only latin content is incidental debris distinct", async () => {
+    const { buildCandidate } = await fresh();
+    // Both slugified to "ai" before the fix.
+    const a = buildCandidate(scarOf("AIの完了報告が虚偽だった", "報告を信じた"));
+    const b = buildCandidate(scarOf("AI自身の応答を履歴に書き戻さない", "毎回作り直した"));
+
+    expect(a.id).not.toBe(b.id);
+  });
+
+  it("stays stable for the same content and readable for a latin title", async () => {
+    const { buildCandidate } = await fresh();
+    const scar = scarOf("prisma generate forgotten", "shipped without regenerating the client");
+
+    expect(buildCandidate(scar).id).toBe(buildCandidate(scar).id);
+    expect(String(buildCandidate(scar).id)).toMatch(/^scar\.prisma-generate-forgotten-[0-9a-f]{8}\.v1$/);
+  });
+
+  it("distinguishes scars that share a title but not a mistake", async () => {
+    const { buildCandidate } = await fresh();
+    const a = buildCandidate(scarOf("build gate bypassed", "the pipe swallowed the exit code"));
+    const b = buildCandidate(scarOf("build gate bypassed", "the gate ran on a stale artifact"));
+
+    expect(a.id).not.toBe(b.id);
+  });
+});
+
 describe("KIRA_SHARE_SCAR_TOOL descriptor", () => {
   it("is read-only and closed-world (submission is the human's act)", async () => {
     const { KIRA_SHARE_SCAR_TOOL } = await fresh();
