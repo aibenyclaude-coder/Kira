@@ -427,10 +427,12 @@ describe("redaction reporting", () => {
   it("reports which rule ate the text and in which field", async () => {
     const { handleRecordFailure } = await fresh();
     const res = await handleRecordFailure({
-      title: "npm publish looked fine",
-      // An npm spec, not an email — the sanitizer cannot tell them apart.
-      mistake: "the log said npm published kira-mcp@0.8.2 and I trusted it",
-      instead: "verify with MAX_TRIES=3 against the registry",
+      title: "unit lookup looked fine",
+      // A systemd template unit, not an email — the sanitizer cannot tell
+      // them apart (an npm spec no longer trips it; `service` still reads
+      // as a TLD).
+      mistake: "the log said iroha-worker@1.service and I trusted it",
+      instead: "verify with MAX_TRIES=3 against systemctl",
     });
     expect(res.redactions?.count).toBe(2);
     expect(res.redactions?.fields).toEqual(["mistake", "instead"]);
@@ -453,8 +455,8 @@ describe("redaction reporting", () => {
   it("describes the rewrite even when the scar folds into an existing one", async () => {
     const { handleRecordFailure } = await fresh();
     const input = {
-      title: "registry publish reported a stale version",
-      mistake: "the log said npm published kira-mcp@0.8.2 and I trusted it",
+      title: "unit lookup reported a stale instance",
+      mistake: "the log said iroha-worker@1.service and I trusted it",
     };
     await handleRecordFailure(input);
     const again = await handleRecordFailure(input);
