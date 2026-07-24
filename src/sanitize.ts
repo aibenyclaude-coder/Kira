@@ -45,7 +45,33 @@ const PATTERNS: Rule[] = [
   { name: "long-hex", re: /\b[a-f0-9]{40,}\b/gi, repl: () => REDACT },
 
   // ── Identity ─────────────────────────────────────────────────────────
-  { name: "email", re: /\b[\w.+-]+@[\w-]+\.[\w.-]+\b/g, repl: () => "[EMAIL]" },
+  /**
+   * An address is `local@domain`, and a domain ends in a TLD — which is never
+   * all digits (ICANN forbids it precisely so a name can't be read as an IP).
+   * The old tail `[\w.-]+` accepted one anyway, so every `pkg@1.2.3` in a
+   * failure note was stored as `[EMAIL]`: "npm published kira-mcp@0.8.2" —
+   * measured, not hypothetical — reached a live personal-scar store as "npm
+   * published [EMAIL]", which is the one detail the lesson existed to record.
+   *
+   * Requiring an alphabetic last label costs no coverage: `user@163.com`
+   * (numeric FIRST label, a real mail provider) still redacts, and the one
+   * shape that legitimately has no TLD — a bare-IP domain — is kept by the
+   * second alternative, so `user@192.168.1.1` still redacts whole rather than
+   * decaying into `user@[IP]` via the rule below.
+   *
+   * `[\w-]` excludes `.`, so the dots fix every split point: the repeated
+   * group has one parse per input and cannot backtrack exponentially.
+   *
+   * Still a known false positive: a systemd template unit, `worker@1.service`
+   * — `service` is alphabetic, so it reads as a TLD. Narrowing that needs a
+   * list of unit suffixes to exclude, and a list can go stale against new
+   * gTLDs; the reporting path (describeScarRedactions) covers it meanwhile.
+   */
+  {
+    name: "email",
+    re: /\b[\w.+-]+@(?:[\w-]+\.)+[A-Za-z]{2,}\b|\b[\w.+-]+@\d{1,3}(?:\.\d{1,3}){3}\b/g,
+    repl: () => "[EMAIL]",
+  },
   { name: "ipv4", re: /(?<![\w.])\d{1,3}(\.\d{1,3}){3}(?![\w.])/g, repl: () => "[IP]" },
   {
     name: "uuid",

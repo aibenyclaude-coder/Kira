@@ -123,12 +123,19 @@ describe("sanitizeWithReport", () => {
     expect(report.hits).toEqual([{ pattern: "env-assignment", count: 2 }]);
   });
 
-  it("reports the false-positive rules that silently eat lesson text", () => {
-    // Both shapes are real corruptions found in a live personal-scar store:
-    // an npm spec read as an email, a systemd template unit read as an email.
-    expect(sanitizeWithReport("npm published kira-mcp@0.8.2", 4096).report.hits).toEqual([
-      { pattern: "email", count: 1 },
-    ]);
+  it("no longer eats an npm spec, and says so by reporting nothing", () => {
+    // A real corruption found in a live personal-scar store: the lesson said
+    // "npm published kira-mcp@0.8.2" and reached disk as "npm published
+    // [EMAIL]". A TLD is never all digits, so this is not an address.
+    const { text, report } = sanitizeWithReport("npm published kira-mcp@0.8.2", 4096);
+    expect(text).toBe("npm published kira-mcp@0.8.2");
+    expect(report.hits).toEqual([]);
+  });
+
+  it("still reports the systemd-unit false positive it cannot yet tell apart", () => {
+    // The other real corruption from the same store. `service` is alphabetic,
+    // so it reads as a TLD — deliberately still redacted, and deliberately
+    // still REPORTED, so the caller can rephrase rather than trust the lesson.
     expect(
       sanitizeWithReport("cgroup showed iroha-worker@1.service", 4096).report.hits
     ).toEqual([{ pattern: "email", count: 1 }]);
@@ -155,5 +162,29 @@ describe("sanitizeWithReport", () => {
     const { text, report } = sanitizeWithReport(undefined, 100);
     expect(text).toBeUndefined();
     expect(report).toEqual({ hits: [], truncated: false });
+  });
+});
+
+describe("worker sanitizer parity", () => {
+  // worker/src/sanitize.ts is a deliberate copy (the Worker must build with no
+  // dependency on this project), and a hand-maintained duplicate drifts: the
+  // pattern list here changed once while the Worker kept redacting the old way,
+  // which is a privacy rule enforced differently on each side of the wire.
+  it("redacts identically to the client copy", async () => {
+    const worker = await import("../worker/src/sanitize.ts");
+    const samples = [
+      "contact alice@example.com please",
+      "wrote to someone@163.com twice",
+      "relayed via user@192.168.1.1 today",
+      "npm published kira-mcp@0.8.2 ok",
+      "cgroup showed iroha-worker@1.service",
+      "env -i HOME=/tmp/x PATH=/usr/bin kira",
+      "see /home/alice/projects/foo and 10.0.0.5",
+      "id 550e8400-e29b-41d4-a716-446655440000 in db",
+      "plain prose, no secrets",
+    ];
+    for (const s of samples) {
+      expect(worker.sanitize(s, 4096), s).toBe(sanitize(s, 4096));
+    }
   });
 });

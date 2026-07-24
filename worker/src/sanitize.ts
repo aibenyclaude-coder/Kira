@@ -18,7 +18,10 @@ const PATTERNS: Array<[RegExp, string]> = [
   [/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g, REDACT],
   [/\bAKIA[0-9A-Z]{16}\b/g, REDACT],
   [/\b[a-f0-9]{40,}\b/gi, REDACT],
-  [/\b[\w.+-]+@[\w-]+\.[\w.-]+\b/g, "[EMAIL]"],
+  // A TLD is never all digits, so `pkg@1.2.3` is not an address; the second
+  // alternative keeps bare-IP domains. See src/sanitize.ts for the full note —
+  // tests/sanitize.test.ts asserts this file stays byte-parity with it.
+  [/\b[\w.+-]+@(?:[\w-]+\.)+[A-Za-z]{2,}\b|\b[\w.+-]+@\d{1,3}(?:\.\d{1,3}){3}\b/g, "[EMAIL]"],
   [/(?<![\w.])\d{1,3}(\.\d{1,3}){3}(?![\w.])/g, "[IP]"],
   [/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, "[UUID]"],
   [/\/(?:home|Users)\/[^\s/"']+/g, "/[USER]"],
