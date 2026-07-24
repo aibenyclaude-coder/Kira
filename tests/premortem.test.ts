@@ -5,7 +5,7 @@ import {
   RECOVERY_MINUTES,
 } from "../src/tools/premortem.ts";
 import { loadAllScars } from "../src/index-loader.ts";
-import { indexItems } from "../src/lookup.ts";
+import { indexItems, lookup } from "../src/lookup.ts";
 import type { Scar, ScarSeverity } from "../src/types.ts";
 
 function scar(
@@ -60,11 +60,16 @@ describe("buildPremortem — matching & ranking", () => {
     expect(r.matched_count).toBe(3);
   });
 
-  it("ranks hotspots by hit_count descending", () => {
+  it("ranks critical hotspots first, then by hit_count within a severity", () => {
     const r = buildPremortem(IDX, { goal: "alpha deploy" });
-    const hits = r.hotspots.map((h) => h.hit_count);
-    expect(hits).toEqual([10, 5, 1]);
-    expect(r.hotspots[0]!.id).toBe("scar.alpha.v1");
+    // A (critical/10) and C (critical/1) lead; B (warning/5) follows despite
+    // having been recorded more often than C.
+    expect(r.hotspots.map((h) => h.id)).toEqual([
+      "scar.alpha.v1",
+      "scar.charlie.v1",
+      "scar.bravo.v1",
+    ]);
+    expect(r.hotspots.map((h) => h.hit_count)).toEqual([10, 1, 5]);
   });
 
   it("echoes the goal and returned_count", () => {
@@ -96,11 +101,60 @@ describe("buildPremortem — heat map", () => {
     expect(byId["scar.charlie.v1"]).toBe(10); //  1/10
   });
 
-  it("heat is monotonic with hit_count", () => {
+  it("heat tracks hit_count, not rank — and never exceeds 100", () => {
     const r = buildPremortem(IDX, { goal: "alpha deploy" });
-    const heats = r.hotspots.map((h) => h.heat);
-    for (let i = 1; i < heats.length; i++) {
-      expect(heats[i]!).toBeLessThanOrEqual(heats[i - 1]!);
+    // Ranking is worst-first, so heat is deliberately non-monotonic down the
+    // list (100, 10, 50 here): it answers "how often", not "how bad".
+    for (const h of r.hotspots) {
+      expect(h.heat).toBe(Math.round((h.hit_count / 10) * 100));
+      expect(h.heat).toBeLessThanOrEqual(100);
+    }
+  });
+
+  it("scales heat against the hottest matched scar even when it ranks last", () => {
+    // The hottest scar is a WARNING, so it sorts below both criticals. Reading
+    // the baseline off the first-ranked hotspot (hit_count 1) would report the
+    // warning at heat 900.
+    const hotWarning = scar({ id: "scar.hot-w.v1", title: "Hot warning", keywords: ["baseline kw"], hit_count: 9, severity: "warning" });
+    const coldCritical = scar({ id: "scar.cold-c.v1", title: "Cold critical", keywords: ["baseline kw"], hit_count: 1, severity: "critical" });
+    const r = buildPremortem(indexItems([hotWarning, coldCritical]), { goal: "baseline kw" });
+    expect(r.hotspots.map((h) => h.id)).toEqual(["scar.cold-c.v1", "scar.hot-w.v1"]);
+    expect(r.hotspots.map((h) => h.heat)).toEqual([11, 100]);
+  });
+});
+
+describe("buildPremortem — one ranking rule with kira_lookup", () => {
+  const MINE = scar({ id: "scar.personal.mine.v1", title: "Zebra — my own wall", keywords: ["shared rank kw"], hit_count: 1, severity: "warning", source: "personal" });
+  const THEIRS = scar({ id: "scar.aardvark.v1", title: "Aardvark — shared corpus", keywords: ["shared rank kw"], hit_count: 1, severity: "warning" });
+  const MIXED = indexItems([THEIRS, MINE]);
+
+  it("puts your own recorded failure above a shared one at equal severity", () => {
+    const r = buildPremortem(MIXED, { goal: "shared rank kw" });
+    expect(r.hotspots.map((h) => h.id)).toEqual([
+      "scar.personal.mine.v1",
+      "scar.aardvark.v1",
+    ]);
+  });
+
+  it("keeps a matched critical in the heat map when top_k truncates", () => {
+    // Five much-hotter warnings plus one critical recorded a single time: the
+    // critical is the whole point of a pre-mortem and must survive top_k=5.
+    const warnings = Array.from({ length: 5 }, (_, i) =>
+      scar({ id: `scar.warn-${i}.v1`, title: `Warn ${i}`, keywords: ["crowded kw"], hit_count: 50 + i, severity: "warning" })
+    );
+    const critical = scar({ id: "scar.rare-critical.v1", title: "Rare critical", keywords: ["crowded kw"], hit_count: 1, severity: "critical" });
+    const r = buildPremortem(indexItems([...warnings, critical]), { goal: "crowded kw" });
+    expect(r.matched_count).toBe(6);
+    expect(r.returned_count).toBe(5);
+    expect(r.hotspots[0]!.id).toBe("scar.rare-critical.v1");
+  });
+
+  it("returns exactly the order kira_lookup returns, truncated to top_k", () => {
+    for (const goal of ["alpha deploy", "shared rank kw"]) {
+      const corpus = goal === "alpha deploy" ? IDX : MIXED;
+      const viaLookup = lookup([], corpus, { keyword: goal }).scars.map((s) => s.id);
+      const viaPremortem = buildPremortem(corpus, { goal, top_k: 20 }).hotspots.map((h) => h.id);
+      expect(viaPremortem).toEqual(viaLookup.slice(0, 20));
     }
   });
 });

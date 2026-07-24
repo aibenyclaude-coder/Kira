@@ -8,16 +8,18 @@
  * people doing this, and how much time will avoiding it save me?"
  *
  * It matches the goal (+ optional project context) against the scar corpus
- * (shared + personal) using the same firing logic as lookup, then ranks the
- * hits by `hit_count` (how many times each wall has been recorded) and
- * attaches a quantified prevention value in estimated minutes saved.
+ * (shared + personal) using the same firing logic as lookup, ranks the hits
+ * with the same ordering rule as lookup (compareScars: critical first, then
+ * your own recorded failures, then hit_count) and attaches a quantified
+ * prevention value in estimated minutes saved. How often each wall has been
+ * recorded is reported per hotspot as `hit_count` and `heat`.
  *
  * Per DESIGN.md the unit of value is not tokens but "re-firing count reduction"
  * (再発火回数の削減) — so the response reports both a per-task estimate (what
  * avoiding these traps saves you now) and a cumulative figure weighted by how
  * many times each trap has been recorded.
  */
-import { lookup, type Indexed } from "../lookup.js";
+import { compareScars, lookup, type Indexed } from "../lookup.js";
 import type { NearMatch, Scar, ScarSeverity } from "../types.js";
 
 /**
@@ -68,7 +70,7 @@ export interface PremortemResponse {
   matched_count: number;
   /** How many hotspots are returned (top-K). */
   returned_count: number;
-  /** Failure patterns ranked hottest-first (by hit_count). */
+  /** Failure patterns ranked worst-first (critical → personal → hit_count). */
   hotspots: PremortemHotspot[];
   prevention_value: {
     /** Sum of estimated_minutes_saved across returned hotspots (this task). */
@@ -95,7 +97,8 @@ export const KIRA_PREMORTEM_TOOL = {
   description:
     "Run a PRE-MORTEM before starting a task. Given a goal (and optional project context), " +
     "return a heat map of the past failure patterns (scars, shared and personal) most likely to " +
-    "bite — ranked by how many times each wall has been recorded (hit_count). Each hotspot " +
+    "bite — ranked worst-first: critical before warning, your own recorded failures before the " +
+    "shared corpus, then by how many times the wall has been recorded (hit_count). Each hotspot " +
     "includes the mistake, the fix ('instead'), a relative heat score, and estimated minutes " +
     "saved by avoiding it, plus an aggregate prevention value. When nothing matches strictly, " +
     "'near_scars' lists the closest recorded scars instead. " +
@@ -158,15 +161,22 @@ export function buildPremortem(
   });
   const matched = looked.scars;
 
-  // Rank by hit_count (proven traps first), then critical-first, then title
-  // for a stable order.
-  const ranked = [...matched].sort((a, b) => {
-    if (b.hit_count !== a.hit_count) return b.hit_count - a.hit_count;
-    if (a.severity !== b.severity) return a.severity === "critical" ? -1 : 1;
-    return a.title.localeCompare(b.title);
-  });
+  // Rank with the shared scar ordering (compareScars): critical first, then
+  // your own recorded failures, then hit_count. Ranking by hit_count first —
+  // what this used to do — reads well but does not survive real data: 173 of
+  // the 180 scars on this machine sit at hit_count 1, so the "hottest first"
+  // key is a near-constant and the answer was decided by the alphabetical
+  // tiebreak underneath it. Measured over the 1007 keywords the shipped corpus
+  // and the local store advertise: 37 goals returned a heat map with a WARNING
+  // ranked above a CRITICAL, and one ("ci") pushed three criticals out of the
+  // top-5 entirely while showing two warnings. hit_count keeps its own field
+  // (`heat`), where it is labelled rather than silently deciding the order.
+  const ranked = [...matched].sort(compareScars);
 
-  const maxHit = ranked.length > 0 ? ranked[0]!.hit_count : 0;
+  // Heat is relative to the hottest MATCHED scar — which is no longer ranked[0]
+  // now that severity leads (35 of those 1007 goals have their max hit_count
+  // outside the first slot; reading it off ranked[0] would emit heat > 100).
+  const maxHit = ranked.reduce((m, s) => Math.max(m, s.hit_count), 0);
   const top = ranked.slice(0, k);
 
   const hotspots: PremortemHotspot[] = top.map((scar) => ({

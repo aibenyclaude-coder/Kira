@@ -278,6 +278,29 @@ function orUndefined(list: NearMatch[]): NearMatch[] | undefined {
 }
 
 /**
+ * THE ordering rule for scars, wherever an agent is shown a list of them.
+ *
+ * Critical first (a scar that sorts first is the agent's top "what not to do"),
+ * then your own recorded failures — "I personally hit this here" beats any
+ * shared-corpus frequency signal — then hit_count. Deliberately NOT a total
+ * order: it is applied with a stable sort, so equal-ranked scars keep the
+ * match tier they arrived in (exact keyword > containment > word overlap).
+ *
+ * Exported because a second surface that re-implements this drifts: premortem
+ * ranked by hit_count first, which put a twice-recorded WARNING above a
+ * CRITICAL and, under top_k, pushed criticals out of the answer entirely.
+ */
+export function compareScars(a: Scar, b: Scar): number {
+  if (a.severity !== b.severity) {
+    return a.severity === "critical" ? -1 : 1;
+  }
+  const personal =
+    Number(b.source === "personal") - Number(a.source === "personal");
+  if (personal !== 0) return personal;
+  return b.hit_count - a.hit_count;
+}
+
+/**
  * Lookup returns BOTH skills (how to do it) and scars (what to avoid).
  *
  * Skills: community first, then vendor.
@@ -299,17 +322,7 @@ export function lookup(
 
   // ── Scars ────────────────────────────────────────────────────────────
   const matchedScars = matchByKeywordAndContext(allScars, keyword, contexts);
-  const rankedScars = [...matchedScars].sort((a, b) => {
-    if (a.severity !== b.severity) {
-      return a.severity === "critical" ? -1 : 1;
-    }
-    // At equal severity your own recorded failures come first — "I personally
-    // hit this here" beats any shared-corpus frequency signal.
-    const personal =
-      Number(b.source === "personal") - Number(a.source === "personal");
-    if (personal !== 0) return personal;
-    return b.hit_count - a.hit_count;
-  });
+  const rankedScars = [...matchedScars].sort(compareScars);
   const sortedScars = rankedScars.map(toScarSummary);
 
   // Fall back to scored near-matching (token-level, with title/summary/alias
