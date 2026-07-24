@@ -93,6 +93,51 @@ describe("handleShareScar", () => {
     expect(String(res.candidate.mistake)).not.toContain("/home/alice");
   });
 
+  // A fold keeps the superseded fix under a marker so the local store never
+  // loses it (personal-scars.ts:mergeInstead). That history is an artifact of
+  // ONE machine's edit log; a corpus entry that carries it tells every future
+  // agent to do two different things, the second of which the submitter
+  // already abandoned. Repeated scars are exactly the ones worth sharing —
+  // the issue body brags about hit_count — so the marker rides along on the
+  // best submissions, not the rare ones.
+  it("shares only the current fix, not the superseded one a fold kept", async () => {
+    const { recordPersonalScar, handleShareScar } = await fresh();
+    const first = await recordPersonalScar({
+      title: "vite-node vanished after the major bump",
+      mistake:
+        "assumed the runner survived the major upgrade and kept calling it from the npm scripts",
+      instead: "OLD FIX: pin the previous major until the runner is replaced",
+    });
+    const folded = await recordPersonalScar({
+      title: "vite-node vanished after the major bump",
+      mistake:
+        "assumed the runner survived the major upgrade and kept calling it from the npm scripts again",
+      instead: "NEW FIX: diff node_modules/.bin across the bump and swap in tsx",
+    });
+    expect(folded.id).toBe(first.id); // folded, not a second scar
+    expect(folded.hit_count).toBe(2);
+    expect(folded.instead).toContain("OLD FIX"); // local store keeps history
+
+    const res = await handleShareScar({ scar_id: folded.id });
+    expect(String(res.candidate.instead)).toBe(
+      "NEW FIX: diff node_modules/.bin across the bump and swap in tsx"
+    );
+    expect(String(res.candidate.instead)).not.toContain("previous instead");
+    expect(String(res.candidate.instead)).not.toContain("OLD FIX");
+    expect(res.issue_body).not.toContain("previous instead");
+  });
+
+  it("leaves an unfolded instead exactly as recorded", async () => {
+    const { recordPersonalScar, handleShareScar } = await fresh();
+    const scar = await recordPersonalScar({
+      title: "forgot to regenerate the committed feed artifacts",
+      mistake: "opened a scar PR without rerunning the generators, so the check job failed",
+      instead: "regenerate docs/stats.json and docs/corpus.json in the same commit",
+    });
+    const res = await handleShareScar({ scar_id: scar.id });
+    expect(res.candidate.instead).toBe(scar.instead);
+  });
+
   it("ignores an invalid repo argument and uses the default", async () => {
     const { recordPersonalScar, handleShareScar } = await fresh();
     const scar = await recordPersonalScar({

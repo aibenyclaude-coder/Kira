@@ -205,6 +205,22 @@ function mergeInstead(next: string, prev: string): string {
   return (next + PREVIOUS_INSTEAD_MARKER + prev).slice(0, INSTEAD_MAX);
 }
 
+/**
+ * The current fix inside a possibly-folded `instead` — everything above the
+ * marker mergeInstead writes.
+ *
+ * Keeping the superseded text is right for the LOCAL store (a fold rewrites the
+ * file in place and there is no history to fall back on), but it is one
+ * machine's edit log, not part of the lesson. Anything that exports a scar off
+ * this machine must publish the newest fix only: a reader who gets both is told
+ * to do two different things, and the second one is the one its author already
+ * abandoned.
+ */
+export function currentInstead(instead: string): string {
+  const cut = instead.indexOf(PREVIOUS_INSTEAD_MARKER);
+  return (cut === -1 ? instead : instead.slice(0, cut)).trim();
+}
+
 function readExisting(file: string): PersonalScar | null {
   if (!existsSync(file)) return null;
   try {
