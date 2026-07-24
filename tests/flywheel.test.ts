@@ -8,8 +8,10 @@ import {
   clusterMisses,
   clusterNotes,
   readNdjson,
+  renderDigest,
   runFlywheel,
 } from "../src/flywheel.js";
+import type { Candidate } from "../src/flywheel.js";
 
 let home: string;
 let prevKiraHome: string | undefined;
@@ -221,5 +223,30 @@ describe("runFlywheel (end-to-end, no LLM)", () => {
     const emitted = await readdir(join(home, "flywheel", "candidates"));
     expect(emitted.some((f) => f.startsWith("skill-gap-"))).toBe(true);
     expect(emitted.some((f) => f.startsWith("scar-"))).toBe(true);
+  });
+});
+
+describe("renderDigest — candidate section honesty", () => {
+  const cand = (file: string): Candidate => ({ kind: "scar", file, body: {} });
+
+  it("does not blame --emit-candidates for an empty candidate list", () => {
+    // buildCandidates() runs BEFORE the flag is ever read — the flag only
+    // decides whether candidates are written to disk, never whether any
+    // exist. All 3 shipped weekly digests named it as a possible cause.
+    const out = renderDigest("2026-07-19", [], [], [], [], [], [], true);
+    expect(out).not.toContain("--emit-candidates");
+    expect(out).not.toContain("candidates/ を確認"); // no dead pointer to a dir that was never created
+  });
+
+  it("states that candidates were NOT written when the flag was absent", () => {
+    const out = renderDigest("2026-07-19", [], [], [], [], [], [cand("scar-x.json")], false);
+    expect(out).toContain("scar-x.json");
+    expect(out).toContain("--emit-candidates"); // here the flag IS the reason nothing is on disk
+  });
+
+  it("points at candidates/ only when something was actually written there", () => {
+    const out = renderDigest("2026-07-19", [], [], [], [], [], [cand("scar-x.json")], true);
+    expect(out).toContain("candidates/ を確認");
+    expect(out).not.toContain("--emit-candidates");
   });
 });

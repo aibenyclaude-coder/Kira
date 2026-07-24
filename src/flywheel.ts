@@ -413,7 +413,12 @@ export function renderDigest(
   routeClusters: MissCluster[],
   stats: SkillStats[],
   personal: PersonalScarLite[],
-  candidates: Candidate[]
+  candidates: Candidate[],
+  // Whether the candidates were actually written to disk. The digest cannot
+  // infer this: buildCandidates() runs unconditionally, so an empty list never
+  // means "the flag was missing" — and a non-empty list does not mean the
+  // files exist. Both halves have to be told.
+  emitted: boolean
 ): string {
   const L: string[] = [];
   L.push(`# Kira flywheel digest — ${date}`);
@@ -449,11 +454,17 @@ export function renderDigest(
     L.push(`- ${p.title} (hit ${p.hit_count})${p.hit_count >= 3 ? " ★ promotion candidate" : ""}`);
   }
   L.push("");
-  L.push("## Candidates emitted");
-  if (candidates.length === 0) L.push("(none — run with --emit-candidates, or not enough repeated signal yet)");
+  L.push("## Candidates");
+  if (candidates.length === 0) L.push("(none — not enough repeated signal yet)");
+  else if (!emitted) L.push("(listed only — rerun with --emit-candidates to write these to candidates/)");
   for (const c of candidates) L.push(`- [${c.kind}] ${c.file}`);
   L.push("");
-  L.push("次の一手: candidates/ を確認 → 採用するものを skills/ へ移して PR。alias 候補は該当 skill の keywords に追記。");
+  // Only point at candidates/ when something is actually there to read.
+  L.push(
+    candidates.length > 0 && emitted
+      ? "次の一手: candidates/ を確認 → 採用するものを skills/ へ移して PR。alias 候補は該当 skill の keywords に追記。"
+      : "次の一手: 上の Loop B/C の需要を見て、alias 候補は該当 skill の keywords に追記。"
+  );
   return L.join("\n") + "\n";
 }
 
@@ -515,8 +526,10 @@ export async function runFlywheel(opts: {
     }
   }
 
-  // The digest lists candidates even when they were not emitted to disk.
-  const digest = renderDigest(date, lookupMisses, missClusters, routeClusters, stats, personal, candidates);
+  // The digest lists candidates even when they were not emitted to disk — it
+  // is told which case it is so it can say so rather than guess.
+  const wroteCandidates = opts.emitCandidates && candidates.length > 0;
+  const digest = renderDigest(date, lookupMisses, missClusters, routeClusters, stats, personal, candidates, wroteCandidates);
   const digestPath = join(outDir, `${date}-digest.md`);
   await writeFile(digestPath, digest, "utf-8");
 
