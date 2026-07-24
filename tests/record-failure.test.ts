@@ -465,6 +465,95 @@ describe("redaction reporting", () => {
   });
 });
 
+describe("glued-parameter reporting", () => {
+  // The exact shape measured on 10 of 117 real kira_record_failure calls:
+  // the next parameter's opening tag lands inside `mistake` and that
+  // parameter never arrives.
+  const GLUED_MISTAKE =
+    "the suite stayed green because no fixture used that shape." +
+    '</mistake>\n<parameter name="instead">When you narrow ANY rule in an ' +
+    "ordered pipeline, enumerate the inputs that must keep their old output.";
+
+  it("omits the malformed field for an intact call", async () => {
+    const { handleRecordFailure } = await fresh();
+    const res = await handleRecordFailure({
+      title: "the gate passed for the wrong reason",
+      mistake: "trusted a green suite that had no fixture for the changed branch",
+      instead: "add the fixture first, then narrow the rule",
+    });
+    expect(res.malformed).toBeUndefined();
+  });
+
+  it("flags the glued field and names the parameter whose text was lost", async () => {
+    const { handleRecordFailure } = await fresh();
+    const res = await handleRecordFailure({
+      title: "narrowing a rule hid a partial match",
+      mistake: GLUED_MISTAKE,
+    });
+    // Still stored — the scar is half-broken, not invalid.
+    expect(res.ack).toBe(true);
+    expect(res.malformed?.fields).toEqual(["mistake"]);
+    expect(res.malformed?.glued).toEqual(["mistake", "instead"]);
+    // `mistake` did arrive; `instead` is the text that was swallowed.
+    expect(res.malformed?.lost).toEqual(["instead"]);
+    expect(res.malformed?.note).toContain("glued together in transport");
+    expect(res.malformed?.note).toContain("arrived empty");
+  });
+
+  it("reports the glue without rewriting the stored text", async () => {
+    const { handleRecordFailure } = await fresh();
+    const res = await handleRecordFailure({
+      title: "narrowing a rule hid a partial match",
+      mistake: GLUED_MISTAKE,
+    });
+    // Splitting the value back into fields would guess at a boundary the
+    // server cannot see, so the text reaches disk exactly as sent.
+    expect(res.scar.mistake).toContain('<parameter name="instead">');
+    expect(res.scar.instead).toBe("");
+    expect(readFileSync(res.path, "utf-8")).toContain("</mistake>");
+  });
+
+  it("does not claim a loss when the named parameter did arrive", async () => {
+    const { handleRecordFailure } = await fresh();
+    // A lesson that legitimately quotes the tag it is warning about: still
+    // worth flagging, but nothing was swallowed.
+    const res = await handleRecordFailure({
+      title: "a glued tool call stored an empty field",
+      mistake:
+        "the stored mistake ended with the literal string " +
+        '\'<parameter name="instead">\' and the fix was gone',
+      instead: "read the record back field by field before moving on",
+    });
+    expect(res.malformed?.glued).toEqual(["instead"]);
+    expect(res.malformed?.lost).toEqual([]);
+    expect(res.malformed?.note).not.toContain("arrived empty");
+  });
+
+  it("counts an absent array parameter as lost", async () => {
+    const { handleRecordFailure } = await fresh();
+    const res = await handleRecordFailure({
+      title: "keywords were swallowed by the glue",
+      mistake:
+        "the run never fired the scar back" +
+        '</mistake>\n<parameter name="keywords">["ci gate", "runbook drift"]',
+    });
+    expect(res.malformed?.lost).toEqual(["keywords"]);
+  });
+
+  it("leaves ordinary markup and prose alone", async () => {
+    const { describeGluedFields } = await fresh();
+    // Angle brackets and the word "instead" are normal in lesson text; only a
+    // tag naming one of this tool's own parameters is evidence of a glue.
+    expect(
+      describeGluedFields({
+        title: "compare with <redirect> and </div> in the template",
+        mistake: "used `a < b` in the guard and it parsed as a tag",
+        instead: "escape it, or use a spaced comparison instead",
+      })
+    ).toBeNull();
+  });
+});
+
 describe("KIRA_RECORD_FAILURE_TOOL descriptor", () => {
   it("is a well-formed, local-only MCP tool", async () => {
     const { KIRA_RECORD_FAILURE_TOOL } = await fresh();
