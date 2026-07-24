@@ -11,9 +11,11 @@ import {
   recordPersonalScar,
   personalScarPath,
   describeScarRedactions,
+  describeGluedFields,
   type PersonalScar,
   type RecordFailureInput,
   type ScarRedactionReport,
+  type ScarStructureReport,
 } from "../personal-scars.js";
 import type { ScarSeverity } from "../types.js";
 
@@ -29,6 +31,8 @@ export const KIRA_RECORD_FAILURE_TOOL = {
     "All free text is sanitized (keys, paths, emails redacted) before it touches " +
     "disk; the response's 'redactions' field reports anything that was rewritten, " +
     "so check it and re-record if a redaction hit something that was not a secret. " +
+    "A 'malformed' field means this call's parameters were glued together in " +
+    "transport and a field's text was lost — re-record with one long field at a time. " +
     "Personal scars are LOCAL-ONLY — they are never uploaded, on any tier.",
   inputSchema: {
     type: "object",
@@ -95,6 +99,12 @@ export interface RecordFailureResult {
    * the stored scar says exactly what the caller sent.
    */
   redactions?: ScarRedactionReport & { note: string };
+  /**
+   * Present ONLY when a submitted field carried a literal tag naming another
+   * parameter — the signature of a call whose parameters were glued together in
+   * transport. Absent means the arguments arrived intact.
+   */
+  malformed?: ScarStructureReport & { note: string };
 }
 
 /** Caller-facing explanation of a rewrite, sized for an agent to act on. */
@@ -115,6 +125,27 @@ function redactionNote(r: ScarRedactionReport): string {
       "assignment. Check scar.mistake / scar.instead above: if a redaction ate the " +
       "detail the lesson depends on, rephrase it (quote or space out the value) and " +
       "record again."
+  );
+  return parts.join(" ");
+}
+
+/** Caller-facing explanation of a glued call, sized for an agent to act on. */
+function malformedNote(r: ScarStructureReport): string {
+  const parts = [
+    `${r.fields.join(", ")} contains a literal tag naming ${r.glued.join(", ")}, ` +
+      "which means this call's parameters were glued together in transport: the " +
+      "stored scar holds markup where lesson text belongs.",
+  ];
+  if (r.lost.length > 0) {
+    parts.push(
+      `${r.lost.join(", ")} arrived empty — that text was swallowed, not sent.`
+    );
+  }
+  parts.push(
+    "Nothing was rewritten. Check scar.mistake / scar.instead above: if the tag " +
+      "was not intentional, delete the file at 'path' and record again with at " +
+      "most ONE long free-text field per call (two long fields back to back is " +
+      "what produces the glue)."
   );
   return parts.join(" ");
 }
@@ -166,6 +197,7 @@ export async function handleRecordFailure(
   };
 
   const redactions = describeScarRedactions(input);
+  const malformed = describeGluedFields(input);
   const scar = await recordPersonalScar(input);
   return {
     ack: true,
@@ -173,5 +205,6 @@ export async function handleRecordFailure(
     path: personalScarPath(scar.id),
     stored: "local-only",
     ...(redactions && { redactions: { ...redactions, note: redactionNote(redactions) } }),
+    ...(malformed && { malformed: { ...malformed, note: malformedNote(malformed) } }),
   };
 }

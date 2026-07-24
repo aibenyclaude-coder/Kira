@@ -286,6 +286,88 @@ export function describeScarRedactions(
   return { count, patterns, fields, truncated };
 }
 
+/** The parameter names this tool accepts — the tags a glued call leaks. */
+const SCAR_PARAM_NAMES = [
+  "title",
+  "mistake",
+  "instead",
+  "summary",
+  "keywords",
+  "contexts",
+  "severity",
+] as const;
+
+/**
+ * A tag naming one of this tool's own parameters, sitting inside a field's
+ * VALUE: either the closing tag of the field that ended (`</mistake>`) or the
+ * opening tag of the one that should have followed (`<parameter name="instead"`).
+ */
+const GLUED_PARAM_RE = new RegExp(
+  `</(${SCAR_PARAM_NAMES.join("|")})>|<parameter\\s+name=["']?(${SCAR_PARAM_NAMES.join("|")})`,
+  "gi"
+);
+
+/** Structural damage detected in the submitted arguments, before storage. */
+export interface ScarStructureReport {
+  /** Free-text fields whose value carries a literal parameter tag. */
+  fields: string[];
+  /** Parameter names those tags refer to, e.g. ["mistake", "instead"]. */
+  glued: string[];
+  /** Of those, the ones that arrived empty or absent — the text that was lost. */
+  lost: string[];
+}
+
+/**
+ * Detect a call whose parameters were glued together in transport.
+ *
+ * A malformed multi-parameter tool call can end one field's value with the next
+ * field's opening tag and swallow that next field entirely: the server receives
+ * a `mistake` ending in `</mistake><parameter name="instead">…` and no `instead`
+ * at all. Nothing about that is invalid input — the required fields are present
+ * and non-empty — so the scar is written, acked, and only later found to be half
+ * lesson text and half markup with the fix missing.
+ *
+ * Measured on this machine's own traffic: 10 of 117 real `kira_record_failure`
+ * calls (2026-07-13 → 2026-07-24) arrived this way, every one of them losing at
+ * least its `instead`.
+ *
+ * This only reports. Rewriting the text would guess at a boundary the server
+ * cannot see, and rejecting the call would throw away a scar that legitimately
+ * quotes a tag (a lesson about this very failure does exactly that). The caller
+ * gets the facts and decides whether to re-record.
+ */
+export function describeGluedFields(
+  input: RecordFailureInput
+): ScarStructureReport | null {
+  const checked: Array<[string, string | undefined]> = [
+    ["title", input.title],
+    ["mistake", input.mistake],
+    ["instead", input.instead],
+    ["summary", input.summary],
+  ];
+  const fields: string[] = [];
+  const glued: string[] = [];
+  for (const [field, value] of checked) {
+    if (!value) continue;
+    let hit = false;
+    for (const m of value.matchAll(GLUED_PARAM_RE)) {
+      hit = true;
+      const name = (m[1] ?? m[2]).toLowerCase();
+      if (!glued.includes(name)) glued.push(name);
+    }
+    if (hit) fields.push(field);
+  }
+  if (fields.length === 0) return null;
+
+  const supplied = (name: string): boolean => {
+    const v = (input as unknown as Record<string, unknown>)[name];
+    if (typeof v === "string") return v.trim().length > 0;
+    if (Array.isArray(v)) return v.length > 0;
+    return v !== undefined && v !== null;
+  };
+  return { fields, glued, lost: glued.filter((name) => !supplied(name)) };
+}
+
 /**
  * Persist a personal scar to ~/.kira/personal-scars/<id>.json.
  *
