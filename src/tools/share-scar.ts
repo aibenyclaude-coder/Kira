@@ -10,7 +10,11 @@
  * the local-only privacy promise intact: sharing is always explicit.
  */
 import { createHash } from "node:crypto";
-import { loadPersonalScars, type PersonalScar } from "../personal-scars.js";
+import {
+  currentInstead,
+  loadPersonalScars,
+  type PersonalScar,
+} from "../personal-scars.js";
 import { sanitize } from "../sanitize.js";
 
 const DEFAULT_REPO = "aibenyclaude-coder/Kira";
@@ -133,7 +137,10 @@ export function buildCandidate(scar: PersonalScar): Record<string, unknown> {
     summary: clean(scar.summary, SUMMARY_MAX) || title,
     severity: scar.severity,
     mistake,
-    instead: clean(scar.instead, TEXT_MAX),
+    // A recurrence folds into the existing scar and parks the fix it replaced
+    // under a marker (mergeInstead). That is local edit history: the corpus
+    // gets the fix that is current, never the one this machine abandoned.
+    instead: clean(currentInstead(scar.instead), TEXT_MAX),
     // Honest count: how often it actually recurred on the submitter's machine.
     hit_count: scar.hit_count,
     version: "1.0.0",
