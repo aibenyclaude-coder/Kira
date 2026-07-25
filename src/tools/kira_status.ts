@@ -11,7 +11,7 @@ import { existsSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadConsent } from "../consent.js";
+import { loadConsent, CONSENT_FILE } from "../consent.js";
 import { PERSONAL_SCARS_DIR } from "../personal-scars.js";
 import { REPORTS_LOG, TELEMETRY_URL } from "../telemetry.js";
 import type { Skill, Scar, ConsentState } from "../types.js";
@@ -107,10 +107,13 @@ export async function buildStatus({
     paths: {
       reports_log: REPORTS_LOG,
       reports_log_exists: existsSync(REPORTS_LOG),
-      consent_file: join(
-        process.env.KIRA_HOME ?? `${process.env.HOME}/.kira`,
-        "consent.json"
-      ),
+      // Imported, not re-derived. consent.ts resolves the data dir with
+      // homedir(), which falls back to the passwd entry when $HOME is unset —
+      // the normal state on Windows outside git-bash. Re-deriving it from
+      // process.env.HOME reported the literal path "undefined/.kira/consent.json"
+      // there, and glued its segments with "/" on a platform whose join() uses
+      // "\". Every other path below is imported from the module that owns it.
+      consent_file: CONSENT_FILE,
       personal_scars_dir: PERSONAL_SCARS_DIR,
       telemetry_url: TELEMETRY_URL,
     },
