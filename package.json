@@ -48,7 +48,7 @@
     "start": "node dist/index.js",
     "demo": "tsc && node dist/demo.js",
     "demo:privacy": "tsc && node dist/demo-redaction.js",
-    "aggregate": "tsc && node dist/aggregate.js",
+    "flywheel": "tsc && node dist/flywheel.js",
     "stats": "tsx scripts/stats.ts",
     "test": "vitest run",
     "test:watch": "vitest",
