@@ -132,6 +132,38 @@ describe("sanitizeWithReport", () => {
     expect(report.hits).toEqual([]);
   });
 
+  it("no longer eats a shell expansion, and says so by reporting nothing", () => {
+    // A third real corruption from the same live store: a scar whose whole
+    // point was a runbook command reached disk as
+    //   `JID=[REDACTED] run view <id> ...'); gh api .../$JID/logs`
+    // — `[^\s'"]+` stops at whitespace, so it ate `$(gh` and left a dangling
+    // `)`. The lesson now teaches a command that cannot run. A value that is a
+    // shell expansion is a REFERENCE, never the secret itself, so keeping it
+    // costs no coverage.
+    const cmd = "JID=$(gh run view 42 --json jobs)";
+    const { text, report } = sanitizeWithReport(cmd, 4096);
+    expect(text).toBe(cmd);
+    expect(report.hits).toEqual([]);
+  });
+
+  it("keeps $VAR and ${VAR} references in a bare-environment command", () => {
+    // Stored as `env -i HOME=[REDACTED] PATH=[REDACTED]` in the live store.
+    const cmd = "env -i HOME=$HOME PATH=${PATH} kira";
+    expect(sanitizeWithReport(cmd, 4096).text).toBe(cmd);
+  });
+
+  it("still redacts a literal secret value, and one beside an expansion", () => {
+    // Negative control: the narrowing must not release anything that is an
+    // actual value. `$`-prefixed spans are spared; the literal beside them
+    // is not.
+    expect(sanitize("DISCORD_TOKEN=abc123literalsecret", 4096)).toBe(
+      "DISCORD_TOKEN=[REDACTED]"
+    );
+    const { text, report } = sanitizeWithReport("TOKEN=hunter2 PATH=$PATH", 4096);
+    expect(text).toBe("TOKEN=[REDACTED] PATH=$PATH");
+    expect(report.hits).toEqual([{ pattern: "env-assignment", count: 1 }]);
+  });
+
   it("still reports the systemd-unit false positive it cannot yet tell apart", () => {
     // The other real corruption from the same store. `service` is alphabetic,
     // so it reads as a TLD — deliberately still redacted, and deliberately

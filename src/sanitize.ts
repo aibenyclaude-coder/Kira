@@ -90,10 +90,29 @@ const PATTERNS: Rule[] = [
   },
 
   // ── KEY=value assignments (after token patterns above) ───────────────
+  /**
+   * Last rule in the list, so a span it declines to rewrite is released to
+   * nothing — no later rule can match a SUBSET of it and emit plausible
+   * partial output.
+   *
+   * A value starting with `$` is a shell expansion — `$HOME`, `${PATH}`,
+   * `$(cmd)` — which is a REFERENCE to a value, never the value itself, so
+   * keeping it costs no secret coverage. Redacting it did cost: `[^\s'"]+`
+   * stops at whitespace, so `JID=$(gh run view 42 --json jobs)` reached a live
+   * personal-scar store as `JID=[REDACTED] run view 42 --json jobs)` — a
+   * dangling paren and an unrunnable command, in a scar that existed only to
+   * teach that command. Any real path inside an expansion is already gone:
+   * `home-path` and `deep-path` run above this rule.
+   *
+   * Returning the match unchanged (rather than excluding `$` in the pattern)
+   * keeps this legible next to the reporting contract: `sanitizeWithReport`
+   * counts a span only when the replacement differs, so a spared expansion
+   * reports nothing without any extra bookkeeping.
+   */
   {
     name: "env-assignment",
     re: /\b([A-Z][A-Z0-9_]{2,})=([^\s'"]+)/g,
-    repl: (_m, key) => `${key}=${REDACT}`,
+    repl: (m, key, value) => (value.startsWith("$") ? m : `${key}=${REDACT}`),
   },
 ];
 
