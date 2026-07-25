@@ -23,6 +23,7 @@ import {
 } from "./tools/personal-brief.js";
 import { KIRA_SHARE_SCAR_TOOL, handleShareScar } from "./tools/share-scar.js";
 import { loadPersonalScars } from "./personal-scars.js";
+import { logger } from "./logger.js";
 import type { Skill, Scar, ReportStatus, ConsentLevel } from "./types.js";
 import type { KiraTier } from "./license.js";
 
@@ -179,11 +180,11 @@ const TOOLS = [
 export async function startServer(): Promise<void> {
   const tier: KiraTier = verifyProKey(resolveKiraKey());
   if (tier !== "free") {
-    // eslint-disable-next-line no-console
-    console.error(
+    logger.info(
       tier === "pro"
-        ? "[kira] Supporter key verified. Fresh community feed enabled."
-        : "[kira] Contributor key verified — thanks for sharing a scar. Fresh community feed enabled."
+        ? "Supporter key verified. Fresh community feed enabled."
+        : "Contributor key verified — thanks for sharing a scar. Fresh community feed enabled.",
+      { tier }
     );
   }
 

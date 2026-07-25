@@ -3,6 +3,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Skill, Scar } from "./types.js";
 import { resolveKiraKey, type KiraTier } from "./license.js";
+import { logger } from "./logger.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dirname, "..");
@@ -95,7 +96,7 @@ async function fetchRemote<T>(endpoint: string, cachePath: string, remoteUrl: st
       signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) {
-      console.error(`[kira] Remote fetch ${endpoint} failed: ${res.status}`);
+      logger.info("remote fetch failed", { endpoint, status: res.status });
       return loadCached<T>(cachePath);
     }
     const items = (await res.json()) as T[];
@@ -103,7 +104,12 @@ async function fetchRemote<T>(endpoint: string, cachePath: string, remoteUrl: st
     await writeFile(cachePath, JSON.stringify(items, null, 2), "utf-8");
     return items;
   } catch (err) {
-    console.error(`[kira] Remote ${endpoint}:`, (err as Error).message);
+    // The message can quote the request URL, and KIRA_REMOTE_URL is
+    // user-supplied — route it through the logger so the scrubber sees it.
+    logger.info("remote fetch errored", {
+      endpoint,
+      error: (err as Error).message,
+    });
     return loadCached<T>(cachePath);
   }
 }
