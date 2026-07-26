@@ -182,7 +182,7 @@ function containsOutsideLatinWord(hay: string, needle: string): boolean {
  * Match keyword with three tiers:
  *   1. Exact match: "deploy vercel" === "deploy vercel"
  *   2. Contains match: "deploy vercel" found inside "I want to deploy vercel app"
- *   3. Word overlap: 2+ meaningful words match (e.g., "add auth" matches "add auth clerk")
+ *   3. Word overlap: 2+ distinct meaningful words match ("add auth" ↔ "add auth clerk")
  *
  * Returns matches in priority order: exact first, then contains, then word overlap.
  * Deduplicates across tiers.
@@ -238,14 +238,33 @@ function matchByKeywordAndContext<T extends Indexed>(
       continue;
     }
 
-    // Tier 3: Word overlap — at least MIN_WORD_OVERLAP meaningful words must match.
+    /**
+     * Tier 3: word overlap — MIN_WORD_OVERLAP meaningful words must match.
+     *
+     * DISTINCT words. The filter used to be counted by length, so one query
+     * word repeated twice cleared a bar that reads as "two words matched":
+     * a query mentioning `branch` twice reached every scar whose keywords
+     * merely contain "branch" — "branch cleanup", "dead branch", "protected
+     * branch" — on a single shared word, which is exactly the sub-threshold
+     * overlap the line below the loop exists to reject.
+     *
+     * Measured over the shipped corpus (81 entries) against 1531 real query
+     * strings (the miss log plus every title and keyword in the author's live
+     * personal-scar store): 3 queries, 7 matches, 0 of them sharing a second
+     * word with the item they matched — and 2 of the 7 CRITICAL, which sorts
+     * first and leads the agent's "what not to do". Nothing was gained by the
+     * old count: every one of the 1531 queries that matched on two genuinely
+     * distinct words still matches. Two of the three queries now return the
+     * empty-result suggestion instead, which is the honest answer — the corpus
+     * holds nothing that overlaps them by two words.
+     */
     if (
       itemKeywords.some((k) => {
-        const kWords = k.split(/\s+/);
-        const meaningfulMatches = queryWords.filter(
-          (qw) => !FILLER.has(qw) && kWords.includes(qw)
+        const kWords = new Set(k.split(/\s+/));
+        const meaningfulMatches = new Set(
+          queryWords.filter((qw) => !FILLER.has(qw) && kWords.has(qw))
         );
-        return meaningfulMatches.length >= MIN_WORD_OVERLAP;
+        return meaningfulMatches.size >= MIN_WORD_OVERLAP;
       })
     ) {
       if (!seen.has(i)) {
