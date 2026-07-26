@@ -3,9 +3,11 @@ import {
   sanitize,
   sanitizeWithReport,
   sanitizePayload,
+  PATTERNS,
   NOTE_MAX,
   CONTEXT_MAX,
 } from "../src/sanitize.ts";
+import type { Rule } from "../src/sanitize.ts";
 import type { ReportPayloadV1 } from "../src/types.ts";
 import fixtures from "./fixtures/redaction-cases.json" with { type: "json" };
 
@@ -263,29 +265,75 @@ describe("worker sanitizer parity", () => {
   // dependency on this project), and a hand-maintained duplicate drifts: the
   // pattern list here changed once while the Worker kept redacting the old way,
   // which is a privacy rule enforced differently on each side of the wire.
+  //
+  // Sampling cannot certify that. When this suite compared 15 hand-picked
+  // strings, 11 of the 16 rules matched NONE of them — the Worker's copy of any
+  // of those eleven could have been edited or deleted with the test still
+  // green. So parity is asserted structurally first (below), and the samples
+  // are demoted to a behavioural cross-check whose coverage is itself asserted.
+  const loadWorker = () => import("../worker/src/sanitize.ts");
+
+  // Every redaction fixture, so the battery grows whenever a case is added,
+  // plus the shapes that exercise a per-MATCH carve-out — which no fixture can
+  // cover, because a spared span redacts to itself and would fail `sanitize
+  // patterns` above.
+  const battery = [
+    ...fixtures.cases.map((c) => c.input),
+    "cgroup showed iroha-worker@1.service",
+    "kura-health@iroha.timer fired",
+    "buyer@circle.target ordered",
+    "npm published kira-mcp@0.8.2 ok",
+    "run with PATH=$PATH set",
+    "JID=$(gh run view 42 --json jobs)",
+    "PATH=(最小) と VAR=値 と HOME=...",
+    "ghs_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "env -i HOME=/tmp/x PATH=/usr/bin kira",
+    "plain prose, no secrets",
+  ];
+
+  /**
+   * Replacements are compared as SOURCE TEXT, which is the only dimension the
+   * previous divergence lived in: same regex on both sides, different decision
+   * about what to write back. Whitespace is squashed because the two files
+   * format the same expression at different nesting depths.
+   */
+  const replSource = (repl: Rule["repl"]) => String(repl).replace(/\s+/g, " ").trim();
+
+  it("holds a pattern list identical to the client's, entry by entry", async () => {
+    const worker = await loadWorker();
+    expect(worker.PATTERNS.length).toBe(PATTERNS.length);
+    PATTERNS.forEach((rule, i) => {
+      const mirror = worker.PATTERNS[i];
+      expect(
+        {
+          name: mirror.name,
+          source: mirror.re.source,
+          flags: mirror.re.flags,
+          repl: replSource(mirror.repl),
+        },
+        `rule ${i} (${rule.name})`
+      ).toEqual({
+        name: rule.name,
+        source: rule.re.source,
+        flags: rule.re.flags,
+        repl: replSource(rule.repl),
+      });
+    });
+  });
+
+  // Structural equality cannot see a divergent CONSTANT: both sides would read
+  // `SYSTEMD_UNIT_TAIL.test(m)` whatever it holds. Firing every rule at least
+  // once is what closes that, so the battery must keep covering all of them.
+  it("exercises every rule at least once in the battery", () => {
+    PATTERNS.forEach((rule, i) => {
+      const fires = battery.some((s) => s.replace(rule.re, rule.repl) !== s);
+      expect(fires, `rule ${i} (${rule.name}) is not exercised by any sample`).toBe(true);
+    });
+  });
+
   it("redacts identically to the client copy", async () => {
-    const worker = await import("../worker/src/sanitize.ts");
-    const samples = [
-      "contact alice@example.com please",
-      "wrote to someone@163.com twice",
-      "relayed via user@192.168.1.1 today",
-      "npm published kira-mcp@0.8.2 ok",
-      "cgroup showed iroha-worker@1.service",
-      "kura-health@iroha.timer fired",
-      "buyer@circle.target ordered",
-      "env -i HOME=/tmp/x PATH=/usr/bin kira",
-      // Every carve-out that decides per MATCH rather than per pattern. The
-      // Worker copy expressed these as plain `$1` strings and diverged for
-      // months; a sample list without them cannot notice.
-      "run with PATH=$PATH set",
-      "JID=$(gh run view 42 --json jobs)",
-      "PATH=(最小) と VAR=値 と HOME=...",
-      "DISCORD_TOKEN=abc123literalsecret",
-      "see /home/alice/projects/foo and 10.0.0.5",
-      "id 550e8400-e29b-41d4-a716-446655440000 in db",
-      "plain prose, no secrets",
-    ];
-    for (const s of samples) {
+    const worker = await loadWorker();
+    for (const s of battery) {
       expect(worker.sanitize(s, 4096), s).toBe(sanitize(s, 4096));
     }
   });
