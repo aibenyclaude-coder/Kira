@@ -201,13 +201,37 @@ describe("sanitizeWithReport", () => {
     expect(report.hits).toEqual([{ pattern: "env-assignment", count: 1 }]);
   });
 
-  it("still reports the systemd-unit false positive it cannot yet tell apart", () => {
-    // The other real corruption from the same store. `service` is alphabetic,
-    // so it reads as a TLD — deliberately still redacted, and deliberately
-    // still REPORTED, so the caller can rephrase rather than trust the lesson.
-    expect(
-      sanitizeWithReport("cgroup showed iroha-worker@1.service", 4096).report.hits
-    ).toEqual([{ pattern: "email", count: 1 }]);
+  it("spares a systemd template unit, whatever its instance id", () => {
+    // The other real corruption from the same store, recovered verbatim from
+    // the transcript that produced it: `user@1000.service` reached a live scar
+    // as `[EMAIL]`, in a lesson whose whole point was that the cgroup parse had
+    // picked up the WRONG unit. The instance is not always numeric, so the
+    // discriminator is the unit type, not the instance.
+    const unit = "cgroup showed user@1000.service, not iroha-worker@1.service";
+    const { text, report } = sanitizeWithReport(unit, 4096);
+    expect(text).toBe(unit);
+    expect(report.hits).toEqual([]);
+    expect(sanitize("kura-health@iroha.timer fired", 4096)).toBe(
+      "kura-health@iroha.timer fired"
+    );
+    expect(sanitize("gnome-session-manager@ubuntu.service died", 4096)).toBe(
+      "gnome-session-manager@ubuntu.service died"
+    );
+  });
+
+  it("keeps redacting addresses a unit suffix could be confused with", () => {
+    // Negative control for the narrowing. `.target` is the one systemd suffix
+    // ICANN has actually delegated, so it is deliberately NOT spared; a domain
+    // with more labels than a unit has is not a unit either.
+    for (const addr of [
+      "noreply@anthropic.com",
+      "user@163.com",
+      "user@192.168.1.1",
+      "buyer@circle.target",
+      "user@mail.example.service",
+    ]) {
+      expect(sanitize(`mail ${addr} now`, 4096), addr).toBe("mail [EMAIL] now");
+    }
   });
 
   it("folds rules that share a name into one entry", () => {
@@ -247,7 +271,16 @@ describe("worker sanitizer parity", () => {
       "relayed via user@192.168.1.1 today",
       "npm published kira-mcp@0.8.2 ok",
       "cgroup showed iroha-worker@1.service",
+      "kura-health@iroha.timer fired",
+      "buyer@circle.target ordered",
       "env -i HOME=/tmp/x PATH=/usr/bin kira",
+      // Every carve-out that decides per MATCH rather than per pattern. The
+      // Worker copy expressed these as plain `$1` strings and diverged for
+      // months; a sample list without them cannot notice.
+      "run with PATH=$PATH set",
+      "JID=$(gh run view 42 --json jobs)",
+      "PATH=(最小) と VAR=値 と HOME=...",
+      "DISCORD_TOKEN=abc123literalsecret",
       "see /home/alice/projects/foo and 10.0.0.5",
       "id 550e8400-e29b-41d4-a716-446655440000 in db",
       "plain prose, no secrets",

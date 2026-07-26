@@ -12,6 +12,23 @@ import type { ReportPayloadV1 } from "./types.js";
 const REDACT = "[REDACTED]";
 
 /**
+ * Tail of a systemd template unit — `worker@1.service`, `user@1000.service`,
+ * `kura-health@iroha.timer` — which the `email` rule below would otherwise read
+ * as an address at a `.service` TLD.
+ *
+ * The suffix set is systemd's, not ICANN's, so it does not grow when new gTLDs
+ * are delegated — but the two namespaces CAN collide, and one already does:
+ * `.target` is a delegated brand TLD (checked against the IANA list, version
+ * 2026072600), so it is deliberately absent here and a unit of that type keeps
+ * redacting. The other ten are unregistered; `.services` exists but the `$`
+ * anchor keeps it out. Exactly one label may sit between `@` and the suffix,
+ * which is a unit's instance id — a mail domain deep enough to have more (
+ * `user@mail.example.service`) is not a unit and stays redacted.
+ */
+const SYSTEMD_UNIT_TAIL =
+  /@[\w-]+\.(?:service|socket|device|mount|automount|swap|path|timer|slice|scope)$/;
+
+/**
  * One redaction rule. `name` is stable and caller-facing: it is reported back
  * by `sanitizeWithReport` so a caller can tell WHICH rule rewrote its text.
  * Renaming one changes an observable contract — treat names as API.
@@ -62,15 +79,20 @@ const PATTERNS: Rule[] = [
    * `[\w-]` excludes `.`, so the dots fix every split point: the repeated
    * group has one parse per input and cannot backtrack exponentially.
    *
-   * Still a known false positive: a systemd template unit, `worker@1.service`
-   * — `service` is alphabetic, so it reads as a TLD. Narrowing that needs a
-   * list of unit suffixes to exclude, and a list can go stale against new
-   * gTLDs; the reporting path (describeScarRedactions) covers it meanwhile.
+   * A systemd template unit is spared via `SYSTEMD_UNIT_TAIL` above: measured,
+   * not hypothetical — `user@1000.service` reached a live personal-scar store
+   * as `[EMAIL]` in a lesson that existed to record WHICH unit the cgroup parse
+   * had picked up. Returning the match unchanged (rather than excluding the
+   * shape in the pattern) keeps the reporting contract simple, as the `$`
+   * carve-out below does: a spared span differs from no replacement, so it
+   * reports nothing. This is the LAST rule that can match such a span — the
+   * ones below need an IP, a UUID, a path or a `KEY=`, so releasing it emits
+   * no plausible partial output.
    */
   {
     name: "email",
     re: /\b[\w.+-]+@(?:[\w-]+\.)+[A-Za-z]{2,}\b|\b[\w.+-]+@\d{1,3}(?:\.\d{1,3}){3}\b/g,
-    repl: () => "[EMAIL]",
+    repl: (m) => (SYSTEMD_UNIT_TAIL.test(m) ? m : "[EMAIL]"),
   },
   { name: "ipv4", re: /(?<![\w.])\d{1,3}(\.\d{1,3}){3}(?![\w.])/g, repl: () => "[IP]" },
   {
