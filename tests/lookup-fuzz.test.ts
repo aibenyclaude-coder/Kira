@@ -277,6 +277,19 @@ describe("kira_lookup matcher — property-based fuzz", () => {
     expect(miss.skills.map((s) => s.id)).not.toContain("skill.0");
   });
 
+  it("counts a repeated query word once toward the overlap threshold (tier 3)", () => {
+    const skills = indexItems([makeSkill(0, "community", ["deploy vercel app"])]);
+    // 'deploy' twice is still ONE word in common — the same sub-threshold
+    // overlap the test above rejects when it appears once. Counting the
+    // occurrences instead of the words let it through: measured on the shipped
+    // corpus, a query naming `branch` twice pulled in three unrelated scars.
+    const miss = lookup(skills, [], { keyword: "deploy zzz deploy", context: [] });
+    expect(miss.skills.map((s) => s.id)).not.toContain("skill.0");
+    // Positive control: a repeat alongside a genuine second word still matches.
+    const hit = lookup(skills, [], { keyword: "deploy zzz deploy app", context: [] });
+    expect(hit.skills.map((s) => s.id)).toContain("skill.0");
+  });
+
   it("does not count filler words toward the overlap threshold", () => {
     const skills = indexItems([makeSkill(0, "community", ["foo bar"])]);
     // 'foo' is the only meaningful overlap; 'the/a/to' are filler → no match.
