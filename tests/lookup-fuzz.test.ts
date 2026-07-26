@@ -290,6 +290,35 @@ describe("kira_lookup matcher — property-based fuzz", () => {
     expect(hit.skills.map((s) => s.id)).toContain("skill.0");
   });
 
+  it("splits tier-3 words on punctuation and stems them, like tier 2 (recall)", () => {
+    const skills = indexItems([
+      makeSkill(0, "community", ["mcp registry publish"]),
+      makeSkill(1, "community", ["npm publish 404"]),
+    ]);
+    // A filename joins two words with punctuation. Splitting only on
+    // whitespace made "registry-publish.yml" a single word that equals no
+    // keyword word, so the query reached nothing at all.
+    const punct = lookup(skills, [], { keyword: "registry-publish.yml", context: [] });
+    expect(punct.skills.map((s) => s.id)).toContain("skill.0");
+    // Stemming pairs "publishing" with "publish" — tier 2 already folded them.
+    const stemmed = lookup(skills, [], { keyword: "npm trusted publishing", context: [] });
+    expect(stemmed.skills.map((s) => s.id)).toContain("skill.1");
+  });
+
+  it("does not let a negation word carry an overlap (tier 3)", () => {
+    const skills = indexItems([makeSkill(0, "community", ["module not found"])]);
+    // Splitting on punctuation exposes the words inside SCREAMING_CASE error
+    // codes, and "not" is in almost every one of them. Counting it left an
+    // unrelated error code sharing exactly one topical word ("found") over the
+    // two-word bar: on the shipped corpus, ERR_FILE_NOT_FOUND — a headless
+    // Chrome failure — pulled in a CRITICAL scar about vitest path aliases.
+    const miss = lookup(skills, [], { keyword: "ERR_FILE_NOT_FOUND", context: [] });
+    expect(miss.skills.map((s) => s.id)).not.toContain("skill.0");
+    // Positive control: two words that do carry topic still match.
+    const hit = lookup(skills, [], { keyword: "module cannot be found", context: [] });
+    expect(hit.skills.map((s) => s.id)).toContain("skill.0");
+  });
+
   it("does not count filler words toward the overlap threshold", () => {
     const skills = indexItems([makeSkill(0, "community", ["foo bar"])]);
     // 'foo' is the only meaningful overlap; 'the/a/to' are filler → no match.

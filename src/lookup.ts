@@ -13,6 +13,7 @@ import { tokenize, nearMatches, stem, hasCJK, type SimIndexed } from "./similari
 const FILLER = new Set([
   "i", "a", "to", "my", "the", "an", "is", "it", "do",
   "want", "need", "please", "can", "how", "with", "for", "in", "on", "of",
+  "not",
 ]);
 const MIN_WORD_OVERLAP = 2;
 
@@ -53,6 +54,7 @@ function stripIndex<T extends Indexed>(item: T): Omit<T, keyof Indexed> {
     _keywordsLower: _k,
     _contextsLower: _c,
     _kwPhrases: _p,
+    _kwWords: _w,
     _kwTokens: _t,
     _simTokens: _s,
     ...rest
@@ -66,6 +68,8 @@ export interface Indexed extends SimIndexed {
   _contextsLower: string[];
   /** Per keyword, its stemmed word sequence — empty for CJK keywords (no word boundaries). */
   _kwPhrases: string[][];
+  /** Per keyword, its stemmed word SET — always populated, tier 3 only. */
+  _kwWords: Set<string>[];
 }
 
 /**
@@ -101,6 +105,7 @@ export function indexItems<
     _keywordsLower: item.keywords.map((k) => k.toLowerCase()),
     _contextsLower: item.contexts.map((c) => c.toLowerCase()),
     _kwPhrases: item.keywords.map((k) => (hasCJK(k) ? [] : phraseWords(k))),
+    _kwWords: item.keywords.map((k) => new Set(phraseWords(k))),
     _kwTokens: new Set(item.keywords.flatMap((k) => tokenize(k))),
     _simTokens: new Set(
       [item.title, item.summary, ...item.keywords, ...item.contexts].flatMap((t) =>
@@ -194,7 +199,6 @@ function matchByKeywordAndContext<T extends Indexed>(
 ): T[] {
   const normalizedKeyword = keyword.toLowerCase().trim();
   const normalizedContexts = new Set(contexts.map((c) => c.toLowerCase().trim()));
-  const queryWords = normalizedKeyword.split(/\s+/);
   const queryPhrase = phraseWords(normalizedKeyword);
 
   const exact: T[] = [];
@@ -259,10 +263,9 @@ function matchByKeywordAndContext<T extends Indexed>(
      * holds nothing that overlaps them by two words.
      */
     if (
-      itemKeywords.some((k) => {
-        const kWords = new Set(k.split(/\s+/));
+      item._kwWords.some((kWords) => {
         const meaningfulMatches = new Set(
-          queryWords.filter((qw) => !FILLER.has(qw) && kWords.has(qw))
+          queryPhrase.filter((qw) => !FILLER.has(qw) && kWords.has(qw))
         );
         return meaningfulMatches.size >= MIN_WORD_OVERLAP;
       })
