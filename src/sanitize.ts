@@ -38,13 +38,19 @@ const SYSTEMD_UNIT_TAIL =
  * text still MATCHES (`HOME=[REDACTED]` matches the env rule again) but changes
  * nothing, and reporting that as a rewrite would be a false alarm.
  */
-interface Rule {
+export interface Rule {
   name: string;
   re: RegExp;
   repl: (match: string, ...groups: string[]) => string;
 }
 
-const PATTERNS: Rule[] = [
+/**
+ * Exported for the Worker parity test, which compares this list to
+ * `worker/src/sanitize.ts` ENTRY BY ENTRY. Sample-based comparison alone let a
+ * divergence live for months: the Worker kept two per-match carve-outs as plain
+ * `$1` strings, and no sample happened to carry one.
+ */
+export const PATTERNS: Rule[] = [
   // ── Token shapes (run before generic hex / KEY=value) ─────────────────
   { name: "sk-token", re: /\bsk-[A-Za-z0-9_-]{20,}\b/g, repl: () => REDACT },
   { name: "stripe-key", re: /\bsk_(?:live|test)_[A-Za-z0-9]{16,}\b/g, repl: () => REDACT },
