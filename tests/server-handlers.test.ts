@@ -172,6 +172,64 @@ describe("kira_lookup handler", () => {
     });
     expect(res.scars.some((s: any) => s.id === SCAR_ID)).toBe(false);
   });
+
+  // `required: ["keyword"]` is not enforced by the SDK server or by the clients
+  // calling it: 2 of 51 real calls on the author's machine sent `query` / `task`
+  // instead and reached the handler. Coercing the absent value to "" made the
+  // matcher answer the empty query on its merits — the whole corpus then, an
+  // empty result now — so a mis-named parameter was indistinguishable from a
+  // corpus with nothing to say.
+  it("rejects a call whose keyword arrived under another name", async () => {
+    await expect(
+      client.callTool({
+        name: "kira_lookup",
+        arguments: { query: "deploy to vercel" },
+      })
+    ).rejects.toThrow(/kira_lookup requires a non-empty 'keyword' string/);
+  });
+
+  it("names the unexpected keys so the retry can be correct", async () => {
+    await expect(
+      client.callTool({ name: "kira_lookup", arguments: { task: "add auth" } })
+    ).rejects.toThrow(/Received 'task' instead — re-send that text as 'keyword'/);
+  });
+
+  it("rejects a blank keyword", async () => {
+    await expect(
+      client.callTool({ name: "kira_lookup", arguments: { keyword: "   " } })
+    ).rejects.toThrow(/non-empty 'keyword'/);
+  });
+
+  // The second harm: an empty query that matched nothing also wrote an empty
+  // keyword into the miss log, which is the flywheel's demand signal. A rejected
+  // call must leave no trace there.
+  it("logs no miss for a rejected call", async () => {
+    await client
+      .callTool({ name: "kira_lookup", arguments: { query: "phantom" } })
+      .catch(() => {});
+
+    // Sentinel: a real miss issued AFTER the rejected one. Once it lands, any
+    // write the rejected call would have made has had its chance too.
+    const sentinel = "zzz sentinel keyword that matches nothing at all";
+    await callJson("kira_lookup", { keyword: sentinel });
+
+    const logPath = join(tmp, "misses.log");
+    const readEntries = () =>
+      existsSync(logPath)
+        ? readFileSync(logPath, "utf-8")
+            .trim()
+            .split("\n")
+            .filter(Boolean)
+            .map((l) => JSON.parse(l))
+        : [];
+    let landed = false;
+    for (let i = 0; i < 100 && !landed; i++) {
+      landed = readEntries().some((e) => e.keyword === sentinel);
+      if (!landed) await new Promise((r) => setTimeout(r, 10));
+    }
+    expect(landed).toBe(true);
+    expect(readEntries().filter((e) => e.keyword === "")).toEqual([]);
+  });
 });
 
 describe("kira_route handler", () => {
@@ -238,6 +296,15 @@ describe("kira_route handler", () => {
       (e) => e.kind === "route" && String(e.keyword ?? "").includes(ROUTE_GOAL)
     );
     expect(matchedMiss).toBeUndefined();
+  });
+
+  it("rejects a missing goal instead of routing the empty string", async () => {
+    await expect(
+      client.callTool({
+        name: "kira_route",
+        arguments: { objective: "build a web app" },
+      })
+    ).rejects.toThrow(/kira_route requires a non-empty 'goal' string/);
   });
 });
 
@@ -382,6 +449,19 @@ describe("personal scar recall (record_failure output feeds lookup/premortem/rou
       goal: "worktree setup for running the test suite",
     });
     expect(res.hotspots.some((h: any) => h.id === recordedId)).toBe(true);
+  });
+
+  // Worst of the three empty-argument cases: a premortem over the empty string
+  // matched nothing and reported "No known failure patterns match this goal" —
+  // a confident all-clear from the tool whose whole job is to warn, handed to an
+  // agent that only mis-typed a parameter name.
+  it("refuses a missing goal rather than reporting an all-clear", async () => {
+    await expect(
+      client.callTool({
+        name: "kira_premortem",
+        arguments: { task: "worktree setup for running the test suite" },
+      })
+    ).rejects.toThrow(/kira_premortem requires a non-empty 'goal' string/);
   });
 
   // kira_route is what the server instructions tell an agent to call FIRST for
