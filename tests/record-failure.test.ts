@@ -427,11 +427,11 @@ describe("redaction reporting", () => {
   it("reports which rule ate the text and in which field", async () => {
     const { handleRecordFailure } = await fresh();
     const res = await handleRecordFailure({
-      title: "unit lookup looked fine",
-      // A systemd template unit, not an email — the sanitizer cannot tell
-      // them apart (an npm spec no longer trips it; `service` still reads
-      // as a TLD).
-      mistake: "the log said iroha-worker@1.service and I trusted it",
+      title: "escalation went to the wrong inbox",
+      // This test is about the REPORTING path, so its vehicle has to be a span
+      // the sanitizer genuinely rewrites. It used to be a systemd unit, which
+      // the email rule no longer touches — an address keeps it honest.
+      mistake: "the log said oncall@example.com and I trusted it",
       instead: "verify with MAX_TRIES=3 against systemctl",
     });
     expect(res.redactions?.count).toBe(2);
@@ -455,8 +455,8 @@ describe("redaction reporting", () => {
   it("describes the rewrite even when the scar folds into an existing one", async () => {
     const { handleRecordFailure } = await fresh();
     const input = {
-      title: "unit lookup reported a stale instance",
-      mistake: "the log said iroha-worker@1.service and I trusted it",
+      title: "escalation reported a stale inbox",
+      mistake: "the log said oncall@example.com and I trusted it",
     };
     await handleRecordFailure(input);
     const again = await handleRecordFailure(input);

@@ -8,7 +8,19 @@
 
 const REDACT = "[REDACTED]";
 
-const PATTERNS: Array<[RegExp, string]> = [
+/** Mirrors SYSTEMD_UNIT_TAIL in src/sanitize.ts — see the note there. */
+const SYSTEMD_UNIT_TAIL =
+  /@[\w-]+\.(?:service|socket|device|mount|automount|swap|path|timer|slice|scope)$/;
+
+/**
+ * A replacement may be a function, because two client rules decide per match
+ * rather than per pattern (a spared systemd unit, a spared shell expansion).
+ * Those carve-outs were expressed client-side as functions and left as plain
+ * `$1` strings here, so this copy went on redacting five shapes the client had
+ * already stopped redacting — a divergence the sample-based parity test missed
+ * because no sample carried one.
+ */
+const PATTERNS: Array<[RegExp, string | ((m: string, ...groups: string[]) => string)]> = [
   [/\bsk-[A-Za-z0-9_-]{20,}\b/g, REDACT],
   [/\bsk_(?:live|test)_[A-Za-z0-9]{16,}\b/g, REDACT],
   [/\bghp_[A-Za-z0-9]{30,}\b/g, REDACT],
@@ -21,18 +33,26 @@ const PATTERNS: Array<[RegExp, string]> = [
   // A TLD is never all digits, so `pkg@1.2.3` is not an address; the second
   // alternative keeps bare-IP domains. See src/sanitize.ts for the full note —
   // tests/sanitize.test.ts asserts this file stays byte-parity with it.
-  [/\b[\w.+-]+@(?:[\w-]+\.)+[A-Za-z]{2,}\b|\b[\w.+-]+@\d{1,3}(?:\.\d{1,3}){3}\b/g, "[EMAIL]"],
+  [
+    /\b[\w.+-]+@(?:[\w-]+\.)+[A-Za-z]{2,}\b|\b[\w.+-]+@\d{1,3}(?:\.\d{1,3}){3}\b/g,
+    (m: string) => (SYSTEMD_UNIT_TAIL.test(m) ? m : "[EMAIL]"),
+  ],
   [/(?<![\w.])\d{1,3}(\.\d{1,3}){3}(?![\w.])/g, "[IP]"],
   [/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, "[UUID]"],
   [/\/(?:home|Users)\/[^\s/"']+/g, "/[USER]"],
   [/[A-Za-z]:\\Users\\[^\\\s"']+/g, "C:\\[USER]"],
   [/(?<![A-Za-z0-9_:/])\/(?:[\w.-]+\/){2,}[\w.-]+/g, "[PATH]"],
-  [/\b([A-Z][A-Z0-9_]{2,})=([^\s'"]+)/g, "$1=[REDACTED]"],
+  [
+    /\b([A-Z][A-Z0-9_]{2,})=([^\s'"]+)/g,
+    (m: string, key: string, value: string) =>
+      value.startsWith("$") || !/[A-Za-z0-9]/.test(value) ? m : `${key}=${REDACT}`,
+  ],
 ];
 
 export function sanitize(s: string | undefined | null, maxLen: number): string | undefined {
   if (s === undefined || s === null) return undefined;
   let out = s.length > maxLen ? s.slice(0, maxLen) : s;
-  for (const [re, repl] of PATTERNS) out = out.replace(re, repl);
+  for (const [re, repl] of PATTERNS)
+    out = typeof repl === "string" ? out.replace(re, repl) : out.replace(re, repl);
   return out;
 }
