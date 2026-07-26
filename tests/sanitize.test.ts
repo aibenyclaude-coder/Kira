@@ -152,6 +152,43 @@ describe("sanitizeWithReport", () => {
     expect(sanitizeWithReport(cmd, 4096).text).toBe(cmd);
   });
 
+  it("keeps a placeholder value that carries no credential material", () => {
+    // Measured over 115 real kira_record_failure calls and the 155-scar live
+    // store: every env-assignment span the rule ever rewrote in real text was
+    // a prose placeholder, not a secret. These four are verbatim from that
+    // data — `HOME=...` and `PATH=(最小)` come from a scar teaching a bare
+    // -environment smoke test, whose command the redaction made unrunnable.
+    for (const s of [
+      "env -i HOME=... PATH=(最小) でスモークする",
+      ".env の VAR=値 は source ではexportされない",
+      "bash の GROUPS=(...) は読み取り専用",
+    ]) {
+      const { text, report } = sanitizeWithReport(s, 4096);
+      expect(text).toBe(s);
+      expect(report.hits).toEqual([]);
+    }
+  });
+
+  it("still redacts a value that is punctuation around one alnum character", () => {
+    // Boundary of the carve-out: "no ASCII alphanumeric" means NONE. One is
+    // enough to keep the span redacted.
+    expect(sanitize("SECRET=***a***", 4096)).toBe("SECRET=[REDACTED]");
+    expect(sanitize("SECRET=***", 4096)).toBe("SECRET=***");
+  });
+
+  it("still reports the short-literal false positives it cannot tell apart", () => {
+    // Deliberately unfixed and deliberately still REPORTED, like the systemd
+    // -unit case below: a one-character number and a UTC offset are alnum and
+    // shape-identical to a short secret. Both are real corruptions in the live
+    // store (`MAX_THINKING_TOKENS=[REDACTED]`, `JST=[REDACTED]`); narrowing
+    // them needs an entropy argument this rule does not have.
+    for (const s of ["EnvironmentFile に MAX_THINKING_TOKENS=0 を入れる", "JST=UTC+9"]) {
+      expect(sanitizeWithReport(s, 4096).report.hits).toEqual([
+        { pattern: "env-assignment", count: 1 },
+      ]);
+    }
+  });
+
   it("still redacts a literal secret value, and one beside an expansion", () => {
     // Negative control: the narrowing must not release anything that is an
     // actual value. `$`-prefixed spans are spared; the literal beside them

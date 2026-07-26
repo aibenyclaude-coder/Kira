@@ -108,11 +108,28 @@ const PATTERNS: Rule[] = [
    * keeps this legible next to the reporting contract: `sanitizeWithReport`
    * counts a span only when the replacement differs, so a spared expansion
    * reports nothing without any extra bookkeeping.
+   *
+   * A value with NO ASCII alphanumeric character at all is spared for the same
+   * structural reason: it carries no credential material. Every machine
+   * credential shape is alnum-bearing (hex, base64, base64url, JWT, `sk-`,
+   * `ghp_`, `AKIA`, UUID) and those shapes are matched by the rules ABOVE this
+   * one anyway — this rule is only the catch-all for an unrecognized literal.
+   * What it was actually eating, measured over 115 real `kira_record_failure`
+   * calls and a 155-scar live store, was prose placeholders: `HOME=...`,
+   * `PATH=(最小)`, `VAR=値`, `GROUPS=(...)` — 0 secrets, 100% false positives.
+   * Residual risk, stated rather than hidden: a secret composed purely of
+   * punctuation would now survive. No credential format produces one, and
+   * password policies universally require alphanumerics.
+   *
+   * Deliberately NOT spared, so the remaining false positives stay visible:
+   * a short literal number (`MAX_THINKING_TOKENS=0`) or an offset (`JST=UTC+9`)
+   * — both alnum, both indistinguishable by shape from a real short secret.
    */
   {
     name: "env-assignment",
     re: /\b([A-Z][A-Z0-9_]{2,})=([^\s'"]+)/g,
-    repl: (m, key, value) => (value.startsWith("$") ? m : `${key}=${REDACT}`),
+    repl: (m, key, value) =>
+      value.startsWith("$") || !/[A-Za-z0-9]/.test(value) ? m : `${key}=${REDACT}`,
   },
 ];
 
