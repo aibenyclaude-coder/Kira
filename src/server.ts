@@ -27,6 +27,47 @@ import { logger } from "./logger.js";
 import type { Skill, Scar, ReportStatus, ConsentLevel } from "./types.js";
 import type { KiraTier } from "./license.js";
 
+/**
+ * A required string argument, or a thrown error that names what to send.
+ *
+ * `required` in a tool's inputSchema is a declaration, not an enforcement: the
+ * low-level MCP Server does not check arguments against the schema, and the
+ * clients calling it do not either. Measured on this machine's own traffic,
+ * 2 of 51 real `kira_lookup` calls arrived with no `keyword` at all — one sent
+ * `query`, the other `task` — and both reached this handler.
+ *
+ * `String(args?.x ?? "")` turned that into a query for the empty string, which
+ * the matcher then answered on its merits. At the time those two calls landed
+ * the empty query matched EVERY item and returned the whole corpus (101,948
+ * characters, over the caller's token limit); on today's matcher it matches
+ * nothing, so the same mistake now yields an empty result plus a phantom
+ * empty-keyword entry in the flywheel's miss log. `kira_premortem` is worse
+ * still: an empty goal reports "No known failure patterns match this goal" — a
+ * confident all-clear from the tool whose entire job is to warn.
+ *
+ * Every one of those is silent. The agent cannot tell a mis-named parameter
+ * from a corpus with nothing to say, so it reads the answer as fact and moves
+ * on. Naming the expected parameter — and the unexpected keys that did arrive —
+ * is what lets the next call be right.
+ *
+ * Only guards the MCP boundary. lookup()/buildPremortem() keep accepting any
+ * string, including "", so the fuzz suite still proves they cannot be crashed.
+ */
+function requireStringArg(
+  args: Record<string, unknown> | undefined,
+  name: string,
+  tool: string
+): string {
+  const value = args?.[name];
+  if (typeof value === "string" && value.trim() !== "") return value;
+  const unexpected = Object.keys(args ?? {}).filter((k) => k !== name);
+  const received = unexpected.length
+    ? ` Received ${unexpected.map((k) => `'${k}'`).join(", ")} instead — ` +
+      `re-send that text as '${name}'.`
+    : "";
+  throw new Error(`${tool} requires a non-empty '${name}' string.${received}`);
+}
+
 const TOOLS = [
   {
     name: "kira_lookup",
@@ -234,7 +275,7 @@ export async function startServer(): Promise<void> {
     const { name, arguments: args } = request.params;
 
     if (name === "kira_lookup") {
-      const keyword = String(args?.keyword ?? "");
+      const keyword = requireStringArg(args, "keyword", "kira_lookup");
       const context = Array.isArray(args?.context)
         ? (args.context as string[])
         : undefined;
@@ -332,7 +373,7 @@ export async function startServer(): Promise<void> {
     }
 
     if (name === "kira_premortem") {
-      const goal = String(args?.goal ?? "");
+      const goal = requireStringArg(args, "goal", "kira_premortem");
       const context = Array.isArray(args?.context)
         ? (args.context as string[])
         : undefined;
@@ -396,7 +437,7 @@ export async function startServer(): Promise<void> {
     }
 
     if (name === "kira_route") {
-      const goal = String(args?.goal ?? "");
+      const goal = requireStringArg(args, "goal", "kira_route");
       const context = Array.isArray(args?.context)
         ? (args.context as string[])
         : undefined;
