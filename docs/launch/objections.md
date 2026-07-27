@@ -7,7 +7,7 @@ correct → "You're right" + fix PR + link, same thread.
 ---
 
 **"Corpus with hit_count 1 everywhere — this database is tiny / seeded."**
-True and stated: 38 skills / 21 scars, and every scar was actually hit — most
+True and stated: 38 skills / 43 scars, and every scar was actually hit — most
 of them by the agent that built this, during the release you're reading about.
 We chose honest 1s over fake 847s (the fake number existed in an early draft;
 removing it is a commit you can read). The bet isn't the current size, it's
