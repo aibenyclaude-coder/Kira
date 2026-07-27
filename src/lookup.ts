@@ -411,14 +411,63 @@ export function lookup(
   const keyword = request.keyword;
   const contexts = request.context ?? [];
 
+  let matchedSkills = matchByKeywordAndContext(allSkills, keyword, contexts);
+  let matchedScars = matchByKeywordAndContext(allScars, keyword, contexts);
+
+  /**
+   * Context tags disambiguate BETWEEN candidates; they cannot disambiguate
+   * between none. When the filter leaves the whole response empty, it stopped
+   * narrowing an answer and started deleting one — the caller who honestly
+   * tagged its project gets less than the caller who tagged nothing.
+   *
+   * The recovery path below already settled this question in the caller's
+   * favour and only applied it to the weaker signal: near-matching scores
+   * title/summary tokens at a 0.30 threshold with the context filter
+   * deliberately off. So a fuzzy 0.30 near-match survived a context mismatch
+   * while an EXACT keyword hit did not — and near matches ship as id + title +
+   * score, without the mistake/instead payload that is the point of a scar.
+   *
+   * Measured over 62 real kira_lookup calls (47 carrying context tags) taken
+   * from this machine's agent transcripts and miss log, against the shipped
+   * corpus plus the author's 173-scar personal store: 8 of the 47 returned
+   * NOTHING while the corpus held a keyword match, and 4 of those 8 had no
+   * near-match to fall back on either — a literally empty answer. Against the
+   * SHIPPED corpus alone (what a fresh npm install holds) the class survives:
+   * "mcp server add tool typescript" + ["typescript", "mcp-server"] drops
+   * `community.mcp-registry-publish.v1`, whose contexts say "mcp".
+   *
+   * It also corrupted the flywheel's own input. logMiss() fires on a 0-hit
+   * response, so 3 of the 15 entries in the miss log — the maintainer's list
+   * of what the corpus is MISSING — are queries the corpus could already
+   * answer, and two of them had been written down as corpus gaps to go
+   * research.
+   *
+   * The condition is "no surviving candidate DECLARES one of the requested
+   * tags", not "the response is empty". An item with no contexts opts out of
+   * the filter entirely, so an empty-contexts entry that happens to share a
+   * keyword would otherwise keep the response non-empty and suppress the
+   * relaxation — the caller's tags would be enforced against everything else
+   * on the strength of an item that never answered them. Surviving items that
+   * declare contexts intersect the request by construction, so this reads
+   * exactly as: apply the filter only where it discriminates.
+   *
+   * Relaxed for both lists together: doing it per list would hand back skills
+   * while still hiding the scars that belong with them.
+   */
+  const discriminates = [...matchedSkills, ...matchedScars].some(
+    (i) => i._contextsLower.length > 0
+  );
+  if (contexts.length > 0 && !discriminates) {
+    matchedSkills = matchByKeywordAndContext(allSkills, keyword, []);
+    matchedScars = matchByKeywordAndContext(allScars, keyword, []);
+  }
+
   // ── Skills (return summaries without instructions to save tokens) ──
-  const matchedSkills = matchByKeywordAndContext(allSkills, keyword, contexts);
   const community = matchedSkills.filter((s) => s.source === "community");
   const vendor = matchedSkills.filter((s) => s.source === "vendor");
   const sortedSkills = [...community, ...vendor].map(toSkillSummary);
 
   // ── Scars ────────────────────────────────────────────────────────────
-  const matchedScars = matchByKeywordAndContext(allScars, keyword, contexts);
   const rankedScars = [...matchedScars].sort(compareScars);
   const sortedScars = rankedScars.map(toScarSummary);
 

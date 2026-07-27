@@ -149,6 +149,70 @@ describe("mixed-script queries", () => {
   });
 });
 
+/**
+ * Context tags narrow an answer; they must not delete one. Enforcing a tag that
+ * no candidate declares turned an exact keyword hit into a 0-hit — and a 0-hit
+ * is also what the miss log records as "the corpus is missing this", so the
+ * maintainer's gap list inherited the mistake.
+ */
+describe("context tags filter only where they discriminate", () => {
+  const NEXT_SKILL = skill({ id: "community.next.v1", keywords: ["deploy"], contexts: ["nextjs"] });
+  const DJANGO_SKILL = skill({ id: "community.django.v1", keywords: ["deploy"], contexts: ["django"] });
+  const UNTAGGED_SKILL = skill({ id: "community.untagged.v1", keywords: ["deploy"], contexts: [] });
+  const DJANGO_SCAR = scar({ id: "scar.django.v1", keywords: ["deploy"], contexts: ["django"] });
+
+  it("drops a non-matching item when another candidate declares the tag", () => {
+    const res = lookup(indexItems([NEXT_SKILL, DJANGO_SKILL]), [], {
+      keyword: "deploy",
+      context: ["nextjs"],
+    });
+    expect(res.skills.map((s) => s.id)).toEqual(["community.next.v1"]);
+  });
+
+  it("returns the keyword matches when no candidate declares the tag", () => {
+    const res = lookup(indexItems([NEXT_SKILL, DJANGO_SKILL]), [], {
+      keyword: "deploy",
+      context: ["python"],
+    });
+    expect(res.skills.map((s) => s.id)).toEqual(["community.next.v1", "community.django.v1"]);
+    expect(res.skill_count).toBe(2);
+  });
+
+  it("does not let an untagged match suppress the relaxation", () => {
+    // An item with no contexts opts out of the filter, so it survives any tag.
+    // Reading that as "the filter kept something" would enforce the tag against
+    // everything else on the strength of an item that never answered it.
+    const res = lookup(indexItems([UNTAGGED_SKILL, DJANGO_SKILL]), [], {
+      keyword: "deploy",
+      context: ["python"],
+    });
+    expect(res.skills.map((s) => s.id)).toEqual([
+      "community.untagged.v1",
+      "community.django.v1",
+    ]);
+  });
+
+  it("relaxes skills and scars together, so a scar is not left behind", () => {
+    const res = lookup(indexItems([DJANGO_SKILL]), indexItems([DJANGO_SCAR]), {
+      keyword: "deploy",
+      context: ["python"],
+    });
+    expect(res.skill_count).toBe(1);
+    expect(res.scar_count).toBe(1);
+    // The payload rides along — a near-match would have carried only a title.
+    expect(res.scars[0]).toMatchObject({ mistake: "x", instead: "x" });
+  });
+
+  it("still answers nothing when the keyword itself matches nothing", () => {
+    const res = lookup(indexItems([NEXT_SKILL]), [], {
+      keyword: "qwertyzxcv nonsense",
+      context: ["python"],
+    });
+    expect(res.skill_count).toBe(0);
+    expect(res.scar_count).toBe(0);
+  });
+});
+
 describe("index internals stay off the wire", () => {
   it("strips _kwPhrases and friends from returned scars and skills", () => {
     const res = lookup(
