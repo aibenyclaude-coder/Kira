@@ -368,6 +368,27 @@ export function describeGluedFields(
   return { fields, glued, lost: glued.filter((name) => !supplied(name)) };
 }
 
+/** What a recurrence fold merged this recording into, and what it dropped. */
+export interface ScarFoldReport {
+  /** Id of the pre-existing scar this recording was merged into. */
+  into: string;
+  /** That scar's title — the identity the store now holds for this recording. */
+  into_title: string;
+  /** Similarity that triggered the merge (>= DEDUP_THRESHOLD). */
+  similarity: number;
+  /** hit_count after the merge. */
+  hit_count: number;
+  /** Submitted fields whose text is NOT on disk: the merge kept the older wording. */
+  dropped: string[];
+}
+
+/** A stored scar plus the fold, if any, that produced it. */
+export interface RecordOutcome {
+  scar: PersonalScar;
+  /** null when this recording became its own scar. */
+  fold: ScarFoldReport | null;
+}
+
 /**
  * Persist a personal scar to ~/.kira/personal-scars/<id>.json.
  *
@@ -375,10 +396,19 @@ export function describeGluedFields(
  * same failure targets the same file and bumps `hit_count` (preserving the
  * original `created_at`). All text is sanitized before write. This function
  * performs no network I/O and writes nothing to stdout.
+ *
+ * Returns the fold alongside the scar because a fold is not a write of what
+ * the caller sent: it rewrites a DIFFERENT, older scar and keeps that scar's
+ * title and mistake, so the submitted ones reach no file at all. Silently, on
+ * this machine, that has already merged a recording about a major dependency
+ * bump into an unrelated scar about stale CI artifacts (2026-07-20) — the
+ * fix survived as that scar's `instead`, the rest of the lesson is simply
+ * gone. Only the caller knows whether the two failures are the same one, and
+ * it can only tell if it is told a merge happened.
  */
-export async function recordPersonalScar(
+export async function recordPersonalScarDetailed(
   input: RecordFailureInput
-): Promise<PersonalScar> {
+): Promise<RecordOutcome> {
   const title = sanitize(input.title, TITLE_MAX)!.trim();
   const mistake = sanitize(input.mistake, MISTAKE_MAX)!.trim();
   const instead = input.instead ? sanitize(input.instead, INSTEAD_MAX)!.trim() : "";
@@ -421,7 +451,24 @@ export async function recordPersonalScar(
       JSON.stringify(merged, null, 2) + "\n",
       "utf-8"
     );
-    return merged;
+    // What the caller sent that no file now holds. `instead` is merged rather
+    // than replaced (see mergeInstead), so it only counts as dropped when the
+    // length cap cut it; keywords/contexts are unioned.
+    const dropped: string[] = [];
+    if (merged.title !== title) dropped.push("title");
+    if (merged.mistake !== mistake) dropped.push("mistake");
+    if (merged.summary !== summary) dropped.push("summary");
+    if (instead && !merged.instead.includes(instead)) dropped.push("instead");
+    return {
+      scar: merged,
+      fold: {
+        into: match.id,
+        into_title: match.title,
+        similarity: Math.round(best * 1000) / 1000,
+        hit_count: merged.hit_count,
+        dropped,
+      },
+    };
   }
 
   const id = `scar.personal.${slugify(title)}.${shortHash(`${title}\n${mistake}`)}.v1`;
@@ -450,7 +497,14 @@ export async function recordPersonalScar(
   };
 
   await writeFile(file, JSON.stringify(scar, null, 2) + "\n", "utf-8");
-  return scar;
+  return { scar, fold: null };
+}
+
+/** As {@link recordPersonalScarDetailed}, for callers that ignore the fold. */
+export async function recordPersonalScar(
+  input: RecordFailureInput
+): Promise<PersonalScar> {
+  return (await recordPersonalScarDetailed(input)).scar;
 }
 
 /**

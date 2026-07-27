@@ -8,12 +8,13 @@
  * network I/O and writes nothing to stdout (stdout is the MCP transport).
  */
 import {
-  recordPersonalScar,
+  recordPersonalScarDetailed,
   personalScarPath,
   describeScarRedactions,
   describeGluedFields,
   type PersonalScar,
   type RecordFailureInput,
+  type ScarFoldReport,
   type ScarRedactionReport,
   type ScarStructureReport,
 } from "../personal-scars.js";
@@ -33,6 +34,9 @@ export const KIRA_RECORD_FAILURE_TOOL = {
     "so check it and re-record if a redaction hit something that was not a secret. " +
     "A 'malformed' field means this call's parameters were glued together in " +
     "transport and a field's text was lost — re-record with one long field at a time. " +
+    "A 'folded' field means this was merged into an EXISTING scar as a recurrence: " +
+    "the returned scar is that older one and your title/mistake were not stored, so " +
+    "check 'folded.into_title' and re-record if it describes a different failure. " +
     "Personal scars are LOCAL-ONLY — they are never uploaded, on any tier.",
   inputSchema: {
     type: "object",
@@ -105,6 +109,11 @@ export interface RecordFailureResult {
    * transport. Absent means the arguments arrived intact.
    */
   malformed?: ScarStructureReport & { note: string };
+  /**
+   * Present ONLY when this recording was merged into an existing scar as a
+   * recurrence. Absent means `scar` is this call's own new scar.
+   */
+  folded?: ScarFoldReport & { note: string };
 }
 
 /** Caller-facing explanation of a rewrite, sized for an agent to act on. */
@@ -146,6 +155,28 @@ function malformedNote(r: ScarStructureReport): string {
       "was not intentional, delete the file at 'path' and record again with at " +
       "most ONE long free-text field per call (two long fields back to back is " +
       "what produces the glue)."
+  );
+  return parts.join(" ");
+}
+
+/** Caller-facing explanation of a merge, sized for an agent to act on. */
+function foldNote(r: ScarFoldReport): string {
+  const parts = [
+    `This recording was merged into an EXISTING scar as a recurrence ` +
+      `(similarity ${r.similarity}, hit_count now ${r.hit_count}): "${r.into_title}". ` +
+      "The scar above is that older one — 'scar' and 'path' are not this call's own.",
+  ];
+  parts.push(
+    r.dropped.length > 0
+      ? `Your ${r.dropped.join(", ")} ${r.dropped.length === 1 ? "is" : "are"} ` +
+          "not stored anywhere: the merge kept the older wording."
+      : "Nothing you sent was lost — the merged scar already said it."
+  );
+  parts.push(
+    "If this was a different failure, the merge was wrong and the lesson you " +
+      "just wrote now exists nowhere. Read scar.title / scar.mistake at 'path': " +
+      "when they describe something else, edit that file back and re-record with " +
+      "wording that does not restate the other scar's."
   );
   return parts.join(" ");
 }
@@ -198,7 +229,7 @@ export async function handleRecordFailure(
 
   const redactions = describeScarRedactions(input);
   const malformed = describeGluedFields(input);
-  const scar = await recordPersonalScar(input);
+  const { scar, fold } = await recordPersonalScarDetailed(input);
   return {
     ack: true,
     scar,
@@ -206,5 +237,6 @@ export async function handleRecordFailure(
     stored: "local-only",
     ...(redactions && { redactions: { ...redactions, note: redactionNote(redactions) } }),
     ...(malformed && { malformed: { ...malformed, note: malformedNote(malformed) } }),
+    ...(fold && { folded: { ...fold, note: foldNote(fold) } }),
   };
 }

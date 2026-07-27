@@ -554,6 +554,117 @@ describe("glued-parameter reporting", () => {
   });
 });
 
+describe("fold reporting", () => {
+  // A fold rewrites an EXISTING scar and drops the submitted title/mistake:
+  // the store keeps the older recording's identity. Measured on the author's
+  // machine, 6 folds have happened across 171 scars and 2 of them were wrong
+  // (2026-07-20: a recording about a major dependency bump was merged into an
+  // unrelated CI-artifact scar, and its title + mistake exist nowhere). Every
+  // one of those calls returned the same `ack: true` a fresh record returns,
+  // so the loss was invisible at the moment it happened.
+  const FIRST = {
+    title: "build gate bypassed by pipe",
+    mistake:
+      "gated the merge on npm run build piped to tail; exit code came from tail",
+    instead: "run the build bare so the gate sees the real exit code",
+  };
+  const RECURRENCE = {
+    title: "pipe swallowed build exit code",
+    mistake:
+      "npm run build piped to tail returned 0 despite tsc failure and the merge gate passed",
+    instead: "set -o pipefail before any piped gate command",
+  };
+
+  it("omits the folded field when the recording becomes its own scar", async () => {
+    const { handleRecordFailure } = await fresh();
+    const res = await handleRecordFailure(FIRST);
+    expect(res.folded).toBeUndefined();
+    expect(res.scar.title).toBe(FIRST.title);
+  });
+
+  it("names the scar the recording was merged into", async () => {
+    const { handleRecordFailure } = await fresh();
+    const first = await handleRecordFailure(FIRST);
+    const res = await handleRecordFailure(RECURRENCE);
+
+    // The ack carries someone ELSE's title, and `path` points at a file this
+    // call never created — that is exactly what the report has to disclose.
+    expect(res.scar.id).toBe(first.scar.id);
+    expect(res.scar.title).toBe(FIRST.title);
+    expect(res.folded?.into).toBe(first.scar.id);
+    expect(res.folded?.into_title).toBe(FIRST.title);
+    expect(res.folded?.hit_count).toBe(2);
+    expect(res.folded?.similarity).toBeGreaterThanOrEqual(0.45);
+  });
+
+  it("lists the submitted fields that are not on disk", async () => {
+    const { handleRecordFailure } = await fresh();
+    await handleRecordFailure(FIRST);
+    const res = await handleRecordFailure(RECURRENCE);
+    // title and mistake were replaced by the existing scar's text...
+    expect(res.folded?.dropped).toContain("title");
+    expect(res.folded?.dropped).toContain("mistake");
+    // ...but `instead` survives above the [previous instead] marker, so
+    // claiming it was dropped would be a false alarm.
+    expect(res.folded?.dropped).not.toContain("instead");
+    expect(res.scar.instead).toContain("set -o pipefail");
+  });
+
+  it("reports the fold on a recurrence with no instead of its own", async () => {
+    const { handleRecordFailure } = await fresh();
+    await handleRecordFailure(FIRST);
+    const res = await handleRecordFailure({
+      title: RECURRENCE.title,
+      mistake: RECURRENCE.mistake,
+    });
+    expect(res.folded?.into_title).toBe(FIRST.title);
+    expect(res.folded?.dropped).not.toContain("instead");
+  });
+
+  it("tells the caller what to do when the merge was wrong", async () => {
+    const { handleRecordFailure } = await fresh();
+    await handleRecordFailure(FIRST);
+    const res = await handleRecordFailure(RECURRENCE);
+    expect(res.folded?.note).toContain(FIRST.title);
+    expect(res.folded?.note).toContain("different failure");
+    // The file is the only place the merge can be undone.
+    expect(res.folded?.note).toContain("path");
+  });
+
+  it("does not report a fold for a genuinely different failure", async () => {
+    const { handleRecordFailure } = await fresh();
+    await handleRecordFailure({
+      title: "vercel env missing",
+      mistake: "forgot to add the database url to vercel project settings",
+    });
+    const res = await handleRecordFailure({
+      title: "prisma generate forgotten",
+      mistake: "deployed without running prisma generate after a schema change",
+    });
+    expect(res.folded).toBeUndefined();
+    expect(res.scar.title).toBe("prisma generate forgotten");
+  });
+
+  it("reports the fold that bumps hit_count on an identical re-record", async () => {
+    const { handleRecordFailure } = await fresh();
+    await handleRecordFailure(FIRST);
+    const res = await handleRecordFailure(FIRST);
+    expect(res.folded?.into_title).toBe(FIRST.title);
+    expect(res.folded?.hit_count).toBe(2);
+    // Same text on both sides: nothing the caller sent was lost.
+    expect(res.folded?.dropped).toEqual([]);
+  });
+
+  it("exposes the fold through the recorder itself, not just the tool", async () => {
+    const { recordPersonalScarDetailed } = await fresh();
+    const first = await recordPersonalScarDetailed(FIRST);
+    expect(first.fold).toBeNull();
+    const second = await recordPersonalScarDetailed(RECURRENCE);
+    expect(second.fold?.into).toBe(first.scar.id);
+    expect(second.scar.hit_count).toBe(2);
+  });
+});
+
 describe("KIRA_RECORD_FAILURE_TOOL descriptor", () => {
   it("is a well-formed, local-only MCP tool", async () => {
     const { KIRA_RECORD_FAILURE_TOOL } = await fresh();
