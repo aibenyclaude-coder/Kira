@@ -319,6 +319,29 @@ describe("kira_lookup matcher — property-based fuzz", () => {
     expect(hit.skills.map((s) => s.id)).toContain("skill.0");
   });
 
+  it("does not count two halves of one identifier as an overlap (tier 3)", () => {
+    const skills = indexItems([makeSkill(0, "community", ["ERR_MODULE_NOT_FOUND tests"])]);
+    // `err` and `found` are the boilerplate ends of an error code, and the one
+    // segment that says WHICH error it is differs. Both sides confine the
+    // entire overlap to a single punctuation-split token, so this is one name
+    // half-matching another, not two independent words. On the shipped corpus
+    // it was the last surviving tier-3 false positive: a headless-Chrome
+    // ERR_FILE_NOT_FOUND reached a scar about a monorepo's nested install.
+    const miss = lookup(skills, [], { keyword: "ERR_FILE_NOT_FOUND", context: [] });
+    expect(miss.skills.map((s) => s.id)).not.toContain("skill.0");
+    // Positive control: the SAME identifier still reaches it.
+    const same = lookup(skills, [], { keyword: "ERR_MODULE_NOT_FOUND vitest", context: [] });
+    expect(same.skills.map((s) => s.id)).toContain("skill.0");
+    // Positive control: an overlap spread across two tokens is untouched.
+    const spread = indexItems([makeSkill(1, "community", ["add tests"])]);
+    const wide = lookup(spread, [], { keyword: "add e2e tests", context: [] });
+    expect(wide.skills.map((s) => s.id)).toContain("skill.1");
+    // Positive control: one compound token matching ITSELF is not an artifact.
+    const dotted = indexItems([makeSkill(2, "community", ["nested package.json"])]);
+    const kept = lookup(dotted, [], { keyword: "package.json version mismatch", context: [] });
+    expect(kept.skills.map((s) => s.id)).toContain("skill.2");
+  });
+
   it("does not count filler words toward the overlap threshold", () => {
     const skills = indexItems([makeSkill(0, "community", ["foo bar"])]);
     // 'foo' is the only meaningful overlap; 'the/a/to' are filler → no match.
