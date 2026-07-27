@@ -164,13 +164,30 @@ describe("kira_lookup handler", () => {
     expect(res.suggestions.length).toBeGreaterThan(0);
   });
 
-  it("honors the context filter", async () => {
-    // The authjs scar is tagged nextjs+typescript; a disjoint context excludes it.
+  it("honors the context filter where the tags discriminate", async () => {
+    // "create nextjs app" also reaches the Expo skill; asking for nextjs keeps
+    // the nextjs entries (which declare the tag) and drops the one that doesn't.
+    const res = await callJson("kira_lookup", {
+      keyword: SKILL_KEYWORD,
+      context: ["nextjs"],
+    });
+    expect(res.skills.some((s: any) => s.id === SKILL_ID)).toBe(true);
+    expect(
+      res.skills.some((s: any) => s.id === "community.setup-expo-react-native.v1")
+    ).toBe(false);
+  });
+
+  it("relaxes context tags no match declares instead of answering empty", async () => {
+    // Nothing matching "authjs" is tagged python, so the tag discriminates
+    // nothing — enforcing it would delete the answer rather than narrow it, and
+    // hand the caller a 0-hit that also poisons the miss log with a corpus gap
+    // the corpus does not have.
     const res = await callJson("kira_lookup", {
       keyword: SCAR_KEYWORD,
       context: ["python"],
     });
-    expect(res.scars.some((s: any) => s.id === SCAR_ID)).toBe(false);
+    expect(res.scars.some((s: any) => s.id === SCAR_ID)).toBe(true);
+    expect(res.scars.find((s: any) => s.id === SCAR_ID).instead).toBeTruthy();
   });
 
   // `required: ["keyword"]` is not enforced by the SDK server or by the clients

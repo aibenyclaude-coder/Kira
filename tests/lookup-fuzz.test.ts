@@ -181,18 +181,42 @@ describe("kira_lookup matcher — property-based fuzz", () => {
     );
   });
 
-  it("filters out a skill whose contexts don't overlap the requested context", () => {
+  it("filters out an item whose contexts don't overlap the requested context, as long as one does", () => {
+    fc.assert(
+      fc.property(fc.nat(), (n) => {
+        // Synthetic so the filter is guaranteed something to keep — on the real
+        // corpus a narrow tag can empty the answer, and an empty answer is the
+        // one case where the filter is relaxed (property below).
+        const onCtx = makeSkill(n % 100, "community", ["shared"], ["nextjs"]);
+        const offCtx = makeSkill((n % 100) + 1, "community", ["shared"], ["django"]);
+        const res = lookup(indexItems([onCtx, offCtx]), [], {
+          keyword: "shared",
+          context: ["nextjs"],
+        });
+        expect(res.skills.map((s) => s.id)).toEqual([onCtx.id]);
+      })
+    );
+  });
+
+  /**
+   * A context tag that matches nothing is relaxed ALL-OR-NOTHING: the answer is
+   * either narrowed or identical to the unfiltered one, never partially eaten.
+   * Run against the real corpus because that is where the tag vocabulary is
+   * narrow enough for a caller's honest project tags to match no entry at all.
+   */
+  it("an unmatched context tag never shrinks the answer below the no-context answer", () => {
     fc.assert(
       fc.property(fc.nat(), fc.nat(), (si, ki) => {
         const skill = realSkills[si % realSkills.length]!;
-        // Property only holds for items that declare contexts (real corpus does).
-        if (skill.contexts.length === 0) return;
         const kw = skill.keywords[ki % skill.keywords.length]!;
-        const res = lookup(realSkills, realScars, {
-          keyword: kw,
-          context: ["__no_such_context__"],
-        });
-        expect(res.skills.map((s) => s.id)).not.toContain(skill.id);
+        const ids = (context: string[]) => {
+          const r = lookup(realSkills, realScars, { keyword: kw, context });
+          return [...r.skills.map((s) => s.id), ...r.scars.map((s) => s.id)];
+        };
+        const bogus = ids(["__no_such_context__"]);
+        const unfiltered = ids([]);
+        expect(bogus).toEqual(unfiltered);
+        expect(bogus).toContain(skill.id);
       })
     );
   });
