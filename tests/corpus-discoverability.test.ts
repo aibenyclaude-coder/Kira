@@ -40,3 +40,36 @@ describe("shipped corpus is reachable by agent-phrased queries", () => {
     expect(firedScarIds(query)).toContain(REACH_SCAR);
   });
 });
+
+/**
+ * The floor under the whole corpus: no query is closer to an entry than the
+ * words its own author chose for the title. An entry that its own title cannot
+ * retrieve is reachable by nothing — it grows the corpus without growing what
+ * the agent can find. `scar.threshold-tuned-to-one-example.v1` sat in exactly
+ * that state (its title says "Tuned…", its keywords say "tune"/"tuning") until
+ * the stemmer learned to fold past tense.
+ *
+ * Asserted as one list rather than a case per entry so a corpus addition that
+ * lands unreachable names itself, and so the failure shows every such entry at
+ * once instead of the first.
+ */
+describe("every shipped entry is retrievable by its own title", () => {
+  it("scars", () => {
+    const unreachable = scars
+      .filter((s) => !firedScarIds(s.title).includes(s.id))
+      .map((s) => s.id);
+    expect(unreachable).toEqual([]);
+  });
+
+  it("skills", () => {
+    const unreachable = skills
+      .filter(
+        (s) =>
+          !lookup(skills, scars, { keyword: s.title, context: [] })
+            .skills.map((m) => m.id)
+            .includes(s.id)
+      )
+      .map((s) => s.id);
+    expect(unreachable).toEqual([]);
+  });
+});

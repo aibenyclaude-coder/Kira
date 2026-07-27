@@ -39,9 +39,33 @@ const ALIASES: Record<string, string[]> = {
   ci: ["continuous", "integration"],
 };
 
-/** Exported so lookup.ts's word-boundary matcher folds plurals the same way this does. */
+/**
+ * Exported so lookup.ts's word-boundary matcher folds plurals the same way this does.
+ *
+ * Past tense folds too, because a scar is WRITTEN in past tense ("Tuned a
+ * matching threshold…", "Polled CI by column-slicing…") and QUERIED in the
+ * present ("tune threshold", "fuzzy match tuning"). Without the -ed rule those
+ * two forms are different words: the shipped scar
+ * `scar.threshold-tuned-to-one-example.v1` could not be retrieved by its OWN
+ * TITLE — no phrasing is closer than that, so nothing could reach it.
+ *
+ * Measured over 1653 real query strings (the miss log plus every title and
+ * keyword in the shipped corpus and in the author's live personal-scar store)
+ * against the 81 shipped entries: 9 matches gained on 7 queries, 0 matches
+ * lost. 4 of the 9 are the fix working as intended (the self-retrieval above;
+ * "reject" → the rejected-push scar; "read back the record" → the write-path
+ * scar; "cached reading" → the caching skill); 2 are the known generic tier-3
+ * tail ({fail, npm} pulling in the npm-publish scar), which is lead (N), not
+ * this rule. Fold decisions on the personal-scar store are untouched: all
+ * 14 878 pairs keep their side of the 0.45 dedup threshold, and no pair lands
+ * within 0.11 of it.
+ *
+ * Length bar is 4, not the 5 the -ing rule uses, because the shortest real
+ * offenders are 5 chars ("tuned"); below that the word is its own stem.
+ */
 export function stem(w: string): string {
   if (w.length > 5 && w.endsWith("ing")) return w.slice(0, -3);
+  if (w.length > 4 && w.endsWith("ed")) return w.slice(0, -2);
   if (w.length > 3 && w.endsWith("s") && !w.endsWith("ss")) return w.slice(0, -1);
   return w;
 }

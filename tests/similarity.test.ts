@@ -30,6 +30,22 @@ describe("tokenize", () => {
     expect(tokenize("kubernetes cluster")).toEqual(tokenize("k8s clusters"));
   });
 
+  it("folds past tense onto the -ing form (scars are written in past tense)", () => {
+    // A scar's title says what ALREADY went wrong; the agent asks about the
+    // task it is ABOUT to start. Both sides must reach the same token.
+    expect(tokenize("tuned")).toEqual(tokenize("tuning"));
+    expect(tokenize("polled")).toEqual(tokenize("polling"));
+    expect(tokenize("cached")).toEqual(tokenize("caching"));
+  });
+
+  it("leaves words too short to carry a real -ed suffix alone", () => {
+    // "used"/"feed"/"seed" are 4 chars: stripping would invent a stem.
+    expect(tokenize("feed the queue")).toEqual(
+      expect.arrayContaining(["feed"])
+    );
+    expect(tokenize("seed data")).toEqual(expect.arrayContaining(["seed"]));
+  });
+
   it("dedupes and drops short tokens", () => {
     expect(tokenize("a a b vercel vercel")).toEqual(["vercel"]);
   });
