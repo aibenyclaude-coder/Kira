@@ -55,6 +55,7 @@ function stripIndex<T extends Indexed>(item: T): Omit<T, keyof Indexed> {
     _contextsLower: _c,
     _kwPhrases: _p,
     _kwWords: _w,
+    _kwTokenWords: _tw,
     _kwTokens: _t,
     _simTokens: _s,
     ...rest
@@ -70,6 +71,8 @@ export interface Indexed extends SimIndexed {
   _kwPhrases: string[][];
   /** Per keyword, its stemmed word SET — always populated, tier 3 only. */
   _kwWords: Set<string>[];
+  /** Per keyword, per whitespace token, its stemmed words — tier 3 only. */
+  _kwTokenWords: string[][][];
 }
 
 /**
@@ -82,6 +85,71 @@ function phraseWords(text: string): string[] {
     .split(/[^\p{L}\p{N}]+/u)
     .filter(Boolean)
     .map(stem);
+}
+
+/**
+ * Split into whitespace tokens, each as its own stemmed word list.
+ *
+ * `phraseWords` flattens "ERR_FILE_NOT_FOUND" into four words with no record
+ * that they came from one identifier; this keeps that grouping.
+ */
+function tokenWords(text: string): string[][] {
+  return text
+    .toLowerCase()
+    .split(/\s+/)
+    .map(phraseWords)
+    .filter((w) => w.length > 0);
+}
+
+/**
+ * The single COMPOUND token every matched word came from, or null.
+ *
+ * Null covers both honest shapes: the words came from two or more different
+ * tokens (independent signals), or the one token they came from is a plain
+ * single word (nothing was split, so nothing was over-counted).
+ */
+function confinedToOneCompound(tokens: string[][], matched: string[]): string[] | null {
+  let only: string[] | null = null;
+  for (const t of tokens) {
+    if (!matched.some((w) => t.includes(w))) continue;
+    if (only) return null;
+    only = t;
+  }
+  if (only === null || only.length < 2) return null;
+  return matched.every((w) => only!.includes(w)) ? only : null;
+}
+
+/**
+ * Is this overlap just two halves of one identifier that isn't the same
+ * identifier on the other side?
+ *
+ * Tier 3 counts DISTINCT words, which reads as "two independent things
+ * matched". A token that punctuation-splits — `ERR_FILE_NOT_FOUND`,
+ * `package.json`, `cloudflare-pages` — is one name, so its pieces are not
+ * independent: the query "ERR_FILE_NOT_FOUND" cleared the bar against the
+ * keyword "ERR_MODULE_NOT_FOUND tests" on `err` + `found`, the two boilerplate
+ * ends of an error code, while differing on the only segment that says which
+ * error it is. Confinement to ONE compound token on BOTH sides is what makes
+ * that an artifact; the escape hatch is the identifier being the SAME one, so
+ * "ERR_MODULE_NOT_FOUND vitest" still reaches that scar, and
+ * "package.json version mismatch" still reaches the keyword "nested
+ * package.json". Anything matching across two tokens is untouched.
+ *
+ * Measured over the shipped corpus (81 entries) against 1551 real query
+ * strings (the miss log plus every title and keyword in the author's live
+ * personal-scar store): 2 matches removed, both the same false positive, and
+ * 0 legitimate matches lost — no query lost its last result.
+ */
+function isCompoundArtifact(
+  queryTokens: string[][],
+  keywordTokens: string[][],
+  matched: string[]
+): boolean {
+  const q = confinedToOneCompound(queryTokens, matched);
+  if (q === null) return false;
+  const k = confinedToOneCompound(keywordTokens, matched);
+  if (k === null) return false;
+  return q.join(" ") !== k.join(" ");
 }
 
 /** Does `hay` contain `needle` as a contiguous run of whole words? */
@@ -106,6 +174,7 @@ export function indexItems<
     _contextsLower: item.contexts.map((c) => c.toLowerCase()),
     _kwPhrases: item.keywords.map((k) => (hasCJK(k) ? [] : phraseWords(k))),
     _kwWords: item.keywords.map((k) => new Set(phraseWords(k))),
+    _kwTokenWords: item.keywords.map((k) => tokenWords(k)),
     _kwTokens: new Set(item.keywords.flatMap((k) => tokenize(k))),
     _simTokens: new Set(
       [item.title, item.summary, ...item.keywords, ...item.contexts].flatMap((t) =>
@@ -200,6 +269,7 @@ function matchByKeywordAndContext<T extends Indexed>(
   const normalizedKeyword = keyword.toLowerCase().trim();
   const normalizedContexts = new Set(contexts.map((c) => c.toLowerCase().trim()));
   const queryPhrase = phraseWords(normalizedKeyword);
+  const queryTokens = tokenWords(normalizedKeyword);
 
   const exact: T[] = [];
   const contains: T[] = [];
@@ -263,11 +333,16 @@ function matchByKeywordAndContext<T extends Indexed>(
      * holds nothing that overlaps them by two words.
      */
     if (
-      item._kwWords.some((kWords) => {
-        const meaningfulMatches = new Set(
-          queryPhrase.filter((qw) => !FILLER.has(qw) && kWords.has(qw))
+      item._kwWords.some((kWords, ki) => {
+        const meaningfulMatches = [
+          ...new Set(queryPhrase.filter((qw) => !FILLER.has(qw) && kWords.has(qw))),
+        ];
+        if (meaningfulMatches.length < MIN_WORD_OVERLAP) return false;
+        return !isCompoundArtifact(
+          queryTokens,
+          item._kwTokenWords[ki] ?? [],
+          meaningfulMatches
         );
-        return meaningfulMatches.size >= MIN_WORD_OVERLAP;
       })
     ) {
       if (!seen.has(i)) {
