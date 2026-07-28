@@ -134,8 +134,48 @@ describe("lookup advisory near-scars (skill hit, zero scars)", () => {
     expect(res.near_scars).toBeUndefined();
   });
 
-  it("stays silent when a scar did match lexically", () => {
+  it("stays silent when the scar that matched is the only one there is", () => {
+    // Nothing is hidden here: the pool holds one scar and it shipped with its
+    // full payload, so there is no second scar left to advise about.
     const res = lookup(skills, scars, { keyword: "vercel env" });
+    expect(res.scar_count).toBeGreaterThan(0);
+    expect(res.near_scars).toBeUndefined();
+  });
+});
+
+describe("lookup advisory near-scars (a scar matched, a closer one did not)", () => {
+  // The three lexical tiers read KEYWORDS only, so a scar can clear tier 2 on a
+  // phrase the query happens to open with, while the scar the query actually
+  // describes — which says so in its title — never enters the response at all.
+  const pool = indexItems([
+    mkScar({
+      id: "scar.release-tag.v1",
+      keywords: ["release tag"],
+      title: "A release tag was pushed twice",
+      summary: "Tagging twice.",
+    }),
+    mkScar({
+      id: "scar.rails-race.v1",
+      keywords: ["version race"],
+      title: "Two release rails publish on one tag",
+      summary: "Both rails fire on the same tag.",
+    }),
+  ]);
+
+  it("surfaces the closer near-scar that a lexical hit used to hide", () => {
+    const res = lookup([], pool, { keyword: "release tag publish version" });
+    expect(res.scars.map((s) => s.id)).toEqual(["scar.release-tag.v1"]);
+    expect(res.near_scars?.map((n) => n.id)).toEqual(["scar.rails-race.v1"]);
+  });
+
+  it("never repeats a scar that already shipped with its payload", () => {
+    const res = lookup([], pool, { keyword: "release tag publish version" });
+    const shipped = new Set(res.scars.map((s) => s.id));
+    expect((res.near_scars ?? []).some((n) => shipped.has(n.id))).toBe(false);
+  });
+
+  it("keeps the advisory bar — one incidental token is still not enough", () => {
+    const res = lookup([], pool, { keyword: "release" });
     expect(res.scar_count).toBeGreaterThan(0);
     expect(res.near_scars).toBeUndefined();
   });
