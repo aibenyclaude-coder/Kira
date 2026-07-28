@@ -162,6 +162,44 @@ function phraseIn(needle: string[], hay: string[]): boolean {
 }
 
 /**
+ * The tag itself plus the words it is built from, for a COMPOUND context tag.
+ *
+ * Every keyword surface in this file travels a splitter (`phraseWords`), so
+ * "cloudflare-pages" reaches "cloudflare". Context tags were the one surface
+ * compared by raw string equality, and the corpus writes compounds:
+ * `github-actions`, `browser-automation`, `browser-extension`,
+ * `browser-testing`, `desktop-automation`, `app-router`. A caller tagging its
+ * project `github` therefore never reached anything tagged `github-actions` —
+ * not because the tags disagree, but because one of them spells out a
+ * narrower case of the other.
+ *
+ * Measured over the 57 distinct kira_lookup calls in this machine's agent
+ * transcripts (47 carrying tags), against the SHIPPED corpus alone:
+ * 3 calls gain, 0 lose. All three are on-topic drops the filter was making —
+ * "release publish version tag" + [github, mcp-server, npm] was dropping the
+ * scar about credential-holding release jobs (tagged [ci, github-actions]),
+ * and two `gh pr merge` queries tagged [git, github] were dropping the scar
+ * about parsing `gh` table output.
+ *
+ * Widening only the ITEM side is deliberate. Splitting the CALLER's tags too
+ * was measured separately and changes nothing on the shipped corpus (its
+ * effect lives entirely in one machine's personal store), and it carries a
+ * false friend the item side does not: `social-media` would relax onto every
+ * item tagged `media`. An item's own tag is the corpus author's word; a
+ * caller's tag is arbitrary input.
+ *
+ * Adding to a non-empty list can never make it empty, so an item that passed
+ * the filter before still passes: this is monotone per item. The one indirect
+ * way it can narrow is by flipping the relaxation below from ON to OFF — that
+ * is what the 0-loss half of the measurement checks.
+ */
+function contextForms(context: string): string[] {
+  const lower = context.toLowerCase();
+  const words = lower.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  return words.length > 1 ? [lower, ...words] : [lower];
+}
+
+/**
  * One-time indexing: lowercase keywords/contexts + similarity token sets at
  * load time so we don't repeat it on every lookup call.
  */
@@ -171,7 +209,7 @@ export function indexItems<
   return items.map((item) => ({
     ...item,
     _keywordsLower: item.keywords.map((k) => k.toLowerCase()),
-    _contextsLower: item.contexts.map((c) => c.toLowerCase()),
+    _contextsLower: [...new Set(item.contexts.flatMap(contextForms))],
     _kwPhrases: item.keywords.map((k) => (hasCJK(k) ? [] : phraseWords(k))),
     _kwWords: item.keywords.map((k) => new Set(phraseWords(k))),
     _kwTokenWords: item.keywords.map((k) => tokenWords(k)),
