@@ -118,6 +118,42 @@ describe("tokenize — CJK (日本語)", () => {
   });
 });
 
+describe("nearMatches — mixed-script queries (日本語 + Latin)", () => {
+  const latinOnly = item("DNS cutover leaves a stale local resolver", [
+    "dns cutover",
+    "stale resolver",
+  ]);
+
+  it("scores a mixed query on the script the item can actually match", () => {
+    // Japanese writes latin identifiers flush against kana, so this 10-token
+    // query is 8 bigrams around `stale resolver`. Against an english-only item
+    // those bigrams are unmatchable by construction — counting them in the
+    // denominator scored a full keyword hit at 4/20 = 0.20 and returned nothing.
+    const res = nearMatches([latinOnly], "ドメイン切替後の stale resolver 誤診");
+    expect(res.length).toBe(1);
+    expect(res[0]!.score).toBe(1);
+    expect(res[0]!.matched_tokens).toEqual(["stale", "resolver"]);
+  });
+
+  it("keeps every token when the ITEM uses both scripts", () => {
+    // Nothing here is unmatchable, so nothing may be dropped: this item's own
+    // 切替 matches. 5 points over 2×7 tokens = 0.36 — the un-projected score.
+    const both = {
+      title: "DNS切替",
+      _kwTokens: new Set(["stale resolver", "キャッシュ"].flatMap(tokenize)),
+      _simTokens: new Set(["stale resolver", "キャッシュ", "DNS切替"].flatMap(tokenize)),
+    };
+    const res = nearMatches([both], "ドメイン切替 stale resolver");
+    expect(res[0]!.score).toBe(0.36);
+  });
+
+  it("leaves a single-script query alone rather than blanking it", () => {
+    // Dropping the only script the query has would leave nothing to score,
+    // which is a verdict on no evidence. A pure-CJK query still just misses.
+    expect(nearMatches([latinOnly], "デプロイに失敗した")).toEqual([]);
+  });
+});
+
 describe("sharedScripts", () => {
   const S = (...t: string[]) => new Set(t);
   const seen = (pair: [Set<string>, Set<string>]) => pair.map((s) => [...s].sort());

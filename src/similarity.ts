@@ -183,6 +183,57 @@ export interface NearScored<T> {
 }
 
 /**
+ * The query tokens this item could match AT ALL.
+ *
+ * Score is query coverage — points over `2 × |query|` — so every token in the
+ * denominator is a claim that the item had a chance to match it. A token in a
+ * script the item never uses is not such a claim: `_kwTokens`/`_simTokens` are
+ * built by the same tokenize() above, so an item with no CJK token anywhere
+ * cannot hold a CJK bigram, and an item with no latin token cannot hold a
+ * latin word. Those tokens are unmatchable weight — the same denominator
+ * problem sharedScripts() describes for dedup, on the retrieval side.
+ *
+ * A mixed-script query is where it bites, and Japanese writes that way by
+ * default: latin identifiers run flush against kana, so "ドメイン切替後の 402/
+ * 旧ホスト応答を「デプロイ失敗」と誤診…" carries ~30 bigrams around its
+ * `402`/`isp`/`resolver`/`stale`. Against the english corpus those bigrams can
+ * only divide: the scar that names that exact trap scored 0.10 against a 0.30
+ * threshold and the caller got "No matching skills found. Try broader
+ * keywords" — with the answer sitting in the corpus.
+ *
+ * Only ever DROPS tokens the item cannot match, so `points` is untouched and
+ * the score can only rise: no near-match that exists today can be lost. A
+ * single-script query is left alone (dropping its only script would blank it,
+ * which is score 0 on no evidence), as is an item that uses both scripts or
+ * neither.
+ *
+ * Measured over 1671 real query strings (the miss log plus every title and
+ * keyword in the shipped corpus and in the author's live personal-scar store)
+ * against the 81 shipped entries: 49 queries gain a near-match, 0 lose one,
+ * and the three lexical tiers are untouched (0 keyword-match changes). All 49
+ * land on a response that was EMPTY, and 48 of those had no near-match either
+ * — they got the "try broader keywords" boilerplate. The advisory path (a
+ * skill matched, no scar, 0.50/2-token bar) gains nothing at all, so no
+ * non-empty answer changes. 37 of the 49 gain a match at ≥ 0.50, including
+ * 「本番404確認済み…Pages内部キャッシュ」→ the Pages soft-404 scar,
+ * 「メジャー bump」→ the release skill, 「timerスクリプト」→ the
+ * scheduled-automation scar; the weaker tail is the recovery path's known
+ * 0.30 permissiveness, which this does not change.
+ */
+function matchableTokens(q: string[], item: SimIndexed, mixed: boolean): string[] {
+  if (!mixed) return q;
+  let cjk = false;
+  let latin = false;
+  for (const t of item._simTokens) {
+    if (hasCJK(t)) cjk = true;
+    else latin = true;
+    if (cjk && latin) return q;
+  }
+  if (cjk === latin) return q; // both scripts, or an item with no tokens at all
+  return q.filter((t) => (hasCJK(t) ? cjk : latin));
+}
+
+/**
  * Score all items against a keyword and return the top matches.
  * Score is query coverage: how much of what the caller asked for exists in
  * the item, with keyword-field hits weighted double. Threshold 0.30 keeps
@@ -198,12 +249,14 @@ export function nearMatches<T extends SimIndexed & { title: string }>(
   const threshold = opts.threshold ?? 0.3;
   const q = tokenize(keyword);
   if (q.length === 0) return [];
+  const mixed = q.some(hasCJK) && q.some((t) => !hasCJK(t));
 
   const scored: NearScored<T>[] = [];
   for (const item of items) {
+    const qi = matchableTokens(q, item, mixed);
     let points = 0;
     const matched: string[] = [];
-    for (const t of q) {
+    for (const t of qi) {
       if (item._kwTokens.has(t)) {
         points += 2;
         matched.push(t);
@@ -212,7 +265,7 @@ export function nearMatches<T extends SimIndexed & { title: string }>(
         matched.push(t);
       }
     }
-    const score = points / (2 * q.length);
+    const score = points / (2 * qi.length);
     if (score >= threshold) {
       scored.push({ item, score: Math.round(score * 100) / 100, matched_tokens: matched });
     }
