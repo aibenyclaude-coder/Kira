@@ -213,6 +213,76 @@ describe("context tags filter only where they discriminate", () => {
   });
 });
 
+/**
+ * Context tags were the one matching surface compared by raw string equality
+ * while every keyword surface travelled a splitter. The corpus writes compound
+ * tags (`github-actions`, `browser-testing`, `desktop-automation`), so a caller
+ * tagging its project `github` was vetoed off `github-actions` — a narrower
+ * spelling of its own tag.
+ *
+ * Every case here keeps a SECOND candidate that declares the caller's tag
+ * verbatim. Without it the relaxation above returns everything anyway and the
+ * assertion would hold with or without the split, i.e. pin nothing.
+ */
+describe("a compound context tag matches the words it is built from", () => {
+  const ACTIONS_SCAR = scar({
+    id: "scar.actions.v1",
+    keywords: ["release tag"],
+    contexts: ["ci", "github-actions"],
+  });
+  const GITHUB_SCAR = scar({
+    id: "scar.github.v1",
+    keywords: ["release tag"],
+    contexts: ["github"],
+  });
+  const DJANGO_SCAR2 = scar({
+    id: "scar.django2.v1",
+    keywords: ["release tag"],
+    contexts: ["django"],
+  });
+
+  it("reaches an item tagged github-actions from the tag github", () => {
+    const res = lookup([], indexItems([GITHUB_SCAR, ACTIONS_SCAR]), {
+      keyword: "release tag",
+      context: ["github"],
+    });
+    expect(res.scars.map((s) => s.id).sort()).toEqual([
+      "scar.actions.v1",
+      "scar.github.v1",
+    ]);
+  });
+
+  it("still drops an item whose tag shares no word with the request", () => {
+    const res = lookup([], indexItems([GITHUB_SCAR, DJANGO_SCAR2]), {
+      keyword: "release tag",
+      context: ["github"],
+    });
+    expect(res.scars.map((s) => s.id)).toEqual(["scar.github.v1"]);
+  });
+
+  it("does not split the CALLER's tag onto a narrower item tag", () => {
+    // The asymmetry is deliberate: an item's tag is the corpus author's word,
+    // a caller's tag is arbitrary input, and splitting it relaxes `social-media`
+    // onto everything tagged `media`.
+    const MEDIA = scar({ id: "scar.media.v1", keywords: ["upload"], contexts: ["media"] });
+    const SOCIAL = scar({
+      id: "scar.social.v1",
+      keywords: ["upload"],
+      contexts: ["social-media"],
+    });
+    const res = lookup([], indexItems([SOCIAL, MEDIA]), {
+      keyword: "upload",
+      context: ["social-media"],
+    });
+    expect(res.scars.map((s) => s.id)).toEqual(["scar.social.v1"]);
+  });
+
+  it("leaves the wire contexts untouched — only the index is widened", () => {
+    const res = lookup([], indexItems([ACTIONS_SCAR]), { keyword: "release tag" });
+    expect(res.scars[0]!.contexts).toEqual(["ci", "github-actions"]);
+  });
+});
+
 describe("index internals stay off the wire", () => {
   it("strips _kwPhrases and friends from returned scars and skills", () => {
     const res = lookup(
