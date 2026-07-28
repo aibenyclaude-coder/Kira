@@ -524,16 +524,45 @@ export function lookup(
     if (suggestions.length === 0) {
       suggestions = ["No matching skills found. Try broader keywords like 'deploy', 'auth', 'database', 'testing'."];
     }
-  } else if (sortedScars.length === 0) {
-    // A skill matched but no scar did — the agent now holds a recipe and an
-    // empty "what not to do" list, which is exactly the moment before it
-    // executes. Gating near-scars on a fully empty response hid them there:
-    // asking for "deploy vercel" returned the Vercel deploy skill while the
-    // scar "Vercel deploy fails from missing env vars" stayed silent, because
-    // its keywords ("vercel env") miss all three lexical tiers. Scars are the
-    // point of Kira, so a strong near-scar ships even when a skill matched.
+  } else {
+    /**
+     * The response holds a recipe and a "what not to do" list that may be
+     * missing its most on-point entry. Gating near-scars on a fully empty
+     * response hid them when a SKILL matched: asking for "deploy vercel"
+     * returned the Vercel deploy skill while the scar "Vercel deploy fails from
+     * missing env vars" stayed silent, because its keywords ("vercel env") miss
+     * all three lexical tiers. Scars are the point of Kira, so a strong
+     * near-scar ships even when a skill matched.
+     *
+     * A SCAR matching does not close that hole either, and this is the same
+     * bug one gate further in. The three tiers read KEYWORDS only, so "a scar
+     * matched" means some scar advertised two of the query's words — not that
+     * the closest scar in the corpus is in the answer. Measured over the 55
+     * distinct kira_lookup calls in this machine's agent transcripts, against
+     * the SHIPPED corpus alone: 3 calls ship a scar while a strictly stronger
+     * one is suppressed, and all three are the warning the caller asked for —
+     * "release publish version tag" ships the credential-gates scar while
+     * `parallel-rails-same-trigger-race` (0.75, two release rails racing on one
+     * tag) is dropped; "gh pr merge delete-branch worktree" drops
+     * `rebase-needs-force-push-use-merge-instead` (0.57); "domain transfer
+     * registrar cloudflare" drops `dns-cutover-stale-local-resolver-
+     * misdiagnosis` (0.50). On this machine's store (221 scars) it is 9 calls,
+     * 17 items. The first of those is the very pair the bar below was tuned on:
+     * "tag release surfaces the scar about two release rails racing on one tag"
+     * — true only while no other scar matched.
+     *
+     * Scars that already shipped are removed BEFORE scoring, not after: they
+     * carry the full mistake/instead payload, so repeating them as a bare
+     * id+score is noise, and filtering afterwards would spend the top-3 cap on
+     * entries that can never be new. Purely additive — `near_scars` is
+     * undefined on this branch today, so no existing field changes and no
+     * scar_count moves.
+     */
+    const shipped = new Set(sortedScars.map((s) => s.id));
+    const advisable =
+      shipped.size === 0 ? allScars : allScars.filter((s) => !shipped.has(s.id));
     nearScars = orUndefined(
-      nearMatches(allScars, keyword, { threshold: ADVISORY_SCAR_THRESHOLD })
+      nearMatches(advisable, keyword, { threshold: ADVISORY_SCAR_THRESHOLD })
         .filter((n) => n.matched_tokens.length >= ADVISORY_MIN_MATCHED_TOKENS)
         .map(toNear)
     );
