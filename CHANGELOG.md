@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-08-06
+
+The corpus grew by 18 scars, but the larger change is that the corpus now actually
+reaches the agent: two thirds of this release is retrieval and sanitizer correctness.
+Measured against real query logs, the retrieval fixes turn previously **empty**
+responses into hits without losing a single existing match.
+
+### Added
+- 18 community scars harvested from real failures since 0.8.2. Corpus: **38 skills / 45 scars** (was 38 / 27).
+  - Web platform and browser tooling: `backdrop-filter` fixed containing block, Cloudflare Pages soft-404 without `404.html`, chrome-devtools MCP serving stale CSS, Cloudflare quick-scan importing edge IPs, DNS-cutover misdiagnosed as a deploy failure, quoted-printable link corruption over email MCP, browsermcp following the last connected tab, `xdotool type` garbled by an active IME (#177, #178, #179, #193).
+  - Agent execution discipline: `gh` table output parsed by column index, a threshold tuned to a single example, scheduled automation created without a layer inventory, a health check gated on an unverified command, multi-ref `git push --delete` partial success, rebasing a conflicting PR branch committing you to a force-push, a lead naming a branch no shipped input reaches, a green test suite pinning the bug in place (#175, #180, #182, #185, #190).
+  - Packaging and investigation: a new asset directory missing from the ship manifest, and a hand-written fixture whose granularity does not match the real model output (#229).
+- `kira_record_failure` now reports when its scar was folded into an existing one, and what the sanitizer rewrote, so the caller can re-record instead of silently losing the text (#203, #223).
+- Route misses are logged, so the flywheel can see route gaps the same way it sees skill gaps (#191).
+
+### Fixed
+- **Retrieval.** A lexical scar hit no longer suppresses a closer near-scar (#228). A mixed-script query is scored only on the script the item can actually match, so a Japanese query no longer sinks a scar that documents the exact trap (#227). Tier-3 overlap counts distinct words and tokenizes the way tier 2 does; two halves of one identifier no longer count as an overlap (#219, #220, #221). Tier-2 keywords match at word boundaries rather than as raw substrings (#184). Past tense folds in the stemmer, so a scar's own title retrieves it (#224). A compound context tag matches on the words it is built from, and the context filter applies only where the requested tags discriminate (#225, #226). Strong near-scars surface when a skill matched but no scar did (#183). `kira_route` merges personal scars like `kira_lookup` and `kira_premortem` already did, picks a route by match quality rather than `readdir` order, and settles a tie by id (#186, #187, #189).
+- **Sanitizer.** Systemd template units are no longer read as email addresses, package specs are no longer eaten by the email redactor, shell expansions inside key/value spans are no longer redacted, and env values carrying no credential material are left alone. The two pattern lists are now compared entry by entry (#209, #211, #216, #217, #218).
+- **Dedup.** Personal-scar dedup is scored per field so a verbose recurrence still folds, and cross-script comparison no longer produces false folds or overwrites the `instead` of the scar it merged into (#181, #195, #188, #192).
+- `kira_premortem` no longer ranks a warning above a critical (#208). `kira_share_scar` no longer publishes a fix its author had already replaced (#207). `kira_status` no longer reports a consent path that does not exist (#213). A missing keyword or goal is rejected instead of answered as the empty string (#215). `KIRA_LOG_LEVEL` and redact-on-log now actually govern stderr (#214). Community scar candidates get a collision-free id (#204). The caller is told when a tool call's parameters arrived glued together (#210).
+- Flywheel Loop B can cluster real demand again (0 candidates in 3 of 3 weekly runs before the fix), and the digest no longer blames a flag that is never the cause (#205, #206).
+- Removed an aggregation pipeline that read a path nothing writes (#212).
+
+### Changed
+- CI gates the corpus counts advertised in `README.md` and the launch objections doc against the corpus itself — the npm page had been claiming 12 scars while shipping 27 (#202, #222).
+- CI gates `server.json` against `package.json` on every push, not at tag time. A stale second manifest had half-released v0.8.2: npm published, the MCP registry rejected it as a duplicate version, and the registry served 0.8.1 for 15 days with every dashboard green (#201).
+
+### Security
+- `npm audit` cleared to 0 across five advisory waves: body-parser, `@hono/node-server`, fast-uri, sharp, and the worker toolchain (#196, #197, #198, #199, #200). Cleared again for this release — fast-uri 3.1.5 (host confusion), hono 4.13.0 (CORS ReDoS), and ip-address 10.4.0 (leading-zero octet SSRF), all transitive through `@modelcontextprotocol/sdk`. Resolved versions verified out of the advisory ranges rather than trusting the bump.
+
 ## [0.8.2] - 2026-07-09
 
 ### Added
@@ -114,7 +144,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2026-04-XX
 - Initial public release with 31 skills, 12 scars, 7 routes, and three core MCP tools (`kira_lookup`, `kira_route`, `kira_report`).
 
-[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.8.2...HEAD
+[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.9.0
 [0.8.2]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.8.2
 [0.8.1]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.8.1
 [0.8.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.8.0
