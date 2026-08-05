@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-08-06
+
 ### Added
 - **Task tags.** Skills and scars carry an optional `tasks` field naming the activity they fire before — `release`, `deploy`, `code-review`, `debug`, `test`, `setup`, `automation`, `packaging`, `git-workflow`, `media-processing`, `browser-automation`, `dependency-upgrade`, `data-migration`. All 45 shipped scars are tagged.
 - **Naming an activity returns its whole bundle.** `kira_lookup("release")` now answers with every scar that fires during a release, not the few whose keywords happen to overlap the word. Aliases cover Japanese (`リリース`, `デプロイ`, `移行`), and ASCII aliases match on word boundaries so `test` fires on "run the test" but not on `testsrc` or `@latest`.
@@ -156,7 +158,8 @@ responses into hits without losing a single existing match.
 ## [0.4.0] - 2026-04-XX
 - Initial public release with 31 skills, 12 scars, 7 routes, and three core MCP tools (`kira_lookup`, `kira_route`, `kira_report`).
 
-[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.10.0
 [0.9.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.9.0
 [0.8.2]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.8.2
 [0.8.1]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.8.1
