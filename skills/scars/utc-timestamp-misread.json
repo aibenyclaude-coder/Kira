@@ -11,6 +11,9 @@
     "ci",
     "git"
   ],
+  "tasks": [
+    "debug"
+  ],
   "title": "CI/API timestamps are UTC — read as local time, events were misdated by a day",
   "summary": "gh/CI output printed 15:2x UTC; the local clock said 00:2x next day. The agent concluded a merge was 'yesterday' when it happened minutes earlier, and nearly misdiagnosed live concurrent activity as history.",
   "severity": "warning",

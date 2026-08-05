@@ -13,6 +13,10 @@
     "ci",
     "git"
   ],
+  "tasks": [
+    "test",
+    "automation"
+  ],
   "title": "Quality gate passed on a piped command — exit code came from the pipe tail, not the build",
   "summary": "A merge was gated on `npm run build 2>&1 | tail -1` inside a && chain. The pipeline's exit status came from `tail` (0), not the compiler — a failing build passed the gate and broken code reached main.",
   "severity": "critical",

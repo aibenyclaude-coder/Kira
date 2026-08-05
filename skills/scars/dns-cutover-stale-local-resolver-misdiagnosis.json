@@ -17,6 +17,11 @@
     "deploy",
     "cloudflare"
   ],
+  "tasks": [
+    "deploy",
+    "debug",
+    "data-migration"
+  ],
   "title": "After a domain cutover, agent misdiagnoses stale local-resolver responses as a broken server config",
   "summary": "curl uses the system resolver; a router/ISP cache holding pre-cutover records makes a finished migration look like a failed deploy, sending the agent into pointless server-side churn.",
   "severity": "warning",

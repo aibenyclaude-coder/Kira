@@ -11,6 +11,9 @@
   "contexts": [
     "git"
   ],
+  "tasks": [
+    "git-workflow"
+  ],
   "title": "Two agent sessions pushed the same repo concurrently — non-fast-forward rejects and phantom state",
   "summary": "One session was publishing a release while another merged a PR queue into the same repository. Pushes raced (rejected non-fast-forward), local refs moved between commands, and diffs computed seconds earlier were silently stale.",
   "severity": "critical",

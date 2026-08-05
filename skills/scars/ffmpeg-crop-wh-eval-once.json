@@ -2,6 +2,7 @@
   "id": "scar.ffmpeg-crop-wh-eval-once.v1",
   "keywords": ["ffmpeg crop expression", "time-varying zoom", "zoompan", "in_time", "eval per frame", "beat zoom", "crop w h static"],
   "contexts": ["ffmpeg", "video", "media"],
+  "tasks": ["media-processing"],
   "title": "ffmpeg crop w/h expressions evaluate once at init, so t-based zoom via crop fails",
   "summary": "Agent builds a time-varying zoom with t in crop's w/h expressions; those are evaluated once at configure time where t=NAN, so the graph errors out (or silently stays static).",
   "severity": "warning",

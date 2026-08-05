@@ -13,6 +13,11 @@
     "ci",
     "testing"
   ],
+  "tasks": [
+    "release",
+    "packaging",
+    "test"
+  ],
   "title": "Moved config into a new directory beside the code but never added it to the ship manifest — checks passed in place and failed everywhere else",
   "summary": "A new preset directory was added beside the source tree but never added to the manifest listing which paths get copied and shipped. Checks passed when run in place and collapsed against a copied tree — the same gap that ships a package missing its data files.",
   "severity": "critical",

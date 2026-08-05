@@ -14,6 +14,10 @@
     "typescript",
     "vite"
   ],
+  "tasks": [
+    "test",
+    "setup"
+  ],
   "title": "Vitest cannot resolve @/ imports because path aliases do not match tsconfig.json",
   "summary": "Tests fail with 'Cannot find module @/...' because vitest.config.ts resolve.alias does not mirror tsconfig.json paths.",
   "severity": "critical",

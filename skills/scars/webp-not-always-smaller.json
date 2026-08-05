@@ -2,6 +2,7 @@
   "id": "scar.webp-not-always-smaller.v1",
   "keywords": ["webp", "avif", "image optimization", "jpeg", "file size", "srcset"],
   "contexts": ["web", "performance"],
+  "tasks": ["media-processing"],
   "title": "Converting photos to WebP without measuring can produce larger, worse files",
   "summary": "Agent assumes 'WebP is smaller than JPEG', converts a grainy-texture photo, and gets a file that is larger at equal quality and uglier at equal size.",
   "severity": "warning",

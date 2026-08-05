@@ -2,6 +2,7 @@
   "id": "scar.prisma-generate-forgotten.v1",
   "keywords": ["prisma", "setup prisma", "add prisma", "prisma orm", "add database", "setup database"],
   "contexts": ["nextjs", "nodejs", "typescript", "javascript"],
+  "tasks": ["setup"],
   "title": "Prisma schema changed but `prisma generate` not run — types are stale",
   "summary": "Agent modifies schema.prisma but forgets to run `npx prisma generate`, causing TypeScript errors or runtime crashes from stale client types.",
   "severity": "critical",

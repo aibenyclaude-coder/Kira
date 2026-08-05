@@ -2,6 +2,7 @@
   "id": "scar.supabase-rls-not-enabled.v1",
   "keywords": ["supabase", "rls", "row level security", "supabase security", "database security", "create table supabase", "supabase table"],
   "contexts": ["nextjs", "supabase"],
+  "tasks": ["setup"],
   "title": "Supabase table created without Row Level Security — all data publicly accessible",
   "summary": "Agent creates a Supabase table without enabling RLS, leaving every row readable and writable by any anonymous user through the public API.",
   "severity": "critical",

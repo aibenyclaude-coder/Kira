@@ -14,6 +14,9 @@
     "nextjs",
     "typescript"
   ],
+  "tasks": [
+    "setup"
+  ],
   "title": "Auth.js v5 signIn/signOut fails because server and client imports are swapped",
   "summary": "Importing signIn from next-auth/react in a server component (or from @/auth in a client component) causes runtime errors.",
   "severity": "critical",

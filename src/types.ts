@@ -23,6 +23,15 @@ export interface Skill {
    */
   contexts: string[];
 
+  /**
+   * Optional TASK tags — what the caller is about to DO, not what the project
+   * is built with ("release", "code-review", "debug"). Contexts answer "which
+   * stack"; tasks answer "which activity", and only the second one is knowable
+   * before the work starts. Naming the task returns the whole bundle for it
+   * rather than the top few keyword matches. See TASK_ALIASES in lookup.ts.
+   */
+  tasks?: string[];
+
   title: string;
   summary: string;
 
@@ -54,6 +63,9 @@ export interface Scar {
 
   /** Project context tags for filtering. */
   contexts: string[];
+
+  /** Task tags — the activity this scar fires before. See Skill.tasks. */
+  tasks?: string[];
 
   title: string;
 
@@ -100,6 +112,16 @@ export type ScarSummary = Scar;
 export interface LookupRequest {
   keyword: string;
   context?: string[];
+  /**
+   * Append the task bundle when the keyword names an activity. Default true.
+   *
+   * Callers that TRUNCATE the result must opt out: the bundle is appended, not
+   * ranked, so any consumer that re-sorts and then slices can let a shipped
+   * critical evict the caller's own recorded failure — which is the one thing
+   * personal-scar recall exists to prevent. kira_premortem does exactly that
+   * and passes false.
+   */
+  tasks?: boolean;
 }
 
 /** Scored near-match, returned only when strict matching found nothing. */

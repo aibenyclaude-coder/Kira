@@ -2,6 +2,7 @@
   "id": "scar.clerk-middleware-wrong-location.v1",
   "keywords": ["clerk", "setup clerk", "add clerk", "add auth", "setup auth", "authentication"],
   "contexts": ["nextjs", "react", "typescript", "javascript"],
+  "tasks": ["setup"],
   "title": "Clerk middleware placed in wrong directory — auth silently does nothing",
   "summary": "Agent puts middleware.ts inside app/ directory instead of project root or src/. Clerk auth appears to work in dev but silently fails to protect routes.",
   "severity": "critical",

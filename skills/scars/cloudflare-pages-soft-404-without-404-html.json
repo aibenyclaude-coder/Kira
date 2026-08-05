@@ -2,6 +2,7 @@
   "id": "scar.cloudflare-pages-soft-404-without-404-html.v1",
   "keywords": ["cloudflare pages", "soft 404", "404.html", "spa fallback", "robots.txt missing", "sitemap", "seo audit", "wrangler pages deploy"],
   "contexts": ["deploy", "seo", "cloudflare"],
+  "tasks": ["deploy"],
   "title": "Every nonexistent URL on a Cloudflare Pages site returns 200 with the homepage HTML",
   "summary": "Without a root 404.html, Cloudflare Pages serves single-page-app fallback: any unknown path (including /robots.txt, /sitemap.xml, /favicon.ico) returns HTTP 200 with index.html, creating soft-404s that SEO tools and auditors flag.",
   "severity": "warning",

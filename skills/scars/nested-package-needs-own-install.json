@@ -10,6 +10,10 @@
   "contexts": [
     "nodejs"
   ],
+  "tasks": [
+    "setup",
+    "test"
+  ],
   "title": "Sub-package tests failed with ERR_MODULE_NOT_FOUND — root npm ci doesn't install nested projects",
   "summary": "A repo carried an independent npm project in a subdirectory (worker/). After a fresh clone/worktree plus a root `npm ci`, the subproject's test runner crashed with ERR_MODULE_NOT_FOUND because its own node_modules never existed.",
   "mistake": "Running `npm ci` at the repository root and assuming every test suite in the tree was now runnable. Without npm workspaces, a nested package.json (worker/, apps/*, functions/) is a separate installation unit — its devDependencies (test pool, CLI tools) are simply absent until installed in place.",

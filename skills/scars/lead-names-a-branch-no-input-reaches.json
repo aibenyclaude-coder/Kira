@@ -11,6 +11,7 @@
     "verified claim"
   ],
   "contexts": [],
+  "tasks": ["code-review", "debug"],
   "title": "The branch the lead blamed was really in the code — and no shipped input ever reaches it, so the fix changed nothing",
   "summary": "A TODO named the cause; opening the source confirmed that code exists, so the lead looked verified. Running the shipped data through the function showed the branch is entered 0 times out of 42 — the fix would have passed CI and changed nothing.",
   "severity": "critical",

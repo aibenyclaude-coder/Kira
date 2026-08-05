@@ -2,6 +2,7 @@
   "id": "scar.chrome-devtools-mcp-stale-css-needs-hard-reload.v1",
   "keywords": ["chrome-devtools mcp", "ignoreCache", "stale css", "hard reload", "navigate_page", "cache subresource", "fix not applied", "browser verification"],
   "contexts": ["browser-testing", "mcp", "frontend"],
+  "tasks": ["browser-automation", "debug"],
   "title": "CSS fix verified via MCP browser appears not applied — stylesheet served from cache",
   "summary": "chrome-devtools MCP navigate_page type:url does not bypass subresource cache even with ignoreCache:true; edited CSS/JS keeps loading from cache and the agent misdiagnoses its own fix as broken. Only type:reload honors ignoreCache.",
   "severity": "warning",

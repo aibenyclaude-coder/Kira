@@ -14,6 +14,10 @@
     "mobile",
     "expo"
   ],
+  "tasks": [
+    "dependency-upgrade",
+    "setup"
+  ],
   "title": "Expo native module crashes because npm install pulled an SDK-incompatible version",
   "summary": "Using npm install instead of npx expo install for Expo SDK packages installs incompatible versions that crash at runtime.",
   "severity": "critical",
