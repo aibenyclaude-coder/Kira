@@ -11,6 +11,10 @@
     "git",
     "ci"
   ],
+  "tasks": [
+    "git-workflow",
+    "code-review"
+  ],
   "title": "Mechanical conflict resolution silently dropped a code block — merged code did not parse",
   "summary": "Conflicts from two parallel branches touching the same file were resolved mechanically (regex over diff3 markers). The lazy match swallowed part of one side's handler, leaving an unclosed block; git merged 'successfully' and main stopped compiling.",
   "severity": "warning",

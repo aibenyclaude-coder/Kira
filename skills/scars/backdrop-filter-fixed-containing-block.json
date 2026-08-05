@@ -2,6 +2,7 @@
   "id": "scar.backdrop-filter-fixed-containing-block.v1",
   "keywords": ["backdrop-filter", "position fixed", "containing block", "drawer", "mobile nav", "overlay trapped", "fixed not viewport", "css filter transform"],
   "contexts": ["css", "frontend"],
+  "tasks": ["debug"],
   "title": "Fixed full-screen drawer collapses into the header instead of covering the viewport",
   "summary": "A position:fixed inset:0 drawer nested inside a header with backdrop-filter gets sized to the header box, not the viewport, because filter/backdrop-filter/transform ancestors become the containing block for fixed descendants.",
   "severity": "warning",

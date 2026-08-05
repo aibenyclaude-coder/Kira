@@ -11,6 +11,9 @@
     "npm",
     "ci"
   ],
+  "tasks": [
+    "release"
+  ],
   "title": "npm publish said 404 'not in this registry' — the real problem was dead auth",
   "summary": "A publish failed with '404 Not Found - PUT … could not be found or you do not have permission'. It reads like a registry or package-name problem; the actual cause was an expired token (and later, an unregistered trusted publisher).",
   "severity": "warning",

@@ -962,6 +962,10 @@
         "video",
         "testing"
       ],
+      "tasks": [
+        "test",
+        "media-processing"
+      ],
       "title": "Frame-diffing testsrc2 output proves nothing: the test source itself animates",
       "summary": "Agent verifies a video transform by diffing two output frames rendered from testsrc2; testsrc2 is animated, so the diff is nonzero whether or not the transform works.",
       "severity": "warning",
@@ -986,6 +990,9 @@
       "contexts": [
         "nextjs",
         "typescript"
+      ],
+      "tasks": [
+        "setup"
       ],
       "title": "Auth.js v5 signIn/signOut fails because server and client imports are swapped",
       "summary": "Importing signIn from next-auth/react in a server component (or from @/auth in a client component) causes runtime errors.",
@@ -1012,6 +1019,9 @@
         "css",
         "frontend"
       ],
+      "tasks": [
+        "debug"
+      ],
       "title": "Fixed full-screen drawer collapses into the header instead of covering the viewport",
       "summary": "A position:fixed inset:0 drawer nested inside a header with backdrop-filter gets sized to the header box, not the viewport, because filter/backdrop-filter/transform ancestors become the containing block for fixed descendants.",
       "severity": "warning",
@@ -1036,6 +1046,9 @@
         "browser-automation",
         "mcp",
         "browser-extension"
+      ],
+      "tasks": [
+        "browser-automation"
       ],
       "title": "Browser MCP silently operates on whichever tab was last Connected, not the one you think",
       "summary": "Agent keeps driving Browser MCP assuming the connection still points at the original tab; the user re-clicked Connect on a different tab, so commands act on (or hang against) the wrong page.",
@@ -1063,6 +1076,10 @@
         "mcp",
         "frontend"
       ],
+      "tasks": [
+        "browser-automation",
+        "debug"
+      ],
       "title": "CSS fix verified via MCP browser appears not applied — stylesheet served from cache",
       "summary": "chrome-devtools MCP navigate_page type:url does not bypass subresource cache even with ignoreCache:true; edited CSS/JS keeps loading from cache and the agent misdiagnoses its own fix as broken. Only type:reload honors ignoreCache.",
       "severity": "warning",
@@ -1087,6 +1104,9 @@
         "react",
         "typescript",
         "javascript"
+      ],
+      "tasks": [
+        "setup"
       ],
       "title": "Clerk middleware placed in wrong directory — auth silently does nothing",
       "summary": "Agent puts middleware.ts inside app/ directory instead of project root or src/. Clerk auth appears to work in dev but silently fails to protect routes.",
@@ -1114,6 +1134,9 @@
         "seo",
         "cloudflare"
       ],
+      "tasks": [
+        "deploy"
+      ],
       "title": "Every nonexistent URL on a Cloudflare Pages site returns 200 with the homepage HTML",
       "summary": "Without a root 404.html, Cloudflare Pages serves single-page-app fallback: any unknown path (including /robots.txt, /sitemap.xml, /favicon.ico) returns HTTP 200 with index.html, creating soft-404s that SEO tools and auditors flag.",
       "severity": "warning",
@@ -1140,6 +1163,10 @@
         "dns",
         "infrastructure"
       ],
+      "tasks": [
+        "deploy",
+        "data-migration"
+      ],
       "title": "Cloudflare add-site quick scan imports the OLD zone's proxied edge IPs (104.21.x/172.67.x) as origin records",
       "summary": "Re-adding a domain Cloudflare already proxies (e.g. moving a zone between accounts) makes the onboarding quick scan resolve public DNS and import Cloudflare edge IPs as A/AAAA origin records. Activating that zone causes a proxy loop (Error 1000), and the proxy has already hidden the true origin.",
       "mistake": "Recreated a zone in a second Cloudflare account using the default 'Import DNS records automatically' option. The scan imported 9 junk records: apex and www A/AAAA pointing at 104.21.x.x, 172.67.x.x and 2606:4700::/32 — Cloudflare edge addresses, not the origin. The original origin (a Vercel IP and CNAME) was only known because the old zone's record table had been captured beforehand; without that capture the origin would have been lost.",
@@ -1161,6 +1188,10 @@
       "contexts": [
         "ci",
         "github-actions"
+      ],
+      "tasks": [
+        "release",
+        "automation"
       ],
       "title": "Credential-holding CI jobs shipped without ref gate, tag-ancestry check, or pinned toolchain",
       "summary": "A deploy job with cloud secrets and a tag-triggered npm publish job with OIDC went to main missing three standard gates. An automated security review caught it post-merge; each gap was a one-line fix.",
@@ -1190,6 +1221,11 @@
         "deploy",
         "cloudflare"
       ],
+      "tasks": [
+        "deploy",
+        "debug",
+        "data-migration"
+      ],
       "title": "After a domain cutover, agent misdiagnoses stale local-resolver responses as a broken server config",
       "summary": "curl uses the system resolver; a router/ISP cache holding pre-cutover records makes a finished migration look like a failed deploy, sending the agent into pointless server-side churn.",
       "severity": "warning",
@@ -1214,6 +1250,9 @@
         "nodejs",
         "docker",
         "typescript"
+      ],
+      "tasks": [
+        "packaging"
       ],
       "title": "Single-stage Dockerfile produces bloated image with devDependencies",
       "summary": "Agent writes a single-stage Dockerfile that includes node_modules, devDependencies, and source files, resulting in an image over 1GB.",
@@ -1240,6 +1279,9 @@
         "email",
         "browser-automation"
       ],
+      "tasks": [
+        "debug"
+      ],
       "title": "Email fetched via MCP/API can double-decode quoted-printable, turning '=XX' inside URLs into U+FFFD and destroying one-time links",
       "summary": "Agent extracts a verification/invitation URL from an email body returned by a mail MCP tool; a quoted-printable double-decode has already replaced '=XX' hex-pair sequences with U+FFFD, so the token is silently truncated and the link is dead. The lost bytes are unrecoverable from the fetched copy.",
       "mistake": "Fetched a Cloudflare invitation email through a Gmail MCP tool and grepped the membership URL from htmlBody. The code parameter contained a literal '=95' which an upstream quoted-printable decode pass consumed into a single invalid byte, surfaced as U+FFFD (EF BF BD). Both htmlBody and plaintextBody were corrupted identically. The agent then wasted time hexdumping the saved output trying to recover the original bytes — impossible, since U+FFFD carries no information about the byte it replaced.",
@@ -1264,6 +1306,10 @@
         "typescript",
         "mobile",
         "expo"
+      ],
+      "tasks": [
+        "dependency-upgrade",
+        "setup"
       ],
       "title": "Expo native module crashes because npm install pulled an SDK-incompatible version",
       "summary": "Using npm install instead of npx expo install for Expo SDK packages installs incompatible versions that crash at runtime.",
@@ -1290,6 +1336,9 @@
         "video",
         "media"
       ],
+      "tasks": [
+        "media-processing"
+      ],
       "title": "ffmpeg crop w/h expressions evaluate once at init, so t-based zoom via crop fails",
       "summary": "Agent builds a time-varying zoom with t in crop's w/h expressions; those are evaluated once at configure time where t=NAN, so the graph errors out (or silently stays static).",
       "severity": "warning",
@@ -1314,6 +1363,10 @@
         "testing",
         "nlp"
       ],
+      "tasks": [
+        "debug",
+        "test"
+      ],
       "title": "Investigated a text-splitting bug against a hand-written fixture and nearly cleared the code that was actually broken",
       "summary": "A hand-written fixture tokenized text into clean phrase-level units while the real speech-to-text output split it per character. Reading only the fixture made the splitting logic look correct and pointed the investigation away from the actual defect.",
       "severity": "warning",
@@ -1336,6 +1389,9 @@
       "contexts": [
         "github-actions",
         "ci"
+      ],
+      "tasks": [
+        "automation"
       ],
       "title": "Polled CI by column-slicing `gh pr checks` output — check names contain spaces, so the loop never saw the status and slept until the tool timed out",
       "summary": "A wait loop classified CI state with `gh pr checks | awk '{print $2}'`. Check names contain spaces, so column 2 is never the status word: no branch ever matched, the loop slept every iteration, and the call died at the tool timeout — while CI had been green nearly the whole time.",
@@ -1361,6 +1417,10 @@
         "git",
         "bash"
       ],
+      "tasks": [
+        "git-workflow",
+        "automation"
+      ],
       "title": "git push --delete with many refs is per-ref, not atomic — nonzero exit misread as total failure",
       "summary": "A multi-ref `git push --delete` exits nonzero if ANY ref fails, but the other refs were still deleted; retry logic then reports 'remote ref does not exist' for every already-deleted ref, making a successful cleanup look like a total failure.",
       "mistake": "Deleting ~150 remote branches in chunks of 25 with `git push origin --delete ref1 ref2 ...`, the agent gated on the command's exit code and fell back to per-ref retries when a chunk exited nonzero. Every retry printed FAIL ('remote ref does not exist') — a wall of 149 FAILs — because the chunk pushes HAD deleted the refs: ref updates in a multi-ref push are independent, and a single rejected ref makes the whole command exit nonzero. The agent nearly reported a fully successful cleanup as failed.",
@@ -1383,6 +1443,10 @@
       "contexts": [
         "nextjs",
         "github"
+      ],
+      "tasks": [
+        "automation",
+        "deploy"
       ],
       "title": "GitHub Actions workflow fails silently because repository secrets are not configured",
       "summary": "Agent creates a GitHub Actions workflow referencing secrets that do not exist in the repository, causing deploys and tests to fail with cryptic errors.",
@@ -1407,6 +1471,10 @@
         "web",
         "testing",
         "chrome"
+      ],
+      "tasks": [
+        "browser-automation",
+        "test"
       ],
       "title": "headless=new clamps --window-size below 500px, so mobile screenshots lie",
       "summary": "Agent verifies mobile layout with --window-size=390 screenshots, but Chrome headless=new clamps the window to a 500px minimum (485px layout after scrollbar), so JS reads a fake width and overlays desync from the screenshot.",
@@ -1433,6 +1501,10 @@
         "ci",
         "node"
       ],
+      "tasks": [
+        "automation",
+        "debug"
+      ],
       "title": "Health check gated on a guessed command name with output suppressed — 'could not run' reported as 'failed'",
       "summary": "Agent wires a pass/fail verdict to `guessed-command >/dev/null 2>&1 || echo FAIL`; the command name was wrong, so a 'command/script not found' error silently became a FAIL verdict against a healthy target.",
       "mistake": "To verify generated artifacts were fresh, the agent ran `npm run gen-stats -- --check >/dev/null 2>&1 || echo MISMATCH`. The npm script name was guessed and did not exist (the real entry point was `node scripts/gen-stats.mjs --check`), so npm exited nonzero with 'Missing script' — but the suppressed output turned that into a fake MISMATCH verdict, briefly indicting a healthy repo. This is the inverse of the classic pipe-swallow: instead of a false PASS from a masked failure, a false FAIL from a check that never ran.",
@@ -1456,6 +1528,9 @@
         "web",
         "css",
         "html"
+      ],
+      "tasks": [
+        "debug"
       ],
       "title": "Adding width/height attributes to img silently disables CSS aspect-ratio",
       "summary": "Agent adds width/height attributes for CLS, which fixes both axes and makes the CSS aspect-ratio rule inert, squashing the image into a stripe.",
@@ -1482,6 +1557,9 @@
         "video",
         "media"
       ],
+      "tasks": [
+        "media-processing"
+      ],
       "title": "Infinite lavfi source + output-side -t + sparse select makes ffmpeg run forever",
       "summary": "With an infinite lavfi source, -t as an output option only stops when output pts reaches the limit; a select filter that passes few frames means that never happens, so ffmpeg consumes the source indefinitely.",
       "severity": "warning",
@@ -1504,6 +1582,10 @@
         "verified claim"
       ],
       "contexts": [],
+      "tasks": [
+        "code-review",
+        "debug"
+      ],
       "title": "The branch the lead blamed was really in the code — and no shipped input ever reaches it, so the fix changed nothing",
       "summary": "A TODO named the cause; opening the source confirmed that code exists, so the lead looked verified. Running the shipped data through the function showed the branch is entered 0 times out of 42 — the fix would have passed CI and changed nothing.",
       "severity": "critical",
@@ -1526,6 +1608,10 @@
         "git",
         "ci"
       ],
+      "tasks": [
+        "git-workflow",
+        "code-review"
+      ],
       "title": "Mechanical conflict resolution silently dropped a code block — merged code did not parse",
       "summary": "Conflicts from two parallel branches touching the same file were resolved mechanically (regex over diff3 markers). The lazy match swallowed part of one side's handler, leaving an unclosed block; git merged 'successfully' and main stopped compiling.",
       "severity": "warning",
@@ -1546,6 +1632,10 @@
       ],
       "contexts": [
         "nodejs"
+      ],
+      "tasks": [
+        "setup",
+        "test"
       ],
       "title": "Sub-package tests failed with ERR_MODULE_NOT_FOUND — root npm ci doesn't install nested projects",
       "summary": "A repo carried an independent npm project in a subdirectory (worker/). After a fresh clone/worktree plus a root `npm ci`, the subproject's test runner crashed with ERR_MODULE_NOT_FOUND because its own node_modules never existed.",
@@ -1571,6 +1661,11 @@
         "ci",
         "testing"
       ],
+      "tasks": [
+        "release",
+        "packaging",
+        "test"
+      ],
       "title": "Moved config into a new directory beside the code but never added it to the ship manifest — checks passed in place and failed everywhere else",
       "summary": "A new preset directory was added beside the source tree but never added to the manifest listing which paths get copied and shipped. Checks passed when run in place and collapsed against a copied tree — the same gap that ships a package missing its data files.",
       "severity": "critical",
@@ -1595,6 +1690,9 @@
         "nextjs",
         "react"
       ],
+      "tasks": [
+        "setup"
+      ],
       "title": "Next.js App Router component uses Client Hooks without 'use client' directive",
       "summary": "Agent writes useState/useEffect/onClick in an App Router component but forgets the 'use client' directive at the top, causing build or hydration errors.",
       "severity": "critical",
@@ -1616,6 +1714,9 @@
       "contexts": [
         "npm",
         "ci"
+      ],
+      "tasks": [
+        "release"
       ],
       "title": "npm publish said 404 'not in this registry' — the real problem was dead auth",
       "summary": "A publish failed with '404 Not Found - PUT … could not be found or you do not have permission'. It reads like a registry or package-name problem; the actual cause was an expired token (and later, an unregistered trusted publisher).",
@@ -1639,6 +1740,9 @@
       "contexts": [
         "git"
       ],
+      "tasks": [
+        "git-workflow"
+      ],
       "title": "Two agent sessions pushed the same repo concurrently — non-fast-forward rejects and phantom state",
       "summary": "One session was publishing a release while another merged a PR queue into the same repository. Pushes raced (rejected non-fast-forward), local refs moved between commands, and diffs computed seconds earlier were silently stale.",
       "severity": "critical",
@@ -1660,6 +1764,10 @@
       "contexts": [
         "ci",
         "github-actions"
+      ],
+      "tasks": [
+        "release",
+        "automation"
       ],
       "title": "Two release rails fired on one tag — the downstream validator raced the upstream publisher",
       "summary": "An npm-publish workflow and a registry-listing workflow both triggered on the same v* tag. The registry validates that the npm package version exists; it ran faster than the npm publish and failed with 'package not found'.",
@@ -1685,6 +1793,10 @@
         "ci",
         "git"
       ],
+      "tasks": [
+        "test",
+        "automation"
+      ],
       "title": "Quality gate passed on a piped command — exit code came from the pipe tail, not the build",
       "summary": "A merge was gated on `npm run build 2>&1 | tail -1` inside a && chain. The pipeline's exit status came from `tail` (0), not the compiler — a failing build passed the gate and broken code reached main.",
       "severity": "critical",
@@ -1709,6 +1821,9 @@
         "nodejs",
         "typescript",
         "javascript"
+      ],
+      "tasks": [
+        "setup"
       ],
       "title": "Prisma schema changed but `prisma generate` not run — types are stale",
       "summary": "Agent modifies schema.prisma but forgets to run `npx prisma generate`, causing TypeScript errors or runtime crashes from stale client types.",
@@ -1736,6 +1851,10 @@
         "ci",
         "automation"
       ],
+      "tasks": [
+        "git-workflow",
+        "code-review"
+      ],
       "title": "Rebasing a conflicting PR branch commits you to a force-push — which is exactly what protected branches and unattended agents are forbidden to do",
       "summary": "A PR branch conflicts with main, so the reflex is `git rebase main`. That rewrites history, so updating the remote PR now requires a force-push — the one operation protected branches and unattended automation are barred from. The conflict ends up resolved and the push impossible.",
       "mistake": "After merging an earlier PR, the next PR conflicted on generated files. Reached for `git rebase origin/main`, resolved the conflict and got every gate green — then hit the wall: the rebase had rewritten the branch, so pushing it required `--force`, which the running policy prohibited (an unattended job, where a force-push can silently erase someone else's commits or a reviewed diff). The clean, tested rebase result had to be thrown away.",
@@ -1760,6 +1879,9 @@
         "automation",
         "devops",
         "agents"
+      ],
+      "tasks": [
+        "automation"
       ],
       "title": "New scheduled automation created without inventorying existing scheduler layers — duplicated a live watcher",
       "summary": "Agent adds a new recurring job (monitor/patrol/sync) after checking only one scheduler layer; an existing job on another layer already covered the work, and a previously DISABLED twin encoded a deliberate decision the new job silently reversed.",
@@ -1786,6 +1908,9 @@
         "javascript",
         "nodejs"
       ],
+      "tasks": [
+        "setup"
+      ],
       "title": "Stripe webhook signature verification fails — body already parsed as JSON",
       "summary": "Agent reads the webhook body with `request.json()` before verifying the signature, causing `stripe.webhooks.constructEvent` to fail with 'No signatures found matching the expected signature for payload'.",
       "severity": "critical",
@@ -1809,6 +1934,9 @@
       "contexts": [
         "nextjs",
         "supabase"
+      ],
+      "tasks": [
+        "setup"
       ],
       "title": "Supabase table created without Row Level Security — all data publicly accessible",
       "summary": "Agent creates a Supabase table without enabling RLS, leaving every row readable and writable by any anonymous user through the public API.",
@@ -1834,6 +1962,10 @@
         "react",
         "typescript",
         "vite"
+      ],
+      "tasks": [
+        "setup",
+        "dependency-upgrade"
       ],
       "title": "Tailwind v4 broken because PostCSS plugin is set to 'tailwindcss' instead of '@tailwindcss/postcss'",
       "summary": "Using the v3 PostCSS plugin name in a v4 project causes styles to silently fail or produce build errors.",
@@ -1861,6 +1993,10 @@
         "python",
         "testing"
       ],
+      "tasks": [
+        "test",
+        "code-review"
+      ],
       "title": "A green test suite can be pinning the bug in place — the failing test after your fix may be the wrong one",
       "summary": "Agent fixes a real defect, an existing test goes red, and the agent reverts or weakens the fix — but the test was asserting the buggy behavior as correct.",
       "severity": "critical",
@@ -1881,6 +2017,10 @@
         "fuzzy match tuning"
       ],
       "contexts": [],
+      "tasks": [
+        "test",
+        "code-review"
+      ],
       "title": "Tuned a matching threshold until the one newly-found case passed — the same threshold silently broke two cases the suite already accepted",
       "summary": "A dedup heuristic missed a real duplicate. The fix measured a new metric on that single pair and picked the threshold that made it merge. Replaying that metric over the cases the tests already asserted showed two would stop merging: one false split traded for two regressions.",
       "severity": "warning",
@@ -1902,6 +2042,9 @@
       "contexts": [
         "ci",
         "git"
+      ],
+      "tasks": [
+        "debug"
       ],
       "title": "CI/API timestamps are UTC — read as local time, events were misdated by a day",
       "summary": "gh/CI output printed 15:2x UTC; the local clock said 00:2x next day. The agent concluded a merge was 'yesterday' when it happened minutes earlier, and nearly misdiagnosed live concurrent activity as history.",
@@ -1926,6 +2069,9 @@
         "react",
         "typescript",
         "javascript"
+      ],
+      "tasks": [
+        "deploy"
       ],
       "title": "Vercel deploy succeeds but app crashes — missing env vars",
       "summary": "Build passes because env vars aren't required at build time, but the app crashes at runtime because they're not set in Vercel's environment settings.",
@@ -1952,6 +2098,10 @@
         "typescript",
         "vite"
       ],
+      "tasks": [
+        "test",
+        "setup"
+      ],
       "title": "Vitest cannot resolve @/ imports because path aliases do not match tsconfig.json",
       "summary": "Tests fail with 'Cannot find module @/...' because vitest.config.ts resolve.alias does not mirror tsconfig.json paths.",
       "severity": "critical",
@@ -1975,6 +2125,9 @@
         "web",
         "performance"
       ],
+      "tasks": [
+        "media-processing"
+      ],
       "title": "Converting photos to WebP without measuring can produce larger, worse files",
       "summary": "Agent assumes 'WebP is smaller than JPEG', converts a grainy-texture photo, and gets a file that is larger at equal quality and uglier at equal size.",
       "severity": "warning",
@@ -1995,6 +2148,9 @@
         "dead data"
       ],
       "contexts": [],
+      "tasks": [
+        "code-review"
+      ],
       "title": "Shipped the write path, never wired the read path — the feature recorded data nobody ever read back",
       "summary": "A failure-memory feature stored records perfectly, but no query path ever loaded them: lookups and reports ran only against the built-in corpus. The product's core loop was silently open for a full release cycle while all write-side tests were green.",
       "severity": "critical",
@@ -2020,6 +2176,9 @@
         "desktop-automation",
         "x11",
         "linux"
+      ],
+      "tasks": [
+        "automation"
       ],
       "title": "xdotool type gets intercepted by an active IME and the target receives converted gibberish",
       "summary": "Agent types ASCII into a GUI field via xdotool type on a machine with a CJK input method enabled; the IME intercepts the synthetic key events and converts them, so the field receives transformed characters instead of the literal string.",

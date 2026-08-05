@@ -12,6 +12,9 @@
     "github-actions",
     "ci"
   ],
+  "tasks": [
+    "automation"
+  ],
   "title": "Polled CI by column-slicing `gh pr checks` output — check names contain spaces, so the loop never saw the status and slept until the tool timed out",
   "summary": "A wait loop classified CI state with `gh pr checks | awk '{print $2}'`. Check names contain spaces, so column 2 is never the status word: no branch ever matched, the loop slept every iteration, and the call died at the tool timeout — while CI had been green nearly the whole time.",
   "severity": "warning",

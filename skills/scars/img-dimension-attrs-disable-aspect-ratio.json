@@ -2,6 +2,7 @@
   "id": "scar.img-dimension-attrs-disable-aspect-ratio.v1",
   "keywords": ["img width height", "aspect-ratio", "CLS", "layout shift", "image squashed", "object-fit"],
   "contexts": ["web", "css", "html"],
+  "tasks": ["debug"],
   "title": "Adding width/height attributes to img silently disables CSS aspect-ratio",
   "summary": "Agent adds width/height attributes for CLS, which fixes both axes and makes the CSS aspect-ratio rule inert, squashing the image into a stripe.",
   "severity": "warning",

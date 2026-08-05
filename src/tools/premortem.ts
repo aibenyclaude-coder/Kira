@@ -155,9 +155,15 @@ export function buildPremortem(
   // Reuse the exact scar firing logic (keyword + context) used everywhere else.
   // Skills are irrelevant to a pre-mortem, so pass an empty skill set. On a
   // 0-hit, lookup already computes the scored near-matches — reuse them below.
+  // tasks:false — this function re-ranks with compareScars and then truncates to
+  // top_k. The task bundle is APPENDED by lookup(), not ranked into it, so a
+  // re-sort followed by a slice lets a shipped critical from the bundle push the
+  // caller's own recorded failure out of the heat map. Personal recall is the
+  // point of a pre-mortem, so the bundle stays in kira_lookup, which never truncates.
   const looked = lookup([], scars, {
     keyword: goal,
     context: request.context,
+    tasks: false,
   });
   const matched = looked.scars;
 

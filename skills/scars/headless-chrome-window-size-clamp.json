@@ -2,6 +2,7 @@
   "id": "scar.headless-chrome-window-size-clamp.v1",
   "keywords": ["headless chrome", "window-size", "mobile screenshot", "clientWidth", "viewport verification", "responsive testing"],
   "contexts": ["web", "testing", "chrome"],
+  "tasks": ["browser-automation", "test"],
   "title": "headless=new clamps --window-size below 500px, so mobile screenshots lie",
   "summary": "Agent verifies mobile layout with --window-size=390 screenshots, but Chrome headless=new clamps the window to a 500px minimum (485px layout after scrollbar), so JS reads a fake width and overlays desync from the screenshot.",
   "severity": "critical",

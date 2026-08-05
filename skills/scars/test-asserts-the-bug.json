@@ -15,6 +15,10 @@
     "python",
     "testing"
   ],
+  "tasks": [
+    "test",
+    "code-review"
+  ],
   "title": "A green test suite can be pinning the bug in place — the failing test after your fix may be the wrong one",
   "summary": "Agent fixes a real defect, an existing test goes red, and the agent reverts or weakens the fix — but the test was asserting the buggy behavior as correct.",
   "severity": "critical",

@@ -11,6 +11,10 @@
     "ci",
     "github-actions"
   ],
+  "tasks": [
+    "release",
+    "automation"
+  ],
   "title": "Two release rails fired on one tag — the downstream validator raced the upstream publisher",
   "summary": "An npm-publish workflow and a registry-listing workflow both triggered on the same v* tag. The registry validates that the npm package version exists; it ran faster than the npm publish and failed with 'package not found'.",
   "severity": "warning",

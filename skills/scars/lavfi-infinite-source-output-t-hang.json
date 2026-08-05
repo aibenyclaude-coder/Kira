@@ -2,6 +2,7 @@
   "id": "scar.lavfi-infinite-source-output-t-hang.v1",
   "keywords": ["ffmpeg hang", "lavfi color", "-t placement", "select filter", "infinite source", "testsrc duration", "anullsrc"],
   "contexts": ["ffmpeg", "video", "media"],
+  "tasks": ["media-processing"],
   "title": "Infinite lavfi source + output-side -t + sparse select makes ffmpeg run forever",
   "summary": "With an infinite lavfi source, -t as an output option only stops when output pts reaches the limit; a select filter that passes few frames means that never happens, so ffmpeg consumes the source indefinitely.",
   "severity": "warning",

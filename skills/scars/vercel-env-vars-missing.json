@@ -13,6 +13,9 @@
     "typescript",
     "javascript"
   ],
+  "tasks": [
+    "deploy"
+  ],
   "title": "Vercel deploy succeeds but app crashes — missing env vars",
   "summary": "Build passes because env vars aren't required at build time, but the app crashes at runtime because they're not set in Vercel's environment settings.",
   "severity": "critical",

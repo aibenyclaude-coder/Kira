@@ -441,6 +441,67 @@ export function compareScars(a: Scar, b: Scar): number {
  * Skills: community first, then vendor.
  * Scars: critical first, then warning. Higher hit_count = more agents burned.
  */
+/**
+ * Task vocabulary — what the caller is ABOUT TO DO.
+ *
+ * Keyword matching answers "what did you type"; it cannot answer "what are you
+ * about to do", because the words that describe an activity ("release") are
+ * almost never the words that describe its failures ("404 means dead auth",
+ * "server.json version drift"). Measured on the shipped corpus before this
+ * existed: "release" returned 1 of the 5 scars that actually fire during a
+ * release, and "code review" returned 0 of 3 — the knowledge was present and
+ * unreachable by the only name the caller knows at that moment.
+ *
+ * An alias containing CJK matches as a substring (no word boundaries in
+ * Japanese); an ASCII alias matches on word boundaries, so "test" fires on
+ * "run the test" and not on "testsrc" or "latest".
+ */
+const TASK_ALIASES: Record<string, string[]> = {
+  release: ["release", "releases", "releasing", "publish", "publishing", "cut a release", "version bump", "リリース", "出荷"],
+  deploy: ["deploy", "deploys", "deploying", "deployment", "デプロイ", "本番反映"],
+  "code-review": ["code review", "reviewing", "pr review", "review a pr", "コードレビュー", "レビュー"],
+  debug: ["debug", "debugging", "diagnose", "root cause", "デバッグ", "原因調査", "切り分け"],
+  test: ["test", "tests", "testing", "テスト"],
+  setup: ["setup", "set up", "scaffold", "bootstrap", "セットアップ", "環境構築"],
+  automation: ["automation", "cron", "scheduled job", "ci pipeline", "自動化", "定期実行"],
+  packaging: ["packaging", "docker image", "パッケージング", "配布物"],
+  "git-workflow": ["merge", "rebase", "git push", "マージ", "リベース"],
+  "media-processing": ["ffmpeg", "transcode", "動画処理", "画像処理"],
+  "browser-automation": ["browser automation", "headless", "puppeteer", "playwright", "ブラウザ操作"],
+  "dependency-upgrade": ["upgrade", "bump", "依存更新", "アップグレード"],
+  "data-migration": ["migration", "migrate", "cutover", "移行"],
+};
+
+const HAS_CJK = /[぀-ヿ㐀-鿿]/;
+
+/** Which task bundles does this query name? */
+export function matchTasks(keyword: string): Set<string> {
+  const raw = String(keyword ?? "").toLowerCase();
+  const norm = raw.replace(/[-_/,.]+/g, " ").replace(/\s+/g, " ").trim();
+  const out = new Set<string>();
+  if (!norm) return out;
+
+  for (const [task, aliases] of Object.entries(TASK_ALIASES)) {
+    for (const alias of aliases) {
+      const hit = HAS_CJK.test(alias)
+        ? raw.includes(alias)
+        : new RegExp(`(^|\\s)${alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\s|$)`).test(norm);
+      if (hit) { out.add(task); break; }
+    }
+  }
+  return out;
+}
+
+/** Items carrying one of these task tags that are not already in `have`. */
+function byTask<T extends { id: string; tasks?: string[] }>(
+  all: T[],
+  have: T[],
+  tasks: Set<string>
+): T[] {
+  const seen = new Set(have.map((i) => i.id));
+  return all.filter((i) => !seen.has(i.id) && (i.tasks ?? []).some((t) => tasks.has(t)));
+}
+
 export function lookup(
   allSkills: (Skill & Indexed)[],
   allScars: (Scar & Indexed)[],
@@ -500,14 +561,51 @@ export function lookup(
     matchedScars = matchByKeywordAndContext(allScars, keyword, []);
   }
 
+  /**
+   * Task bundle — purely additive.
+   *
+   * When the query names an activity, everything tagged for that activity is
+   * appended to whatever keyword matching already found. Deliberately NOT
+   * subject to the context filter: "what fires during a release" does not stop
+   * being true because the project is tagged nextjs, and the caller asking by
+   * task name is asking before the work, when narrowing is the wrong move.
+   *
+   * Additive means an existing caller's results are a prefix of the new ones:
+   * nothing that used to come back can disappear here.
+   */
+  const taskTags = request.tasks === false ? new Set<string>() : matchTasks(keyword);
+  const bundleSkills = taskTags.size ? byTask(allSkills, matchedSkills, taskTags) : [];
+  const bundleScars = taskTags.size ? byTask(allScars, matchedScars, taskTags) : [];
+
   // ── Skills (return summaries without instructions to save tokens) ──
   const community = matchedSkills.filter((s) => s.source === "community");
   const vendor = matchedSkills.filter((s) => s.source === "vendor");
-  const sortedSkills = [...community, ...vendor].map(toSkillSummary);
+  const sortedSkills = [
+    ...community,
+    ...vendor,
+    ...bundleSkills.sort((a, b) => a.id.localeCompare(b.id)),
+  ].map(toSkillSummary);
 
   // ── Scars ────────────────────────────────────────────────────────────
+  /**
+   * Keyword matches rank first, the task bundle after — each sorted with the
+   * shared ordering, then concatenated rather than merged and re-sorted.
+   *
+   * A keyword hit is direct evidence ("you said this"); a bundle hit is
+   * contextual ("this fires during that activity"). Interleaving the two by
+   * severity lets a shipped critical from the bundle outrank the caller's own
+   * recorded failure — which is exactly what happened: kira_premortem resolves
+   * its goal through this function and then truncates to top_k, so the bundle
+   * displaced a personal scar out of the heat map and the recall test caught it.
+   *
+   * Concatenation makes the promise literal: the old result is a PREFIX of the
+   * new one, so no truncation depth can drop something that used to survive.
+   */
   const rankedScars = [...matchedScars].sort(compareScars);
-  const sortedScars = rankedScars.map(toScarSummary);
+  const sortedScars = [
+    ...rankedScars,
+    ...[...bundleScars].sort(compareScars),
+  ].map(toScarSummary);
 
   // Fall back to scored near-matching (token-level, with title/summary/alias
   // coverage — see similarity.ts). Near results are a recovery path, so the

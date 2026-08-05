@@ -13,6 +13,10 @@
     "testing",
     "nlp"
   ],
+  "tasks": [
+    "debug",
+    "test"
+  ],
   "title": "Investigated a text-splitting bug against a hand-written fixture and nearly cleared the code that was actually broken",
   "summary": "A hand-written fixture tokenized text into clean phrase-level units while the real speech-to-text output split it per character. Reading only the fixture made the splitting logic look correct and pointed the investigation away from the actual defect.",
   "severity": "warning",

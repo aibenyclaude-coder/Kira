@@ -10,6 +10,7 @@
     "exit code not atomic"
   ],
   "contexts": ["git", "bash"],
+  "tasks": ["git-workflow", "automation"],
   "title": "git push --delete with many refs is per-ref, not atomic — nonzero exit misread as total failure",
   "summary": "A multi-ref `git push --delete` exits nonzero if ANY ref fails, but the other refs were still deleted; retry logic then reports 'remote ref does not exist' for every already-deleted ref, making a successful cleanup look like a total failure.",
   "mistake": "Deleting ~150 remote branches in chunks of 25 with `git push origin --delete ref1 ref2 ...`, the agent gated on the command's exit code and fell back to per-ref retries when a chunk exited nonzero. Every retry printed FAIL ('remote ref does not exist') — a wall of 149 FAILs — because the chunk pushes HAD deleted the refs: ref updates in a multi-ref push are independent, and a single rejected ref makes the whole command exit nonzero. The agent nearly reported a fully successful cleanup as failed.",

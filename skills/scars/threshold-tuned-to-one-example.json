@@ -9,6 +9,7 @@
     "fuzzy match tuning"
   ],
   "contexts": [],
+  "tasks": ["test", "code-review"],
   "title": "Tuned a matching threshold until the one newly-found case passed — the same threshold silently broke two cases the suite already accepted",
   "summary": "A dedup heuristic missed a real duplicate. The fix measured a new metric on that single pair and picked the threshold that made it merge. Replaying that metric over the cases the tests already asserted showed two would stop merging: one false split traded for two regressions.",
   "severity": "warning",

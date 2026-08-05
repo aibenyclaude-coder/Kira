@@ -238,24 +238,45 @@ export async function startServer(): Promise<void> {
       capabilities: {
         tools: {},
       },
+      /**
+       * Written as situation → action, not as a tool manual.
+       *
+       * A manual tells a capable agent HOW to call the tools once it has already
+       * decided to; it never fires, because deciding to look is the step that
+       * gets skipped. The triggers below name the moments instead — and those
+       * moments are recognisable from the work itself, before anything breaks.
+       * Named activities ("release", "code review", "移行") return the whole
+       * bundle for that activity, which is why the first trigger is a task name
+       * rather than a symptom.
+       */
       instructions:
-        "Kira manages your skills (how to do things) and scars (what to avoid). " +
-        "WORKFLOW: " +
-        "1. For BROAD GOALS ('build a web app'): call kira_route → get ordered steps. " +
-        "2. For SPECIFIC TASKS ('deploy to vercel'): call kira_lookup → get matching skills/scars. " +
-        "3. Read scars FIRST to know what NOT to do. " +
-        "4. Choose a skill, then call kira_get(skill_id) to get full instructions. " +
-        "5. Follow the instructions step by step. " +
-        "6. Call kira_report with the outcome (especially 'retry' with a note on what went wrong). " +
-        "7. If a task needed retries or threw, call kira_record_failure — it becomes a personal " +
-        "scar that automatically fires in future kira_lookup / kira_premortem calls on this machine. " +
-        "IMPORTANT: kira_lookup and kira_route return summaries WITHOUT instructions to save tokens. " +
-        "Always call kira_get to fetch the full instructions before executing. " +
-        "If lookup returns 0 results, check 'near_skills' and 'near_scars' (scored closest matches). " +
-        "'near_scars' can also appear alongside a skill hit when no scar matched outright — read it " +
-        "before you act on the skill; it is the closest thing to a warning the catalog has. " +
-        "Every miss is recorded locally so the catalog learns what was asked for. " +
-        "Kira is community-vetted and designed for zero-retry execution.",
+        "Kira gives you the failures other engineers already hit (scars) and the procedures that " +
+        "survived them (skills), so you do not pay for the same mistake twice.\n\n" +
+        "CALL kira_lookup BEFORE YOU ACT, in these moments:\n" +
+        "• You are about to start a named activity — releasing, deploying, reviewing code, " +
+        "upgrading dependencies, migrating data, setting up a project, writing tests, automating " +
+        "something, debugging. Pass the activity name itself ('release', 'code review', 'リリース'): " +
+        "it returns every scar that fires during that activity, not just keyword matches.\n" +
+        "• You are about to do something hard to undo — publishing, deleting, force-pushing, " +
+        "editing production config, running a migration.\n" +
+        "• You are returning to an area that has burned you or anyone before.\n" +
+        "• Your plan rests on a guess about a tool, API, or platform you have not verified today.\n\n" +
+        "Read the scars FIRST — they say what NOT to do, and each carries a concrete 'instead'. " +
+        "A scar you did not read costs exactly as much as one that was never written.\n\n" +
+        "AFTER YOU ACT:\n" +
+        "• Retried, threw, or worked around something? Call kira_record_failure. It becomes a " +
+        "personal scar (local-only) that fires automatically in your future lookups on this machine. " +
+        "Record it while you still remember why it happened — a week later you will only remember that it did.\n" +
+        "• If that failure would also bite someone on a different machine or project, call " +
+        "kira_share_scar to prepare it for the shared catalog. Nothing is uploaded without you.\n" +
+        "• Call kira_report with the outcome so the catalog learns which procedures actually hold.\n\n" +
+        "MECHANICS: kira_lookup and kira_route return summaries WITHOUT instructions to save tokens — " +
+        "call kira_get(id) for the full text before executing. For a broad goal ('build a web app') " +
+        "use kira_route to get ordered steps. Before a task with a history of going wrong, " +
+        "kira_premortem(goal) returns a heat map of how it has failed. If lookup returns 0 results, " +
+        "read 'near_skills' / 'near_scars' — and read 'near_scars' even when a skill matched, since " +
+        "it is the closest warning the catalog has. Every miss is logged locally so the catalog " +
+        "learns what was asked for.",
     }
   );
 

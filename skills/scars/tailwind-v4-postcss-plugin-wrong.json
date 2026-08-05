@@ -14,6 +14,10 @@
     "typescript",
     "vite"
   ],
+  "tasks": [
+    "setup",
+    "dependency-upgrade"
+  ],
   "title": "Tailwind v4 broken because PostCSS plugin is set to 'tailwindcss' instead of '@tailwindcss/postcss'",
   "summary": "Using the v3 PostCSS plugin name in a v4 project causes styles to silently fail or produce build errors.",
   "severity": "critical",

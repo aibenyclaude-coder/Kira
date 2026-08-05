@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Task tags.** Skills and scars carry an optional `tasks` field naming the activity they fire before — `release`, `deploy`, `code-review`, `debug`, `test`, `setup`, `automation`, `packaging`, `git-workflow`, `media-processing`, `browser-automation`, `dependency-upgrade`, `data-migration`. All 45 shipped scars are tagged.
+- **Naming an activity returns its whole bundle.** `kira_lookup("release")` now answers with every scar that fires during a release, not the few whose keywords happen to overlap the word. Aliases cover Japanese (`リリース`, `デプロイ`, `移行`), and ASCII aliases match on word boundaries so `test` fires on "run the test" but not on `testsrc` or `@latest`.
+
+  Measured on the shipped corpus against scars actually needed while performing each task on this repo: **5/17 → 16/17**. `"release"` went 1→4 of 5; `"code review"` went 0→3 of 3. The knowledge was already present — the activity name was simply not a way to reach it.
+
+### Changed
+- The MCP `initialize` instructions are written as situation → action rather than as a tool manual. A manual explains how to call the tools once the agent has decided to; deciding to look is the step that gets skipped. The triggers now name the moments — starting a named activity, doing something hard to undo, returning to an area that has burned someone, acting on an unverified guess — and point at recording and sharing afterwards.
+
+### Fixed
+- The task bundle is appended, never interleaved, so an existing caller's results stay a **prefix** of the new ones. Found by the personal-scar recall test: `kira_premortem` re-ranks and truncates to `top_k`, so merging the bundle by severity let a shipped critical evict the caller's own recorded failure — the one thing personal recall exists to prevent. Callers that truncate pass `tasks: false`; `kira_premortem` now does.
+
 ## [0.9.0] - 2026-08-06
 
 The corpus grew by 18 scars, but the larger change is that the corpus now actually

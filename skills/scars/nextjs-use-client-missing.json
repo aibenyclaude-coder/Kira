@@ -2,6 +2,7 @@
   "id": "scar.nextjs-use-client-missing.v1",
   "keywords": ["nextjs", "use client", "react hooks", "app router", "client component", "useState", "useEffect"],
   "contexts": ["nextjs", "react"],
+  "tasks": ["setup"],
   "title": "Next.js App Router component uses Client Hooks without 'use client' directive",
   "summary": "Agent writes useState/useEffect/onClick in an App Router component but forgets the 'use client' directive at the top, causing build or hydration errors.",
   "severity": "critical",

@@ -10,6 +10,7 @@
     "automation inventory"
   ],
   "contexts": ["automation", "devops", "agents"],
+  "tasks": ["automation"],
   "title": "New scheduled automation created without inventorying existing scheduler layers — duplicated a live watcher",
   "summary": "Agent adds a new recurring job (monitor/patrol/sync) after checking only one scheduler layer; an existing job on another layer already covered the work, and a previously DISABLED twin encoded a deliberate decision the new job silently reversed.",
   "mistake": "Asked to set up monitoring, the agent designed and created a new daily scheduled job after checking only the layer it was working in. A 4-hourly job on a different layer (OS timer vs cloud scheduler vs CI cron) already covered a superset of the checks — stateful, with a working notification path. Worse, a disabled twin of the new job existed: the owner had deliberately turned daily runs off, and the new job resurrected that cost. The new job was also stateless with a frozen baseline, so any legitimate change (a version bump, a new PR) would alarm forever. Options were even presented to the owner BEFORE the inventory, so they chose on false premises.",

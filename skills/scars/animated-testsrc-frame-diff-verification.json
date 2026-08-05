@@ -2,6 +2,7 @@
   "id": "scar.animated-testsrc-frame-diff-verification.v1",
   "keywords": ["ffmpeg verification", "testsrc2", "frame diff", "static grid", "control case", "false positive test", "visual transform testing"],
   "contexts": ["ffmpeg", "video", "testing"],
+  "tasks": ["test", "media-processing"],
   "title": "Frame-diffing testsrc2 output proves nothing: the test source itself animates",
   "summary": "Agent verifies a video transform by diffing two output frames rendered from testsrc2; testsrc2 is animated, so the diff is nonzero whether or not the transform works.",
   "severity": "warning",
