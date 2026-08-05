@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-08-06
+
 ### Added
 - **`kira_personal_brief` now asks.** Recording a failure is automatic and sharing it is one call away, but nothing ever prompted — so a personal store grows to hundreds while the shared catalog stays the size of what one maintainer remembered to promote. The brief now names up to 3 of your own scars that would also fire on someone else's machine, says why each one, and hands you the exact `kira_share_scar(...)` call. It is a suggestion: nothing is uploaded, and the reasoning is returned so you can disagree on the spot.
 
@@ -167,7 +169,8 @@ responses into hits without losing a single existing match.
 ## [0.4.0] - 2026-04-XX
 - Initial public release with 31 skills, 12 scars, 7 routes, and three core MCP tools (`kira_lookup`, `kira_route`, `kira_report`).
 
-[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/aibenyclaude-coder/Kira/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.11.0
 [0.10.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.10.0
 [0.9.0]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.9.0
 [0.8.2]: https://github.com/aibenyclaude-coder/Kira/releases/tag/v0.8.2
