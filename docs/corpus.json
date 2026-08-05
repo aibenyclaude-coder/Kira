@@ -1300,6 +1300,30 @@
       "updated_at": "2026-07-09T00:00:00Z"
     },
     {
+      "id": "scar.fixture-not-representative-of-real-output.v1",
+      "keywords": [
+        "fixture does not match real output",
+        "tokenization granularity surprise",
+        "debug against real data",
+        "hand written test data misleads",
+        "speech to text word timestamps",
+        "root cause investigation"
+      ],
+      "contexts": [
+        "debugging",
+        "testing",
+        "nlp"
+      ],
+      "title": "Investigated a text-splitting bug against a hand-written fixture and nearly cleared the code that was actually broken",
+      "summary": "A hand-written fixture tokenized text into clean phrase-level units while the real speech-to-text output split it per character. Reading only the fixture made the splitting logic look correct and pointed the investigation away from the actual defect.",
+      "severity": "warning",
+      "mistake": "Subtitle lines were breaking in the middle of words. To find out why, the repository's committed test fixture was opened first, because it was small and close at hand. Its word tokens were tidy phrase-sized units, which made the splitting routine look correct: it only ever cut on token boundaries, so on that input it could not have broken a word. The conclusion that the defect lay somewhere else was nearly reached. Opening an actual transcript produced by the real speech-to-text model showed tokens split down to individual characters, so cutting on token boundaries split words apart routinely. The fixture had been written by hand to describe the desired shape of the data, not the shape the model actually emits, and nothing had ever compared the two.",
+      "instead": "When a defect involves data produced by a machine-learning model or an external service, open a real output before opening any fixture. Search the working directories for artifacts a previous run already left behind, and if none exist, execute the smallest possible real run and inspect its output. Only after the real granularity is known should the fixture be consulted. Hand-written fixtures remain valuable as regression inputs but must not serve as the primary evidence during root-cause analysis, because they encode the shape the author expected rather than the shape that arrives. This applies most sharply to tokenization, word segmentation, normalization, rounding, and character encoding, where a granularity mismatch is the single most common root cause. When the two disagree, refresh the fixture from a real sample so the next investigation starts from the truth.",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-08-05T00:00:00Z"
+    },
+    {
       "id": "scar.gh-table-output-parsed-by-column.v1",
       "keywords": [
         "gh pr checks",
@@ -1531,6 +1555,30 @@
       "hit_count": 1,
       "version": "1.0.0",
       "updated_at": "2026-07-06T00:00:00Z"
+    },
+    {
+      "id": "scar.new-asset-dir-missing-from-ship-manifest.v1",
+      "keywords": [
+        "asset directory not shipped",
+        "ship manifest out of date",
+        "package data missing",
+        "works in repo fails when packaged",
+        "check suite copies tree",
+        "negative control caught it"
+      ],
+      "contexts": [
+        "packaging",
+        "ci",
+        "testing"
+      ],
+      "title": "Moved config into a new directory beside the code but never added it to the ship manifest — checks passed in place and failed everywhere else",
+      "summary": "A new preset directory was added beside the source tree but never added to the manifest listing which paths get copied and shipped. Checks passed when run in place and collapsed against a copied tree — the same gap that ships a package missing its data files.",
+      "severity": "critical",
+      "mistake": "While extending a feature, code went into the existing source directory but its configuration was factored out into a brand-new sibling directory. The list at the top of the acceptance script naming which paths belong to the deliverable was never updated. Run normally, from the repository root, every check passed and the suite reported a clean result, because the new directory was physically present. The suite's self-validation mode, which copies only the manifested paths into a scratch directory and re-runs each check there, then failed two checks with a file-not-found error while the normal run stayed green. Without that second mode the release would have been declared complete and the artifact would have broken on the first machine that received it. The identical gap exists in a container build file's copy instructions, a Python package-data or manifest template, a Node package file allowlist, and a CI artifact upload path.",
+      "instead": "The moment configuration, assets, presets, fixtures, or templates are placed in a directory that did not exist before, update every place that enumerates the shipped tree in the same change. Find them with a single search across the repository for the manifest keywords used by your ecosystem: the acceptance script's path list, MANIFEST templates, package-data declarations, container copy instructions, package file allowlists, and CI upload globs. Then, when the check suite has a mode that re-runs itself against a copy or a fresh install, never accept the in-place run as proof of completion: run both, and treat completion as reached only when both are green. On any change that introduces a new top-level directory, run the copied-tree mode first, since it is the fastest way to surface the omission.",
+      "hit_count": 1,
+      "version": "1.0.0",
+      "updated_at": "2026-08-05T00:00:00Z"
     },
     {
       "id": "scar.nextjs-use-client-missing.v1",

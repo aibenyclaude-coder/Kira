@@ -1,0 +1,24 @@
+{
+  "id": "scar.fixture-not-representative-of-real-output.v1",
+  "keywords": [
+    "fixture does not match real output",
+    "tokenization granularity surprise",
+    "debug against real data",
+    "hand written test data misleads",
+    "speech to text word timestamps",
+    "root cause investigation"
+  ],
+  "contexts": [
+    "debugging",
+    "testing",
+    "nlp"
+  ],
+  "title": "Investigated a text-splitting bug against a hand-written fixture and nearly cleared the code that was actually broken",
+  "summary": "A hand-written fixture tokenized text into clean phrase-level units while the real speech-to-text output split it per character. Reading only the fixture made the splitting logic look correct and pointed the investigation away from the actual defect.",
+  "severity": "warning",
+  "mistake": "Subtitle lines were breaking in the middle of words. To find out why, the repository's committed test fixture was opened first, because it was small and close at hand. Its word tokens were tidy phrase-sized units, which made the splitting routine look correct: it only ever cut on token boundaries, so on that input it could not have broken a word. The conclusion that the defect lay somewhere else was nearly reached. Opening an actual transcript produced by the real speech-to-text model showed tokens split down to individual characters, so cutting on token boundaries split words apart routinely. The fixture had been written by hand to describe the desired shape of the data, not the shape the model actually emits, and nothing had ever compared the two.",
+  "instead": "When a defect involves data produced by a machine-learning model or an external service, open a real output before opening any fixture. Search the working directories for artifacts a previous run already left behind, and if none exist, execute the smallest possible real run and inspect its output. Only after the real granularity is known should the fixture be consulted. Hand-written fixtures remain valuable as regression inputs but must not serve as the primary evidence during root-cause analysis, because they encode the shape the author expected rather than the shape that arrives. This applies most sharply to tokenization, word segmentation, normalization, rounding, and character encoding, where a granularity mismatch is the single most common root cause. When the two disagree, refresh the fixture from a real sample so the next investigation starts from the truth.",
+  "hit_count": 1,
+  "version": "1.0.0",
+  "updated_at": "2026-08-05T00:00:00Z"
+}
