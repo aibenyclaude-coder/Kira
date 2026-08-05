@@ -16,6 +16,7 @@ import {
   type PersonalScar,
 } from "../personal-scars.js";
 import { sanitize } from "../sanitize.js";
+import { notePrepared } from "../share-ledger.js";
 
 const DEFAULT_REPO = "aibenyclaude-coder/Kira";
 /** Prefilled-URL budget — GitHub/browsers get unreliable past ~8k chars. */
@@ -209,6 +210,12 @@ export async function handleShareScar(args: unknown): Promise<ShareScarResult> {
     `?labels=${encodeURIComponent("scar-submission")}` +
     `&title=${encodeURIComponent(issue_title)}` +
     `&body=${encodeURIComponent(issue_body)}`;
+
+  // Record the one fact this machine can honestly observe: a submission was
+  // prepared. Whether it was ever opened, accepted, or merged happens elsewhere.
+  // Without this the share prompt in kira_personal_brief has no memory and
+  // re-suggests its own strongest candidate in every future session.
+  await notePrepared(scar.id);
 
   return {
     candidate,

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`kira_personal_brief` now asks.** Recording a failure is automatic and sharing it is one call away, but nothing ever prompted — so a personal store grows to hundreds while the shared catalog stays the size of what one maintainer remembered to promote. The brief now names up to 3 of your own scars that would also fire on someone else's machine, says why each one, and hands you the exact `kira_share_scar(...)` call. It is a suggestion: nothing is uploaded, and the reasoning is returned so you can disagree on the spot.
+
+  The filter is deliberately narrow. Naming a public surface (npm, git, ffmpeg, …) is necessary but nowhere near sufficient — measured over 196 real personal scars, 150 of them mention some public tool, and "share 150 scars" is the same silence with extra steps. A candidate also has to carry weight the author already recorded: `severity: "critical"`, or `hit_count > 1` (it recurred, so the lesson demonstrably does not stick on its own). That takes 196 → 31. Anything naming a path, a private host, or "this machine" is excluded outright, whatever its severity.
+- **A local ledger of prepared submissions** (`~/.kira/shared-prepared.json`). `kira_share_scar` uploads nothing by design, so acceptance is not observable from this machine — which left the prompt with no memory and made it re-suggest its own strongest candidate in every future session, permanently occupying a slot. The ledger records the one fact that *is* observable: a submission was prepared, and when. A corrupt or missing ledger reads as empty rather than throwing.
+
+### Fixed
+- A JavaScript `\b` next to a CJK character never matches, so the private-marker check silently never fired on Japanese text — "うちの本番機だけで再現する" was judged shareable. Caught by the test that feeds it exactly that.
+
 ## [0.10.0] - 2026-08-06
 
 ### Added
