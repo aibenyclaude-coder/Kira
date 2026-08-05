@@ -16,9 +16,16 @@ import {
   PERSONAL_SCARS_DIR,
   type PersonalScar,
 } from "../personal-scars.js";
+import { judgeShareability } from "../shareability.js";
+import { preparedIds } from "../share-ledger.js";
 
 const DEFAULT_LIMIT = 5;
 const MAX_LIMIT = 50;
+/**
+ * A share prompt is an interruption. Three is enough to make the loop visible
+ * without turning the brief into a backlog the author learns to scroll past.
+ */
+const MAX_SHAREABLE = 3;
 
 export const KIRA_PERSONAL_BRIEF_TOOL = {
   name: "kira_personal_brief",
@@ -81,6 +88,21 @@ export interface PersonalBrief {
   read: "local-only";
   /** A ready-to-print one-liner + summary for a SessionStart banner. */
   headline: string;
+  /**
+   * Personal scars that would also fire on someone else's machine, ranked by
+   * weight. A SUGGESTION only — nothing is uploaded, and `kira_share_scar` still
+   * has to be called deliberately. Present only when there is something to say.
+   */
+  shareable?: ShareableCandidate[];
+}
+
+export interface ShareableCandidate {
+  id: string;
+  title: string;
+  /** Why this one and not the others — show it verbatim, it is the whole point. */
+  reason: string;
+  /** The exact call that prepares it for the shared catalog. */
+  share_with: string;
 }
 
 /** Epoch ms for an ISO timestamp; unparseable timestamps sort oldest. */
@@ -165,6 +187,26 @@ export async function buildPersonalBrief(
   filtered.sort(byRecencyDesc);
   const scars = filtered.slice(0, clampLimit(input.limit));
 
+  /**
+   * Collection is the loop's weakest link: recording is automatic, sharing is
+   * one call away, and nothing ever asks. Judged over the whole store rather
+   * than the shown page — the scar worth promoting is rarely the newest one.
+   */
+  const alreadyPrepared = await preparedIds();
+  const shareable: ShareableCandidate[] = [];
+  for (const s of all) {
+    if (alreadyPrepared.has(s.id)) continue;
+    const verdict = judgeShareability(s);
+    if (!verdict.shareable) continue;
+    shareable.push({
+      id: s.id,
+      title: s.title,
+      reason: verdict.reason,
+      share_with: `kira_share_scar("${s.id}")`,
+    });
+    if (shareable.length >= MAX_SHAREABLE) break;
+  }
+
   return {
     scars,
     count: scars.length,
@@ -172,6 +214,7 @@ export async function buildPersonalBrief(
     source_dir: PERSONAL_SCARS_DIR,
     read: "local-only",
     headline: headlineFor(scars, total),
+    ...(shareable.length ? { shareable } : {}),
   };
 }
 
